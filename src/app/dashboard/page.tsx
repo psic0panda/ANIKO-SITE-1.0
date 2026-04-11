@@ -432,6 +432,7 @@ export default function Dashboard() {
              <span className="text-xl font-bold tracking-tight text-brand-primary uppercase">ANIKO</span>
           </Link>
           <div className="flex items-center gap-4">
+             <Link href="/valores" className="hidden md:block text-slate-400 font-bold hover:text-brand-accent transition-colors text-sm">Valores</Link>
              <Link href="/contato" className="hidden md:block text-slate-400 font-bold hover:text-brand-accent transition-colors text-sm">Dúvidas?</Link>
              <button 
                onClick={() => { supabase.auth.signOut(); window.location.href = "/"; }}

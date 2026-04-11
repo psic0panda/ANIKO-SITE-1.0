@@ -213,6 +213,7 @@ export default function Home() {
         <div className="hidden md:flex items-center gap-8 font-medium text-brand-primary/80">
           <Link href="/abordagem" className="hover:text-brand-accent transition-colors">Abordagem</Link>
           <Link href="/tecnologia" className="hover:text-brand-accent transition-colors">Tecnologia</Link>
+          <Link href="/valores" className="hover:text-brand-accent transition-colors">Valores</Link>
           <Link href="/contato" className="hover:text-brand-accent transition-colors font-bold">Contato</Link>
           <Link href="/login" className="rounded-full bg-brand-primary px-6 py-2.5 text-white shadow-xl hover:bg-brand-primary/90 transition-all hover:scale-105 active:scale-95">
             Começar Agora
@@ -244,6 +245,7 @@ export default function Home() {
             <div className="flex flex-col gap-8 text-3xl font-black text-brand-primary uppercase tracking-tighter">
               <Link href="/abordagem" onClick={() => setIsMenuOpen(false)}>Abordagem</Link>
               <Link href="/tecnologia" onClick={() => setIsMenuOpen(false)}>Tecnologia</Link>
+              <Link href="/valores" onClick={() => setIsMenuOpen(false)}>Valores</Link>
               <Link href="/contato" onClick={() => setIsMenuOpen(false)}>Contato</Link>
               <Link 
                 href="/login" 
