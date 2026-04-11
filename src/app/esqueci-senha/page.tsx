@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { supabase, SITE_URL } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -18,7 +18,7 @@ export default function ForgotPassword() {
     setLoading(true);
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${SITE_URL}/resetar-senha`,
+      redirectTo: `${window.location.origin}/resetar-senha`,
     });
 
     if (error) {

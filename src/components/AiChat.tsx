@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 
 interface Message {
@@ -8,25 +8,263 @@ interface Message {
   content: string;
 }
 
+const proactiveMessages = [
+  "Olá! Posso te ajudar com dúvidas sobre animações ou TEA! 🐧💙",
+  "Ei! Sabia que Video Modeling ajuda muito no desenvolvimento? 🎬",
+  "Posso responder sobre comunicação, rotinas ou habilidades sociais!",
+  "Você conhece o PECS? É um sistema de comunicação por figuras muito legal! 📋",
+  "Quer saber quais habilidades podemos trabalhar nos vídeos? É só perguntar!",
+  "Estou aqui caso quiser conversar sobre estratégias para crianças com TEA 🧸",
+  "O Daniel Tigre ensina crianças a lidar com emoções! 😊",
+  "Posso ajudar com qualquer dúvida sobre o desenvolvimento infantil!",
+  "Você sabia que crianças com TEA aprendem muito bem com vídeos demonstrativos? 🎥",
+  "Que tal criarmos uma história sobre um pinguim que aprende a fazer novos amigos? 🐧",
+  "Emoções são como nuvens - cada uma tem seu formato! ☁️ Como você está se sentindo?",
+  "Sabia que rotinas visuais ajudam muito no dia a dia? 📅",
+  "Posso te contar como o PECS ajuda crianças a se comunicarem! 📋",
+  "O que você acha de criarmos um vídeo sobre escovar os dentes? 🦷",
+  "Você conhece algum criança que amaanimais? 🐶",
+  "Crianças com TEA têm pontos fortes incríveis, como atenção aos detalhes! ⭐",
+  "Quer saber como os vídeos personalizados podem ajudar no aprendizado? 📚",
+  "A comunicação visual é muito poderosa! 🖼️",
+  "Você sabia que o tempo de tela pode ser educativo com o conteúdo certo? 📱",
+  "Posso te ajudar a criar uma história divertida para os vídeos! 📖",
+  "Emoções são ensináveis! Falei com o Aniko sobre isso! 💭",
+  "Você conhece a teoria da mente? É sobre entender o que os outros pensam! 🧠",
+  "Quer ideas de atividades sensoriais para fazer em casa? 🎨",
+  "O que você achou do último vídeo que assistiu? 🎞️",
+  "Sabia que músicas e repetições ajudam na memorização? 🎵",
+  "Posso te explicar como funciona o Video Modeling! 📹",
+  "Você sabia que pinguins são animais muito sociáveis? 🐧",
+  "Que tal um vídeo sobre organizar brinquedos? 🧸",
+  "Quer saber mais sobre sinais de alerta do autismo? 🚩",
+  "A previsibilidade ajuda muito crianças com TEA! ⏰",
+  "Posso criar vídeos sobre qualquer habilidade que você quiser! ✨",
+  "Você conhece o conceito de Interests Special? 🌟",
+  "Emoji são ótimos para comunicar emoções! 😃",
+  "Quer aprender sobre estratégias de modificação ambiental? 🏠",
+  "Crianças com TEA podem ter habilidades extraordinárias! 🚀",
+  "Que tal um vídeo sobre saying goodbye? 👋",
+  "Posso te contar segredos sobre como fazer vídeos educativos! 🎓",
+  "Você sabia que desenhar ajuda no desenvolvimento? ✏️",
+  "Quer ideas de jogos sensoriais? 🎯",
+  "O tempo de transição pode ser difícil para algumas crianças! ⏳",
+  "Você conhece o método ABA? É uma abordagem bem conhecida! 📘",
+  "Quer saber como tornar a escola mais inclusiva? 🏫",
+  "Posso criar vídeos com personagens que sua criança ama! ⭐",
+  "Você sabia que o brincar livre é muito importante? 🧩",
+  "Quer aprender sobre recursos visuais para comunicação? 🗺️",
+  "As crianças com TEA têm direito a accompaniment especializado! 👩‍⚕️",
+  "Que tal um vídeo sobre taking turns? 🔄",
+  "Posso te ajudar a criar um cronograma visual! 📆",
+  "Você conhece o método TEACCH? É muito usado! 📚",
+  "Quer saber como lidar com melt downs? 😤",
+  "A família é super importante no tratamento! 👨‍👩‍👧‍👦",
+  "Você sabia que animais de estimação podem ajudar no desenvolvimento? 🐕",
+  "Quer ideas de livros infantis sobre emoções? 📕",
+  "Posso criar vídeos sobre higiene pessoal! 🛁",
+  "Você conhece o conceito de scaffolding? 🪜",
+  "Quer aprender sobre integração sensorial? 🤲",
+  "Vídeos com repeat são ótimos para aprender! 🔁",
+  "Você sabia que pinguins vivem em colônias? São bem sociáveis! 🐧",
+  "Quer saber mais sobre inclusion na escola? 🤝",
+  "Posso te dar ideas de atividades para férias! ☀️",
+  "Você conhece estratégias de antecipação? 📋",
+  "Quer aprender sobre comunicação aumentativa? 📢",
+  "O que sua criança mais gosta de assistir? 📺",
+  "Posso criar vídeos sobre rotinas de manhã! 🌅",
+  "Você sabia que o abraço profundo ajuda no regulation? 🤗",
+  "Quer ideas de jogos cooperativos? 🎲",
+  "A constância do objeto é algo que podemos trabalhar! 🎁",
+  "Posso fazer um vídeo sobre colors e formas! 🎨",
+  "Você conhece o闪卡 sistema de cartões? 🃏",
+  "Quer aprender sobre estratégias visuais para transitions? 🪄",
+  "Você sabia que música ajuda no desenvolvimento da linguagem? 🎶",
+  "Posso criar vídeos sobre fazer escolhas! ✅",
+  "Quer saber como trabalhar habilidades acadêmicas? 📖",
+  "Você conhece o programa Floortime? É bem legal! 🏠",
+  "Quer ideas de atividades outdoor? 🌳",
+  "A paciência é uma habilidade que pode ser ensinada! 🧘",
+  "Posso fazer um vídeo sobre waiting patiently! ⏰",
+  "Você sabia que crianças com TEA podem ter boa memória? 🧮",
+  "Quer aprender sobre sistemas de rewards? 🏆",
+  "O que você mais gostaria de ver nos vídeos? 💡",
+  "Posso criar vídeos sobre animals do mar! 🐠",
+  "Você conhece estratégias de redirection? ➡️",
+  "Quer saber como trabalhar a motricidade fina? ✋",
+  "A comunicação gestual pode ajudar muito! 🙌",
+  "Posso fazer um vídeo sobre say please e thank you! 🙏",
+  "Você sabia que o pinguim Imperador toma conta dos ovos? 🥚",
+  "Quer ideas de receitas educativas? 🍪",
+  "O que делает sua criança feliz? 😊",
+  "Posso criar vídeos sobre limpeza pessoal! 🧼",
+  "Você conhece o conceito de neurodiversity? 🌈",
+  "Quer aprender sobre self-care para os pais! 🫶",
+  "A família toda pode participar do tratamento! 👨‍👩‍👧",
+  "Posso fazer um vídeo sobre brush teeth! 🦷",
+  "Você sabia que pinguins não voam, mas nadam muito bem? 🏊",
+  "Quer ideas de projetos artísticos? 🎭",
+  "O support correto faz toda a diferença! 💪",
+  "Posso criar vídeos sobre any topic que você quiser! 🎯",
+  "Você conhece occupational therapy? 👨‍⚕️",
+  "Quer aprender sobre speech therapy? 🗣️",
+  "A early intervention é muito importante! 🎯",
+  "Posso fazer um vídeo sobre days of the week! 📅",
+  "Você sabia que cada pinguim tem uma voz diferente? 🐧",
+  "Quer ideas de livros para trabalhar emoções? 📚",
+  "O love é o ingrediente mais importante! ❤️",
+  "Posso criar vídeos sobre animals da fazenda! 🐄",
+  "Você conhece o conceito de joint attention? 👀",
+  "Quer aprender sobre estratégias de play therapy? 🧸",
+  "Você sabia que pinguins se cumprimentam com beijos no bico? 💋",
+  "Posso fazer um vídeo sobre números e contagem! 🔢",
+  "Quer ideas de atividades de science? 🔬",
+  "A consistency é chave no tratamento! 🔑",
+  "Posso criar vídeos sobre formas geométricas! 🔷",
+  "Você conhece o método Denver? É bem eficiente! 💯",
+  "Quer aprender sobre como lidar com a ansiedade? 😟",
+  "O que você gostaria de perguntar para o Aniko? 🐧",
+  "Posso fazer um vídeo sobre seasons do ano! 🍂",
+  "Você sabia que pinguins podem viver mais de 20 anos? 🐧",
+  "Quer ideas de atividades sensoriais com água? 💧",
+  "A love acceptance é fundamental! 💜",
+  "Posso criar vídeos sobre letras do alfabeto! 🔤",
+  "Você conhece recursos tecnológicos para comunicação? 📲",
+  "Quer aprender sobre estratégias de calming? 🧘‍♀️",
+  "O apoio da escola é muito importante! 🏫",
+  "Posso fazer um vídeo sobre body parts! 🦴",
+  "Você sabia que pinguins se abraçam para se aquecer? 🤗",
+  "Quer ideas de atividades com música? 🎵",
+  "A paciência e persistência são essenciais! 💪",
+  "Posso criar vídeos sobre cores! 🌈",
+  "Você conhece o concepto de inclusión social? 🤝",
+  "Quer aprender sobre habilidades de vida diária? 🏠",
+  "Você sabia que existem 18 espécies de pinguins? 🐧",
+  "Posso fazer um vídeo sobre telling time! ⏰",
+  "Quer ideas de jogos de tabuleiro educativos? 🎲",
+  "A family involvement mejora muito os resultados! 👨‍👩‍👧‍👦",
+  "Posso criar vídeos sobre profissões! 👷",
+  "Você sabia que pinguins exchanges de parceiro? 💕",
+  "Quer aprender sobre estratégias de comportamento? 📊",
+  "O progresso pode ser pequeno, mas é válido! 🎉",
+  "Posso fazer um vídeo sobre alimentos saudáveis! 🥦",
+  "Você conhece o support de peers? 👯",
+  "Quer ideas de crafts simples? ✂️",
+  "A communication é um direito de todos! 📢",
+  "Posso criar vídeos sobre natureza! 🌳",
+  "Você sabia que pinguins se ajudam mutuamente? 🐧",
+  "Quer aprender sobre self-advocacy? 🗣️",
+  "O que mais te importa sobre o desenvolvimento? 💭",
+  "Posso fazer um vídeo sobre good manners! 👋",
+  "Você sabia que o Aniko adora fazer novos amigos? 🐧💖",
+  "Quer ideas de atividades para o fim de semana? 🎊",
+  "A celebration de pequenas conquistas é importante! 🥳",
+  "Posso criar vídeos sobre países do mundo! 🌍",
+  "Você conhece recursos de aprendizagem online? 💻",
+  "Quer aprender sobre music therapy? 🎶",
+  "O Aniko está aqui para ajudar! 🐧✨",
+];
+
 export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Olá! Eu sou o assistente do Aniko. Como posso ajudar você hoje com dúvidas sobre animações, rotinas ou TEA? 😊" }
+    { role: "assistant", content: "Olá! Sou o Aniko, seu amigo pinguim! 🐧 Como posso te ajudar hoje?" }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isMuted, setIsMuted] = useState(true); // Começa mudo por padrão (melhor UX sensorial)
+  const [isMuted, setIsMuted] = useState(true);
+  const [showProactiveBadge, setShowProactiveBadge] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastProactiveTime = useRef<number>(0);
 
-  const speak = (text: string) => {
-    if (isMuted || typeof window === 'undefined' || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'pt-BR';
-    utterance.rate = 1.0; 
-    utterance.pitch = 1.7; // Voz bem fininha e parecida com desenho animado
-    window.speechSynthesis.speak(utterance);
-  };
+  const playNotificationSound = useCallback(async () => {
+    if (typeof window === 'undefined' || isMuted) return;
+    
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    } catch (e) {
+      console.log('Audio not supported');
+    }
+  }, [isMuted]);
+
+  const playNotificationBeep = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    } catch (e) {
+      console.log('Audio not supported');
+    }
+  }, []);
+
+  const sendProactiveMessage = useCallback(() => {
+    const now = Date.now();
+    if (now - lastProactiveTime.current < 13000) return;
+    if (messages.length === 0) return;
+    if (isOpen) return;
+    if (isLoading) return;
+    
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage && lastMessage.role === 'user' && !isLoading) return;
+    
+    lastProactiveTime.current = now;
+    const randomIndex = Math.floor(Math.random() * proactiveMessages.length);
+    const newMessage = proactiveMessages[randomIndex];
+    
+    setMessages(prev => [...prev, { role: "assistant", content: newMessage }]);
+    setShowProactiveBadge(true);
+    setPopupMessage(newMessage);
+    setShowPopup(true);
+    playNotificationBeep();
+    
+    setTimeout(() => setShowPopup(false), 4000);
+    
+    setTimeout(() => setShowProactiveBadge(false), 5000);
+  }, [messages.length, playNotificationSound, isOpen, isLoading]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      sendProactiveMessage();
+    }, 15000);
+    
+    return () => clearInterval(interval);
+  }, [sendProactiveMessage]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -34,13 +272,47 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
     }
   }, [messages]);
 
-  // Falar automaticamente quando a IA responder
+  const speak = useCallback(async (text: string) => {
+    if (isMuted) return;
+    
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.audioContent) {
+        const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+        audio.play();
+      } else {
+        console.error('TTS Error:', data.error, data.details);
+        fallbackSpeak(text);
+      }
+    } catch (err) {
+      console.error('TTS Error:', err);
+      fallbackSpeak(text);
+    }
+  }, [isMuted]);
+
+  const fallbackSpeak = (text: string) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'pt-BR';
+    utterance.rate = 0.5;
+    utterance.pitch = 2.0;
+    window.speechSynthesis.speak(utterance);
+  };
+
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (lastMessage && lastMessage.role === 'assistant' && !isLoading && !isMuted) {
       speak(lastMessage.content);
     }
-  }, [messages, isLoading, isMuted]);
+  }, [messages, isLoading, isMuted, speak]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,11 +326,8 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
     setIsLoading(true);
 
     try {
-      // Normaliza para busca de palavra cheia e sem pontuação
       const m = ` ${userMessage.toLowerCase().replace(/[.,!?;]/g, " ")} `; 
-
-      // 1. REGRAS FIXAS (Garantia de acerto para itens críticos)
-      let aiResponseParts: string[] = [];
+      const aiResponseParts: string[] = [];
       
       if (m.includes(" contato ") || m.includes(" falar com ") || m.includes(" email ") || m.includes(" whatsapp ") || m.includes(" número ") || m.includes(" telefone ") || m.includes(" suporte ")) {
         aiResponseParts.push("Para dúvidas de suporte ou falar com o criador, basta acessar a nossa página de **Contato** no menu superior! 📱✨");
@@ -70,11 +339,11 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
 
       if (aiResponseParts.length > 0) {
         setMessages((prev) => [...prev, { role: "assistant", content: aiResponseParts.join(" Além disso, ") }]);
+        playNotificationBeep();
         setIsLoading(false);
         return;
       }
 
-      // 2. Cérebro de IA (Gemini)
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -83,19 +352,28 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
 
       const data = await res.json();
       setMessages((prev) => [...prev, { role: "assistant", content: data.content }]);
+      playNotificationBeep();
       setIsLoading(false);
     } catch (err) {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Minha conexão com a geleira falhou! ❄️ Mas já estou tentando de novo..." }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "Ops! Minha conexão com a geleira travou! 🐧 Mas já estou voltando, só um momento..." }]);
+      playNotificationBeep();
       setIsLoading(false);
+    }
+  };
+
+  const handleOpenChat = () => {
+    setIsOpen(!isOpen);
+    if (!isOpen) {
+      setTimeout(() => {
+        lastProactiveTime.current = Date.now();
+      }, 1000);
     }
   };
 
   return (
     <div className={`fixed right-8 z-[100] font-sans transition-all duration-700 ease-in-out ${isHigh ? 'top-8' : 'bottom-8'}`}>
-      {/* Balão de Chat */}
       {isOpen && (
         <div className="mb-4 w-[350px] md:w-[400px] h-[500px] bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-scale-up origin-bottom-right">
-          {/* Header */}
           <div className="bg-brand-primary p-6 text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full border-2 border-white/20 overflow-hidden shadow-inner bg-white">
@@ -111,20 +389,13 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
             </div>
             <div className="flex items-center gap-2">
               <button 
-                onClick={() => {
+                onClick={async () => {
                   const newMuted = !isMuted;
                   setIsMuted(newMuted);
-                  if (newMuted) window.speechSynthesis.cancel();
-                  else {
+                  if (!newMuted) {
                     const lastMsg = messages[messages.length - 1];
                     if (lastMsg && lastMsg.role === 'assistant') {
-                      setTimeout(() => {
-                        const utterance = new SpeechSynthesisUtterance(lastMsg.content);
-                        utterance.lang = 'pt-BR';
-                        utterance.rate = 1.0;
-                        utterance.pitch = 1.7;
-                        window.speechSynthesis.speak(utterance);
-                      }, 100);
+                      speak(lastMsg.content);
                     }
                   }
                 }}
@@ -134,7 +405,7 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
                 {isMuted ? (
                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m11 5-7 7 7 7"/><path d="M22 9 16 15"/><path d="M16 9 22 15"/></svg>
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 4 12 11 19"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5 4 12 11 19"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
                 )}
               </button>
               <button onClick={() => setIsOpen(false)} className="text-white/50 hover:text-white transition-colors">
@@ -143,7 +414,6 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
             </div>
           </div>
 
-          {/* Messages Area */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50 custom-scrollbar">
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -176,7 +446,6 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
             )}
           </div>
 
-          {/* Input Area */}
           <form onSubmit={handleSend} className="p-4 bg-white border-t border-slate-100 flex gap-2">
             <input 
               type="text" 
@@ -196,17 +465,30 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
         </div>
       )}
 
-      {/* Botão para Abrir */}
+      {showPopup && !isOpen && (
+        <div className="absolute bottom-4 -left-64 mb-2 mr-2 max-w-[250px] bg-white rounded-2xl shadow-2xl border border-cyan-100 p-3 animate-bounce-once">
+          <div className="flex items-start gap-2">
+            <img src="/assets/avatars/avatar_aniko.png" alt="Aniko" className="w-8 h-8 rounded-full flex-shrink-0" />
+            <p className="text-xs text-slate-700 leading-tight">{popupMessage}</p>
+          </div>
+        </div>
+      )}
+
       <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className={`h-16 w-16 md:h-20 md:w-20 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-2xl hover:scale-110 active:scale-90 transition-all border-4 border-white ${isOpen ? 'rotate-90' : 'rotate-0'}`}
+        onClick={handleOpenChat}
+        className={`relative h-16 w-16 md:h-20 md:w-20 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-2xl hover:scale-110 active:scale-90 transition-all border-4 border-white ${isOpen ? 'rotate-90' : 'rotate-0'}`}
       >
         {isOpen ? (
           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         ) : (
           <div className="relative h-full w-full rounded-full overflow-hidden border-2 border-white/20 bg-white">
              <img src="/assets/avatars/avatar_aniko.png" alt="Aniko" className="w-full h-full object-cover rounded-full" />
-             <div className="absolute top-2 right-2 h-4 w-4 bg-brand-accent rounded-full border-2 border-white z-10" />
+             {showProactiveBadge && (
+               <div className="absolute top-2 right-2 h-4 w-4 bg-green-400 rounded-full border-2 border-white z-10 animate-pulse" />
+             )}
+             {!showProactiveBadge && (
+               <div className="absolute top-2 right-2 h-4 w-4 bg-brand-accent rounded-full border-2 border-white z-10" />
+             )}
           </div>
         )}
       </button>

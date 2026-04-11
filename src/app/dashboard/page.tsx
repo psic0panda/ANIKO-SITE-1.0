@@ -5,6 +5,15 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { 
+  Star, 
+  MessageSquare, 
+  TrendingUp, 
+  ChevronRight, 
+  PlayCircle,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
 
 const AVATARS = [
   { id: 'lion', label: 'Leão' },
@@ -35,6 +44,111 @@ const ALL_PREFERENCES = [
   "Blaze", "Shimmer and Shine", "Smilingüido", "Bita e o Corpo Humano"
 ];
 
+function GraficoRespostaCustom({ videos }: { videos: any[] }) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  
+  const dados = videos.map((v) => ({
+    nota: v.response_score !== null && v.response_score !== undefined ? v.response_score : (v.rating ? v.rating * 2 : 0),
+    titulo: v.title,
+    data: new Date(v.created_at).toLocaleDateString('pt-BR'),
+    temNota: v.response_score !== null && v.response_score !== undefined
+  }));
+
+  const maxNota = Math.max(...dados.map(d => d.nota), 10);
+  const svgHeight = 200;
+  const svgWidth = 600;
+  const padding = 40;
+  const chartHeight = svgHeight - padding * 2;
+  const chartWidth = svgWidth - padding * 2;
+  const stepX = chartWidth / Math.max(dados.length - 1, 1);
+
+  const getY = (nota: number) => svgHeight - padding - (nota / maxNota) * chartHeight;
+  const getX = (index: number) => padding + index * stepX;
+
+  const pathData = dados.map((d, i) => 
+    `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(d.nota)}`
+  ).join(' ');
+
+  const areaPath = pathData + 
+    ` L ${getX(dados.length - 1)} ${svgHeight - padding}` +
+    ` L ${padding} ${svgHeight - padding} Z`;
+
+  return (
+    <div className="relative w-full">
+      <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="verdeGradiente2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#4FD1A5" stopOpacity={0.35}/>
+            <stop offset="50%" stopColor="#4FD1A5" stopOpacity={0.15}/>
+            <stop offset="100%" stopColor="#4FD1A5" stopOpacity={0.02}/>
+          </linearGradient>
+        </defs>
+        
+        {[0, 2, 4, 6, 8, 10].map((val) => (
+          <g key={val}>
+            <line 
+              x1={padding} y1={getY(val)} 
+              x2={svgWidth - padding} y2={getY(val)} 
+              stroke="rgba(14, 58, 95, 0.08)" 
+              strokeDasharray="4 4"
+            />
+            <text x={padding - 8} y={getY(val) + 4} textAnchor="end" fontSize="10" fill="#0E3A5F" fontWeight="500">
+              {val}
+            </text>
+          </g>
+        ))}
+
+        <path d={areaPath} fill="url(#verdeGradiente2)" />
+        
+        <path d={pathData} fill="none" stroke="#4FD1A5" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+
+        {dados.map((d, i) => (
+          <g 
+            key={i} 
+            onMouseEnter={() => setHoveredIndex(i)}
+            onMouseLeave={() => setHoveredIndex(null)}
+            className="cursor-pointer"
+          >
+            <circle 
+              cx={getX(i)} 
+              cy={getY(d.nota)} 
+              r={hoveredIndex === i ? 8 : 5}
+              fill={d.temNota ? "#fff" : "#e2e8f0"}
+              stroke="#4FD1A5"
+              strokeWidth={2}
+              className="transition-all duration-200"
+            />
+          </g>
+        ))}
+
+        {dados.map((d, i) => (
+          <text 
+            key={`label-${i}`}
+            x={getX(i)} 
+            y={svgHeight - 10} 
+            textAnchor="middle" 
+            fontSize="9" 
+            fill="#0E3A5F"
+            fontWeight="500"
+          >
+            {d.data.split('/')[0] + '/' + d.data.split('/')[1]}
+          </text>
+        ))}
+      </svg>
+
+      {hoveredIndex !== null && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-white px-4 py-2 rounded-xl shadow-xl border border-slate-100 z-10 animate-fade-in">
+          <p className="text-[10px] text-slate-400 font-bold">{dados[hoveredIndex].data}</p>
+          <p className="text-brand-primary font-black text-lg">
+            {dados[hoveredIndex].temNota ? `${dados[hoveredIndex].nota}/10` : 'Sem nota'}
+          </p>
+          <p className="text-slate-500 text-xs truncate max-w-[150px]">{dados[hoveredIndex].titulo || 'Vídeo'}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [showVideo, setShowVideo] = useState(false);
   const [requestText, setRequestText] = useState("");
@@ -44,7 +158,8 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<any>({
     child_name: "Carregando...",
     avatar_url: null,
-    preferences: []
+    preferences: [],
+    historico: ""
   });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -55,12 +170,33 @@ export default function Dashboard() {
     child_name: "",
     avatar_url: "",
     phone: "",
-    preferences: []
+    preferences: [],
+    historico: ""
   });
   const [availablePreferences, setAvailablePreferences] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const [activeFeedbackId, setActiveFeedbackId] = useState<number | null>(null);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackScore, setFeedbackScore] = useState(0);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [historicoExpandido, setHistoricoExpandido] = useState(false);
   const router = useRouter();
+
+  const handleDeleteVideo = async (videoId: number) => {
+    if (!confirm('Tem certeza que deseja excluir este vídeo?')) return;
+    
+    const { error } = await supabase
+      .from('videos')
+      .delete()
+      .eq('id', videoId);
+    
+    if (!error) {
+      setVideos(prev => prev.filter(v => v.id !== videoId));
+    } else {
+      alert('Erro ao excluir vídeo: ' + error.message);
+    }
+  };
 
 
   const handleOpenVideo = (url: string) => {
@@ -94,24 +230,26 @@ export default function Dashboard() {
       if (!profileError && profileData) {
         setProfile({
           ...profileData,
-          preferences: profileData.preferences || []
+          preferences: profileData.preferences || [],
+          historico: profileData.historico || ""
         });
         setEditFormData({
           child_name: profileData.child_name,
           avatar_url: profileData.avatar_url,
           phone: profileData.phone || "",
-          preferences: profileData.preferences || []
+          preferences: profileData.preferences || [],
+          historico: profileData.historico || ""
         });
       }
 
-      // Buscar vídeos deste usuário específico
-      const { data, error } = await supabase
-        .from('videos')
-        .select('*')
-        .eq('profile_id', user.id)
-        .order('created_at', { ascending: false });
-      
-      if (!error && data) setVideos(data);
+      // Buscar vídeos deste usuário específico via API (bypass RLS)
+      try {
+        const videosRes = await fetch(`/api/admin/videos-cliente/${user.id}?key=aniko_admin_segredo_2026`);
+        const videosData = await videosRes.json();
+        if (videosData.videos) setVideos(videosData.videos);
+      } catch (e) {
+        console.error('Erro ao buscar vídeos:', e);
+      }
       setLoading(false);
     }
     initDashboard();
@@ -219,17 +357,30 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [isPaymentModalOpen, pixData]);
 
-  // 3. Avaliar vídeo com estrelas
-  const handleRate = async (videoId: number, rating: number) => {
+  // 3. Avaliar vídeo com Nota e Feedback
+  const handleRate = async (videoId: number) => {
+    setIsSubmittingFeedback(true);
     const { error } = await supabase
       .from('videos')
-      .update({ rating })
+      .update({ 
+        response_score: feedbackScore,
+        feedback: feedbackText,
+        rating: Math.ceil(feedbackScore / 2) // Mantém compatibilidade com estrelas 0-5 se necessário
+      })
       .eq('id', videoId);
     
     if (!error) {
-      // Atualizar estado local para feedback visual
-      setVideos(prev => prev.map(v => v.id === videoId ? { ...v, rating } : v));
+      setVideos(prev => prev.map(v => v.id === videoId ? { 
+        ...v, 
+        response_score: feedbackScore, 
+        feedback: feedbackText,
+        rating: Math.ceil(feedbackScore / 2)
+      } : v));
+      setActiveFeedbackId(null);
+      setFeedbackText("");
+      setFeedbackScore(0);
     }
+    setIsSubmittingFeedback(false);
   };
 
   // 4. Salvar Alterações de Perfil
@@ -242,12 +393,17 @@ export default function Dashboard() {
         child_name: editFormData.child_name,
         avatar_url: editFormData.avatar_url,
         phone: editFormData.phone,
-        preferences: editFormData.preferences
+        preferences: editFormData.preferences,
+        historico: editFormData.historico
       })
       .eq('id', user.id);
 
     if (!error) {
-      setProfile(editFormData);
+      setProfile({
+        ...editFormData,
+        preferences: editFormData.preferences || [],
+        historico: editFormData.historico || ""
+      });
       setIsEditModalOpen(false);
     } else {
       alert("Erro ao atualizar perfil: " + error.message);
@@ -301,33 +457,88 @@ export default function Dashboard() {
               {loading ? (
                 <div className="col-span-2 py-10 text-center text-slate-400 font-bold animate-pulse">Carregando seus vídeos...</div>
               ) : videos.length > 0 ? (
-                videos.map((v, i) => (
-                  <div key={i} className="group relative aspect-video bg-slate-200 rounded-[2.5rem] overflow-hidden shadow-lg border-4 border-white hover:scale-[1.02] transition-all">
-                    <div className="absolute inset-0 bg-brand-primary/20 group-hover:bg-brand-primary/40 transition-colors flex items-center justify-center cursor-pointer" onClick={() => handleOpenVideo(v.video_url)}>
+                videos.map((v, i) => {
+                  const titleLower = (v.title || '').toLowerCase();
+                  const thumb = v.thumbnail_url || (
+                    titleLower.includes('bluey') ? '/assets/drawings/bluey.jpg' :
+                    titleLower.includes('daniel') ? '/assets/drawings/daniel.jpg' :
+                    titleLower.includes('caillou') ? '/assets/drawings/caillou.jpg' :
+                    titleLower.includes('luna') ? '/assets/drawings/luna.webp' :
+                    titleLower.includes('arthur') ? '/assets/drawings/arthur.jpg' :
+                    titleLower.includes('octonaut') ? '/assets/drawings/octonauts.jpg' :
+                    titleLower.includes('peixonauta') ? '/assets/drawings/peixonauta.jpg' :
+                    titleLower.includes('kratts') || titleLower.includes('irmãos kratts') ? '/assets/drawings/kratts.jpg' : null
+                  );
+                  return (
+                  <div key={i} className="space-y-4">
+                    <div className="group relative aspect-video rounded-[2.5rem] overflow-hidden shadow-lg border-4 border-white hover:scale-[1.02] transition-all">
+                      {thumb ? (
+                        <img src={thumb} alt={v.title} className="absolute inset-0 w-full h-full object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-brand-primary to-brand-secondary" />
+                      )}
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
+                      <button type="button" onClick={() => handleOpenVideo(v.video_url)} className="absolute inset-0 w-full h-full flex items-center justify-center cursor-pointer border-none">
                         <div className="h-16 w-16 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-2xl transition-transform group-hover:scale-110">
                           <svg className="h-6 w-6 fill-brand-primary ml-1" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                         </div>
-                    </div>
-                    <div className="absolute bottom-6 left-8 text-white pr-20">
-                        <span className="inline-block px-3 py-1 bg-brand-secondary rounded-full text-[10px] font-black uppercase tracking-widest mb-2">{v.category || 'Animação'}</span>
-                        <h4 className="text-xl font-bold font-shadow-md">{v.title}</h4>
-                        <p className="text-white/80 text-sm">{new Date(v.created_at).toLocaleDateString()}</p>
-                    </div>
-                    
-                    {/* Star Rating Interaction */}
-                    <div className="absolute bottom-6 right-8 flex gap-1 bg-black/20 backdrop-blur-md px-3 py-2 rounded-2xl group/stars hover:bg-black/40 transition-all border border-white/10" onClick={(e) => e.stopPropagation()}>
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button 
-                            key={star} 
-                            onClick={() => handleRate(v.id, star)}
-                            className={`${(v.rating || 0) >= star ? 'text-brand-accent' : 'text-white/40'} hover:text-brand-accent hover:scale-125 transition-all outline-none`}
-                          >
-                            <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                      </button>
+                      <div className="absolute top-6 right-6 group/rating">
+                        <div className="flex items-center gap-2 bg-black/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 cursor-help">
+                          <span className="text-white font-bold text-sm">{v.response_score || v.rating * 2 || 0}/10</span>
+                          {v.feedback && (
+                            <div className="absolute top-full right-0 mt-2 w-48 p-3 bg-white rounded-xl shadow-xl border border-slate-100 opacity-0 group-hover/rating:opacity-100 transition-opacity z-30 pointer-events-none">
+                              <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Feedback</p>
+                              <p className="text-sm text-brand-primary font-medium">{v.feedback}</p>
+                            </div>
+                          )}
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setActiveFeedbackId(v.id); setFeedbackScore(v.response_score || v.rating * 2 || 0); setFeedbackText(v.feedback || ""); }} className="h-8 w-8 rounded-full bg-brand-accent flex items-center justify-center hover:scale-110 transition-transform">
+                            <Star className="h-4 w-4 fill-white text-white" />
                           </button>
-                        ))}
+                        </div>
+                      </div>
+                      {activeFeedbackId === v.id && (
+                        <div className="absolute inset-0 bg-brand-primary/95 backdrop-blur-md p-6 md:p-8 flex flex-col justify-center animate-fade-in z-20 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex justify-between items-center mb-4">
+                            <h4 className="text-white font-black text-lg">Como {profile.child_name || "a criança"} reagiu?</h4>
+                            <button type="button" onClick={() => setActiveFeedbackId(null)} className="text-white/60 hover:text-white">✕</button>
+                          </div>
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-xs font-bold text-white/60 uppercase tracking-widest">
+                                <span>Feedback</span>
+                                <span className="text-brand-accent">{feedbackScore}/10</span>
+                              </div>
+                              <input type="range" min="0" max="10" value={feedbackScore} onChange={(e) => setFeedbackScore(parseInt(e.target.value))} className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-brand-accent" />
+                            </div>
+                            <textarea value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)} placeholder="Opcional: O que ela mais gostou?" className="w-full h-16 md:h-20 bg-white/10 border border-white/10 rounded-2xl p-3 md:p-4 text-white text-sm outline-none focus:border-brand-accent transition-colors resize-none" />
+                            <button type="button" disabled={isSubmittingFeedback} onClick={() => handleRate(v.id)} className="w-full py-3 bg-brand-accent text-white font-bold rounded-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
+                              {isSubmittingFeedback ? "Salvando..." : "Salvar Feedback"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="px-2 flex justify-between items-start">
+                      <div>
+                        <span className="inline-block px-3 py-1 bg-brand-secondary/50 rounded-full text-[10px] font-black uppercase tracking-widest text-brand-primary">{v.category || 'Animação'}</span>
+                        <h4 className="text-lg font-bold text-brand-primary mt-1">{v.title}</h4>
+                        <p className="text-slate-400 text-sm">{new Date(v.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={() => handleDeleteVideo(v.id)}
+                        className="p-2 text-slate-300 hover:text-red-500 transition-colors"
+                        title="Excluir vídeo"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                ))
+                  );
+                })
               ) : (
                  <div className="col-span-2 py-20 bg-white rounded-[3rem] border border-dashed border-slate-200 text-center space-y-4">
                     <p className="text-slate-400 font-bold uppercase tracking-widest">Nenhum vídeo disponível ainda.</p>
@@ -380,17 +591,52 @@ export default function Dashboard() {
              </div>
           </section>
 
-          {/* Progress Section (Keep but keep it clean) */}
+          {/* Progress Section */}
           <section className="bg-white rounded-[3rem] p-10 shadow-xl border border-white animate-fade-up delay-200">
-             <h3 className="text-2xl font-black mb-8">Evolução do Engajamento</h3>
-             <div className="h-48 w-full bg-slate-50 rounded-3xl border border-dashed border-slate-200 flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 opacity-10">
-                   <svg width="100%" height="100%" viewBox="0 0 1000 200" preserveAspectRatio="none">
-                      <path d="M0,150 Q250,50 500,100 T1000,50" fill="none" stroke="#2563eb" strokeWidth="10" />
-                   </svg>
+             <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                   <div className="h-10 w-10 rounded-xl bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+                      <TrendingUp className="h-5 w-5" />
+                   </div>
+                   <h3 className="text-2xl font-black">Gráfico de Resposta</h3>
                 </div>
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-sm z-10">Gráfico de Interação</p>
+                <div className="hidden md:flex gap-2">
+                   <span className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase">
+                      <div className="h-2 w-2 rounded-full bg-brand-accent" /> Notas Individuais
+                   </span>
+                </div>
              </div>
+             
+              <div className="w-full">
+                {videos.length > 0 ? (
+                  <GraficoRespostaCustom videos={videos} />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-48 text-slate-300">
+                    <TrendingUp className="h-10 w-10 opacity-20" />
+                    <p className="text-sm font-bold uppercase tracking-widest mt-2">Aguardando avaliações...</p>
+                  </div>
+                )}
+              </div>
+             
+              {videos.length > 0 && (
+                <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Média de Resposta</p>
+                      <p className="text-xl font-black text-brand-primary">
+                         {(() => {
+                           const videosComNota = videos.filter(v => v.response_score !== null && v.response_score !== undefined);
+                           if (videosComNota.length === 0) return '-';
+                           const media = videosComNota.reduce((acc, v) => acc + v.response_score, 0) / videosComNota.length;
+                           return `${media.toFixed(1)}/10`;
+                         })()}
+                      </p>
+                   </div>
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                     <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Total de Vídeos</p>
+                     <p className="text-xl font-black text-brand-primary">{videos.length}</p>
+                  </div>
+               </div>
+             )}
           </section>
         </div>
 
@@ -419,21 +665,66 @@ export default function Dashboard() {
               </div>
            </div>
 
-           {/* Active Tasks/Interests */}
-           <div className="bg-white rounded-[3rem] p-10 shadow-xl border border-white">
-              <h3 className="text-lg font-black mb-6">Preferências Ativas</h3>
-              <div className="flex flex-wrap gap-2">
-                 {profile.preferences.length > 0 ? profile.preferences.map((int: string, i: number) => (
-                    <span key={i} className="px-4 py-2 bg-slate-50 text-slate-600 rounded-full text-xs font-bold border border-slate-100 flex items-center gap-2">
-                       <span className="h-1.5 w-1.5 rounded-full bg-brand-accent" />
-                       {int}
-                    </span>
-                 )) : (
-                   <p className="text-sm text-slate-400 italic">Nenhuma preferência selecionada.</p>
-                 )}
-              </div>
-           </div>
-        </aside>
+            {/* Active Tasks/Interests */}
+            <div className="bg-white rounded-[3rem] p-10 shadow-xl border border-white">
+               <h3 className="text-lg font-black mb-6">Preferências Ativas</h3>
+               <div className="flex flex-wrap gap-2">
+                  {profile.preferences.length > 0 ? profile.preferences.map((int: string, i: number) => (
+                     <span key={i} className="px-4 py-2 bg-slate-50 text-slate-600 rounded-full text-xs font-bold border border-slate-100 flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-brand-accent" />
+                        {int}
+                     </span>
+                  )) : (
+                    <p className="text-sm text-slate-400 italic">Nenhuma preferência selecionada.</p>
+                  )}
+               </div>
+            </div>
+
+            {/* Histórico da Criança */}
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-[3rem] p-8 shadow-xl border border-purple-200/50">
+               <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                     <span className="text-2xl">📖</span>
+                     <h3 className="text-lg font-black text-brand-primary">Sobre {profile.child_name?.split(' ')[0] || 'a criança'}</h3>
+                  </div>
+                  {profile.historico && (
+                    <button 
+                      onClick={() => setIsEditModalOpen(true)}
+                      className="text-purple-500 hover:text-purple-600 text-xs font-bold"
+                    >
+                      ✏️ Editar
+                    </button>
+                  )}
+               </div>
+               {profile.historico ? (
+                 <div className="bg-white/70 rounded-2xl p-5">
+                   <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
+                     {historicoExpandido || profile.historico.length <= 150 
+                       ? profile.historico 
+                       : profile.historico.slice(0, 150) + '...'}
+                   </p>
+                   {profile.historico.length > 150 && (
+                     <button 
+                       onClick={() => setHistoricoExpandido(!historicoExpandido)}
+                       className="mt-2 text-purple-500 hover:text-purple-600 text-sm font-bold"
+                     >
+                       {historicoExpandido ? 'Ver menos' : 'Ver completo'}
+                     </button>
+                   )}
+                 </div>
+               ) : (
+                 <div className="text-center py-4">
+                   <p className="text-slate-500 text-sm mb-4">Conte um pouco sobre {profile.child_name?.split(' ')[0] || 'a criança'} para ajudarmos a criar animações ainda mais personalizadas!</p>
+                   <button 
+                     onClick={() => setIsEditModalOpen(true)}
+                     className="px-6 py-2 bg-purple-500 text-white font-bold rounded-full text-sm hover:bg-purple-600 transition-all"
+                   >
+                     + Adicionar História
+                   </button>
+                 </div>
+               )}
+            </div>
+         </aside>
 
       </div>
 
@@ -487,6 +778,20 @@ export default function Dashboard() {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                {/* Histórico field */}
+                <div>
+                  <label className="block text-sm font-bold text-purple-400 uppercase tracking-widest mb-3 ml-2 flex items-center gap-2">
+                    <span>📖</span> Conte-nos sobre {editFormData.child_name?.split(' ')[0] || 'a criança'}
+                  </label>
+                  <textarea 
+                    value={editFormData.historico}
+                    onChange={(e) => setEditFormData({ ...editFormData, historico: e.target.value })}
+                    placeholder="Ex: João adora animais, especialmente dogs. Tem 6 anos, é muito curioso e gosta de histórias sobre amizade. Já assistiu muito Bluey e Daniel Tigre..."
+                    className="w-full px-6 py-4 rounded-2xl bg-purple-50 border-2 border-transparent focus:border-purple-400 focus:bg-white transition-all outline-none text-brand-primary font-bold shadow-inner min-h-[120px]"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-2 italic ml-2">* Isso nos ajuda a criar animações ainda mais personalizadas!</p>
                 </div>
 
                 {/* Preferences Selector */}

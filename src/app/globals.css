@@ -6,13 +6,14 @@ html {
 
 :root {
   --background: #ffffff;
-  --foreground: #001a42;
+  --foreground: #003d6d;
+  color-scheme: light;
   
   /* Brand Colors */
-  --color-primary: #001a42;
-  --color-secondary: #0b2b5c;
-  --color-accent: #2563eb;
-  --color-warmth: #ff9b46;
+  --color-primary: #003d6d;
+  --color-secondary: #a9dff5;
+  --color-accent: #56e0a3;
+  --color-warmth: #ffa646;
 }
 
 @theme {
@@ -21,16 +22,16 @@ html {
   --color-brand-accent: var(--color-accent);
   --color-brand-warmth: var(--color-warmth);
   
-  --font-plus-jakarta-sans: var(--font-plus-jakarta-sans);
-  --font-be-vietnam-pro: var(--font-be-vietnam-pro);
+  --font-outfit: var(--font-outfit);
 }
 
+/* Dark Mode - Removido para manter estética light/playful */
+
 body {
-  background: var(--background);
+  background: #ffffff;
   color: var(--foreground);
-  font-family: var(--font-plus-jakarta-sans), sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
 }
 
 /* Animations */
@@ -57,6 +58,15 @@ body {
 @keyframes scale-up {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bounce-once {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-bounce-once {
+  animation: bounce-once 0.5s ease-out forwards;
 }
 
 .animate-fade-in {

@@ -20,6 +20,7 @@ export default function AdminDashboard() {
   const [selectedProfileId, setSelectedProfileId] = useState("");
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   // Verificar se já está logado (sessionStorage)
   useEffect(() => {
@@ -60,18 +61,23 @@ export default function AdminDashboard() {
     async function fetchData() {
       setLoading(true);
       
-      const { data: reqData } = await supabase
-        .from('video_requests')
-        .select(`id, description, status, created_at, profile_id, profiles(phone, child_name, parent_name, email)`)
-        .order('created_at', { ascending: false });
-      if (reqData) setRequests(reqData);
+      // Buscar pedidos via API (bypass RLS)
+      try {
+        const reqRes = await fetch('/api/admin/pedidos?key=aniko_admin_segredo_2026');
+        const reqData = await reqRes.json();
+        if (reqData.requests) setRequests(reqData.requests);
+      } catch (e) {
+        console.error('Erro ao buscar pedidos:', e);
+      }
 
-      // Carregar todos os perfis
-      const { data: profData } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('child_name', { ascending: true });
-      if (profData) setProfiles(profData);
+      // Carregar todos os perfis via API (绕过 RLS)
+      try {
+        const res = await fetch('/api/admin/clientes?key=aniko_admin_segredo_2026');
+        const data = await res.json();
+        if (data.profiles) setProfiles(data.profiles);
+      } catch (e) {
+        console.error('Erro ao buscar clientes:', e);
+      }
       
       setLoading(false);
     }
@@ -81,26 +87,35 @@ export default function AdminDashboard() {
   // Enviar vídeo
   const handleSendVideo = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!videoUrl || !selectedProfileId) return;
+    if (!videoUrl || !selectedProfileId || isSending) return;
 
-    const { error } = await supabase
-      .from('videos')
-      .insert([
-        {
+    setIsSending(true);
+
+    try {
+      const res = await fetch('/api/admin/enviar-video?key=aniko_admin_segredo_2026', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           profile_id: selectedProfileId,
           title: videoTitle || "Sua nova animação!",
           video_url: videoUrl,
           category: "Personalizado"
-        }
-      ]);
+        }),
+      });
+      
+      const data = await res.json();
 
-    if (!error) {
-      alert("Vídeo enviado com sucesso para o pai!");
-      setVideoUrl("");
-      setVideoTitle("");
-      // Não limpamos o ProfileId imediamente para permitir a notificação via WhatsApp no formulário
-    } else {
-      alert("Erro ao enviar vídeo: " + error.message);
+      if (data.success) {
+        alert("Vídeo enviado com sucesso para os pais!");
+        setVideoUrl("");
+        setVideoTitle("");
+      } else {
+        alert("Erro ao enviar vídeo: " + (data.error || "Erro desconhecido na API"));
+      }
+    } catch (err: any) {
+      alert("Erro ao enviar vídeo: " + err.message);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -198,16 +213,29 @@ export default function AdminDashboard() {
                   </div>
                   <p className="text-lg font-medium mb-6">"{req.description}"</p>
                   <div className="flex gap-4">
-                    <button 
-                      onClick={() => {
-                          setSelectedProfileId(req.profile_id);
-                          setSelectedProfile(req.profiles);
-                          setVideoTitle(`Especial para você: ${req.description.slice(0, 20)}...`);
-                      }}
-                      className="text-sm font-bold text-brand-accent hover:underline"
-                    >
-                      Responder este pedido →
-                    </button>
+                    <div className="flex flex-wrap gap-3">
+                      <Link 
+                        href={`/admin/cliente/${req.profile_id}`}
+                        target="_blank"
+                        className="text-sm font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                      >
+                        📊 Ver Dashboard →
+                      </Link>
+                      <button 
+                        onClick={() => {
+                            setSelectedProfileId(req.profile_id);
+                            setSelectedProfile(req.profiles || { 
+                              child_name: req.profiles?.child_name || 'Cliente',
+                              phone: req.profiles?.phone,
+                              email: req.profiles?.email
+                            });
+                            setVideoTitle(`Especial para você: ${req.description?.slice(0, 20) || 'vídeo'}...`);
+                        }}
+                        className="text-sm font-bold text-brand-accent hover:underline"
+                      >
+                        Responder este pedido →
+                      </button>
+                    </div>
                     
                     {req.profiles?.phone && (
                       <a 
@@ -239,21 +267,49 @@ export default function AdminDashboard() {
                value={searchQuery}
                onChange={(e) => setSearchQuery(e.target.value)}
              />
-             <div className="space-y-3 h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                {filteredProfiles.map((prof) => (
-                   <div 
-                    key={prof.id} 
-                    onClick={() => {
-                        setSelectedProfileId(prof.id);
-                        setSelectedProfile(prof);
-                        setVideoTitle(`Um vídeo especial para o(a) ${prof.child_name}!`);
-                    }}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all ${selectedProfileId === prof.id ? 'bg-brand-accent/20 border-brand-accent' : 'bg-slate-800 border-slate-700 hover:border-slate-500'}`}
-                   >
-                      <p className="font-bold text-sm leading-tight mb-1">{prof.child_name || "Sem nome"}</p>
+              <div className="space-y-3 h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                 {loading ? (
+                   <p className="text-slate-500 text-sm">Carregando clientes...</p>
+                 ) : filteredProfiles.length === 0 ? (
+                   <p className="text-slate-500 text-sm">Nenhum cliente encontrado.</p>
+                  ) : filteredProfiles.map((prof) => (
+                    <div 
+                     key={prof.id} 
+                     onClick={() => {
+                       setSelectedProfileId(prof.id);
+                       setSelectedProfile(prof);
+                       setVideoTitle(`Um vídeo especial para o(a) ${prof.child_name}!`);
+                     }}
+                     className={`p-4 rounded-2xl border cursor-pointer transition-all ${selectedProfileId === prof.id ? 'bg-brand-accent/20 border-brand-accent' : 'bg-slate-800 border-slate-700 hover:border-slate-500'}`}
+                    >
+                       <div className="flex justify-between items-start mb-2">
+                         <p className="font-bold text-sm leading-tight">{prof.child_name || "Sem nome"}</p>
+                         <div className="flex gap-1">
+                           <Link 
+                             href={`/admin/cliente/${prof.id}`}
+                             target="_blank"
+                             onClick={(e) => e.stopPropagation()}
+                             className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 bg-blue-500/10 px-2 py-1 rounded-lg"
+                           >
+                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+                           </Link>
+                           <button 
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               setSelectedProfileId(prof.id);
+                               setSelectedProfile(prof);
+                               setVideoTitle(`Um vídeo especial para o(a) ${prof.child_name}!`);
+                             }}
+                             className="text-xs font-bold text-green-400 hover:text-green-300 flex items-center gap-1 bg-green-500/10 px-2 py-1 rounded-lg"
+                             title="Selecionar para enviar vídeo"
+                           >
+                             📤
+                           </button>
+                         </div>
+                       </div>
                       <div className="space-y-1">
                         <p className="text-[11px] text-slate-300 flex items-center gap-1">
-                          <span className="opacity-70">👤</span> {prof.parent_name || "Pai/Mãe"}
+                          <span className="opacity-70">👤</span> {prof.parent_name || "Pais"}
                         </p>
                         <p className="text-[10px] text-slate-400 flex items-center gap-1 italic break-all">
                           <span className="opacity-70">📧</span> {prof.email || "Sem e-mail"}
@@ -295,23 +351,23 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                    <label className="block text-sm font-bold mb-2">Link do Vídeo (.mp4)</label>
-                   <input 
-                     type="url" 
-                     placeholder="https://link-do-video.mp4"
-                     required
-                     className="w-full px-5 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-brand-accent outline-none font-mono text-sm"
-                     value={videoUrl}
-                     onChange={(e) => setVideoUrl(e.target.value)}
-                   />
-                </div>
-                
-                <div className="space-y-3 pt-2">
+                    <input 
+                      type="url" 
+                      placeholder="https://link-do-video.mp4"
+                      required
+                      className="w-full px-5 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-brand-accent outline-none font-mono text-sm"
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                    />
+                 </div>
+                  
+                  <div className="space-y-3 pt-2">
                   <button 
                     type="submit"
-                    disabled={!selectedProfileId}
+                    disabled={!selectedProfileId || isSending}
                     className="w-full py-4 bg-brand-primary text-white font-black rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                   >
-                    Enviar para o Pai
+                    {isSending ? "Enviando..." : "Enviar para os Pais"}
                   </button>
 
                   {selectedProfile?.phone && (

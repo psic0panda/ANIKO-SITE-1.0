@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase, SITE_URL } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -30,8 +30,7 @@ export default function Signup() {
           parent_name: parentName,
           child_name: childName,
           phone: phone,
-        },
-        emailRedirectTo: SITE_URL,
+        }
       }
     });
 
