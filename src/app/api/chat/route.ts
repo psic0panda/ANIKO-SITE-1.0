@@ -146,13 +146,10 @@ REGRAS CRÍTICAS:
         console.error("Gemini Fallback Error:", e);
       }
     }
-
     return NextResponse.json(
       { content: "O Aniko está descansando um pouco na geleira! 🐧❄️ Tente me perguntar novamente em um minuto!" },
       { status: 200 }
-    );data.choices?.[0]?.message?.content || "Puxa, minha cabeça de pinguim deu um nó! Pode me perguntar de novo? 🐧";
-
-    return NextResponse.json({ content: aiText });
+    );
   } catch (error: any) {
     console.error("Chat API Error:", error);
     return NextResponse.json(
