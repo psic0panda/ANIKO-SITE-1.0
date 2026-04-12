@@ -302,8 +302,33 @@ export default function Dashboard() {
 
       if (data.error) throw new Error(data.error);
 
-      setPixData(data);
-      setIsPaymentModalOpen(true);
+      if (data.is_free) {
+        // Fluxo para cupom de 100% - Aprovação instantânea
+        console.log(">>> DASHBOARD: Pagamento grátis, pulando modal...");
+        
+        if (requestText && user) {
+          await supabase
+            .from('video_requests')
+            .insert([{ 
+              description: requestText, 
+              status: 'pendente',
+              profile_id: user.id,
+              payment_id: data.payment_id,
+              coupon_code: appliedCoupon?.code
+            }]);
+        }
+
+        setSuccess(true);
+        setRequestText("");
+        setAppliedCoupon(null);
+        setTimeout(() => {
+          setSuccess(false);
+        }, 4000);
+      } else {
+        // Fluxo normal com Mercado Pago
+        setPixData(data);
+        setIsPaymentModalOpen(true);
+      }
     } catch (err: any) {
       alert("Erro ao gerar pagamento: " + err.message);
     } finally {

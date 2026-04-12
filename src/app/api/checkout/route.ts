@@ -38,6 +38,35 @@ export async function POST(request: Request) {
       }
     }
 
+    // PASSO 0.1: Se o valor for 0 (100% de desconto), pular Mercado Pago
+    if (finalAmount === 0) {
+      console.log(">>> CHECKOUT: Valor 0, aprovando direto...");
+      const { data: paymentData, error: dbError } = await supabaseAdmin
+        .from('payments')
+        .insert([{
+          profile_id,
+          amount: 0,
+          status: 'approved', // Já aprovado
+          external_id: `free-${Date.now()}`,
+          coupon_id: couponId,
+          discount_amount: discountAmount
+        }])
+        .select()
+        .single();
+
+      if (dbError) {
+        console.error(">>> CHECKOUT: Erro DB (Free):", dbError);
+        return NextResponse.json({ error: `Erro banco: ${dbError.message}` }, { status: 500 });
+      }
+
+      return NextResponse.json({
+        payment_id: paymentData.id,
+        amount: 0,
+        status: 'approved',
+        is_free: true
+      });
+    }
+
     // PASSO 1: Chamar Mercado Pago
     console.log(">>> CHECKOUT: Chamando Mercado Pago com valor:", finalAmount);
     const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
