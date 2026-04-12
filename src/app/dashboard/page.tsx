@@ -284,6 +284,7 @@ export default function Dashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           description: requestText,
+          profile_id: user.id,
           user_email: user.email,
           coupon_code: appliedCoupon?.code
         }),
