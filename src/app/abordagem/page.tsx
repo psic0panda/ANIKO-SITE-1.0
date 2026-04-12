@@ -235,18 +235,6 @@ export default function Abordagem() {
               <p className="text-cyan-100/70 text-lg mb-8 leading-relaxed">
                 Veja como transformamos uma situação de medo em uma aventura espacial épica com o Gumball.
               </p>
-              <div className="flex gap-4">
-                <div className="flex -space-x-3">
-                  {[1,2,3].map(i => (
-                    <div key={i} className="h-10 w-10 rounded-full border-2 border-[#0E3A5F] bg-slate-200">
-                      <Image src={`/assets/logo.jpeg`} alt="User" width={40} height={40} className="rounded-full" />
-                    </div>
-                  ))}
-                </div>
-                <p className="text-sm text-cyan-200/50 font-medium">
-                  Roteiro gerado via IA <br /> personalizado para João
-                </p>
-              </div>
             </div>
 
             <div className="flex-1 w-full">
