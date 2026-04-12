@@ -270,7 +270,7 @@ export default function Abordagem() {
                   <div className="bg-slate-50 p-6 rounded-2xl relative">
                     <div className="absolute -top-3 left-6 px-3 py-1 bg-[#0E3A5F] text-white text-[10px] font-black uppercase rounded-lg">Gumball</div>
                     <p className="text-slate-800 font-bold leading-relaxed">
-                      "Oi, Nikolas! Tudo bem? Eu fiquei sabendo que você vai ao dentista e vim te contar uma coisa: eu também vou hoje! Sabe, às vezes a gente fica com um pouquinho de medo quando vai a um lugar novo, mas não precisa se preocupar. O dentista é nosso amigo e ele só vai olhar se os nossos dentes estão limpinhos e fortes para a gente continuar tendo um sorriso bem bonito."
+                      "Oi, João! Tudo bem? Eu fiquei sabendo que você vai ao dentista e vim te contar uma coisa: eu também vou hoje! Sabe, às vezes a gente fica com um pouquinho de medo quando vai a um lugar novo, mas não precisa se preocupar. O dentista é nosso amigo e ele só vai olhar se os nossos dentes estão limpinhos e fortes para a gente continuar tendo um sorriso bem bonito."
                     </p>
                   </div>
 
@@ -284,7 +284,7 @@ export default function Abordagem() {
                   <div className="bg-slate-50 p-6 rounded-2xl relative">
                     <div className="absolute -top-3 left-6 px-3 py-1 bg-[#0E3A5F] text-white text-[10px] font-black uppercase rounded-lg">Gumball</div>
                     <p className="text-slate-800 font-bold leading-relaxed">
-                      "Lá tem uma cadeira muito legal que sobe e desce, parece até um foguete! Eu vou primeiro para você ver como é fácil, e vou ficar o tempo todo ali do seu lado. Quando a gente vai conferir o que vai acontecer, o medo logo vai embora. Vamos juntos deixar nossos dentes brilhando? Uga-muga para você, Nikolas! A gente se vê lá!"
+                      "Lá tem uma cadeira muito legal que sobe e desce, parece até um foguete! Eu vou primeiro para você ver como é fácil, e vou ficar o tempo todo ali do seu lado. Quando a gente vai conferir o que vai acontecer, o medo logo vai embora. Vamos juntos deixar nossos dentes brilhando? Uga-muga para você, João! A gente se vê lá!"
                     </p>
                   </div>
                 </div>
@@ -314,7 +314,7 @@ export default function Abordagem() {
       {/* Footer */}
       <footer className="w-full border-t border-slate-100 py-8 mt-auto bg-white">
         <div className="mx-auto max-w-7xl px-6 text-center">
-          <p className="text-slate-400 font-medium">© 2026 Aniko — Feito com <span className="text-red-400">♥</span> para o Nikolas.</p>
+          <p className="text-slate-400 font-medium">© 2026 Aniko — Feito com <span className="text-red-400">♥</span> para o João.</p>
         </div>
       </footer>
     </main>
