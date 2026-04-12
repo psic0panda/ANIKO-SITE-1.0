@@ -224,7 +224,7 @@ export default function Abordagem() {
         </div>
 
         <div className="max-w-5xl mx-auto relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
+          <div className="flex flex-col lg:flex-row items-start gap-16">
             <div className="flex-1 text-white">
               <span className="inline-block px-4 py-1 bg-cyan-400/20 text-cyan-300 text-xs font-bold uppercase tracking-widest rounded-full mb-6">
                 Exemplo Real de Roteiro
@@ -235,6 +235,16 @@ export default function Abordagem() {
               <p className="text-cyan-100/70 text-lg mb-8 leading-relaxed">
                 Veja como transformamos uma situação de medo em uma aventura espacial épica com o Gumball.
               </p>
+              <div className="relative w-64 h-64 mt-12 group">
+                <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-3xl group-hover:bg-cyan-400/30 transition-colors"></div>
+                <Image 
+                  src="/assets/gumball.png" 
+                  alt="Gumball Watterson" 
+                  width={256} 
+                  height={256} 
+                  className="relative z-10 w-full h-full object-contain transform hover:scale-110 transition-transform duration-500" 
+                />
+              </div>
             </div>
 
             <div className="flex-1 w-full">
