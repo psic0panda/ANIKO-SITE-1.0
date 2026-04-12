@@ -155,6 +155,151 @@ export default function Abordagem() {
         </div>
       </div>
 
+      {/* Exemplos de Contextos */}
+      <div className="py-20 px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-black text-[#0E3A5F] mb-6">Onde o ANIKO ajuda?</h2>
+            <p className="text-slate-500 text-lg max-w-2xl mx-auto font-medium">
+              Transformamos momentos desafiadores em histórias de coragem e aprendizado.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              { 
+                title: "Ida ao Dentista", 
+                desc: "Preparamos a criança para os sons, luzes e sensações da cadeira de dentista através de seus personagens favoritos.",
+                icon: "🦷",
+                color: "bg-blue-50 text-blue-600"
+              },
+              { 
+                title: "Tomar Remédio", 
+                desc: "Explicamos a importância do remédio de forma lúdica, reduzindo a resistência e a ansiedade.",
+                icon: "💊",
+                color: "bg-red-50 text-red-600"
+              },
+              { 
+                title: "Ida à Escola", 
+                desc: "Facilitamos a transição e a rotina escolar, tornando a despedida e o ambiente novos mais familiares.",
+                icon: "🏫",
+                color: "bg-orange-50 text-orange-600"
+              },
+              { 
+                title: "Cortar o Cabelo", 
+                desc: "Trabalhamos a dessensibilização com o som da tesoura e o toque, mostrando que é um momento de cuidado.",
+                icon: "✂️",
+                color: "bg-purple-50 text-purple-600"
+              },
+              { 
+                title: "Novos Alimentos", 
+                desc: "Encorajamos a seletividade alimentar apresentando cores e texturas através do exemplo positivo dos heróis.",
+                icon: "🥦",
+                color: "bg-green-50 text-green-600"
+              },
+              { 
+                title: "Higiene Pessoal", 
+                desc: "Banho, escovar os dentes e usar o banheiro tornam-se missões divertidas e previsíveis.",
+                icon: "🧼",
+                color: "bg-cyan-50 text-cyan-600"
+              }
+            ].map((item, i) => (
+              <div key={i} className="group p-8 rounded-[2.5rem] bg-slate-50 hover:bg-white hover:shadow-2xl hover:shadow-brand-primary/10 transition-all duration-500 border border-transparent hover:border-slate-100">
+                <div className={`w-16 h-16 ${item.color} rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform`}>
+                  {item.icon}
+                </div>
+                <h3 className="text-xl font-black text-[#0E3A5F] mb-3">{item.title}</h3>
+                <p className="text-slate-600 text-sm leading-relaxed font-medium opacity-80">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Exemplo de Roteiro - Gumball */}
+      <div className="py-24 px-6 bg-[#0E3A5F] relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-10">
+          <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-400 rounded-full blur-[120px]"></div>
+          <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400 rounded-full blur-[120px]"></div>
+        </div>
+
+        <div className="max-w-5xl mx-auto relative z-10">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="flex-1 text-white">
+              <span className="inline-block px-4 py-1 bg-cyan-400/20 text-cyan-300 text-xs font-bold uppercase tracking-widest rounded-full mb-6">
+                Exemplo Real de Roteiro
+              </span>
+              <h2 className="text-4xl md:text-6xl font-black mb-8 tracking-tight italic">
+                O Incrível Mundo de Gumball no Dentista
+              </h2>
+              <p className="text-cyan-100/70 text-lg mb-8 leading-relaxed">
+                Veja como transformamos uma situação de medo em uma aventura espacial épica com o Gumball.
+              </p>
+              <div className="flex gap-4">
+                <div className="flex -space-x-3">
+                  {[1,2,3].map(i => (
+                    <div key={i} className="h-10 w-10 rounded-full border-2 border-[#0E3A5F] bg-slate-200">
+                      <Image src={`/assets/logo.jpeg`} alt="User" width={40} height={40} className="rounded-full" />
+                    </div>
+                  ))}
+                </div>
+                <p className="text-sm text-cyan-200/50 font-medium">
+                  Roteiro gerado via IA <br /> personalizado para Nickolas
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 w-full">
+              <div className="bg-white rounded-[3rem] p-8 md:p-12 shadow-3xl transform rotate-1 hover:rotate-0 transition-transform duration-500">
+                <div className="flex items-center gap-4 mb-10 border-b border-slate-100 pb-6">
+                  <div className="h-12 w-12 bg-yellow-400 rounded-xl flex items-center justify-center text-2xl shadow-lg">🎬</div>
+                  <div>
+                    <h4 className="font-black text-[#0E3A5F] text-lg">Script #042</h4>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Gumball Encoraja Nickolas</p>
+                  </div>
+                </div>
+
+                <div className="space-y-8">
+                  <div className="relative pl-6 border-l-4 border-yellow-400">
+                    <p className="text-xs font-black text-yellow-500 uppercase mb-2">Cena 1: Sala de Espera</p>
+                    <p className="text-slate-700 font-medium leading-relaxed italic">
+                      "Gumball aparece correndo na tela, ofegante, e olha diretamente para a câmera."
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50 p-6 rounded-2xl relative">
+                    <div className="absolute -top-3 left-6 px-3 py-1 bg-[#0E3A5F] text-white text-[10px] font-black uppercase rounded-lg">Gumball</div>
+                    <p className="text-slate-800 font-bold leading-relaxed">
+                      "Ei, Nickolas! Shhh... você não vai acreditar. Aquela cadeira ali na frente? Não é uma cadeira de dentista... É o HANGAR DE LANÇAMENTO DA NAVE ELMORE-1!"
+                    </p>
+                  </div>
+
+                  <div className="relative pl-6 border-l-4 border-cyan-400">
+                    <p className="text-xs font-black text-cyan-500 uppercase mb-2">Cena 2: Ação</p>
+                    <p className="text-slate-700 font-medium leading-relaxed">
+                      "Gumball abre um bocão enorme."
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50 p-6 rounded-2xl relative">
+                    <div className="absolute -top-3 left-6 px-3 py-1 bg-[#0E3A5F] text-white text-[10px] font-black uppercase rounded-lg">Gumball</div>
+                    <p className="text-slate-800 font-bold leading-relaxed">
+                      "Quando o Comandante Dentista pedir, você abre o hangar assim: AAAAAAA! Eu vou estar aqui do seu lado pilotando a nave. Estamos juntos nessa missão, parceiro!"
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-10 flex justify-center">
+                  <div className="px-6 py-3 bg-brand-warmth/10 rounded-2xl text-brand-warmth font-black text-sm animate-pulse">
+                    ✨ Nickolas sorri e abre a boca com confiança
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* CTA */}
       <div className="py-16 px-6 text-center bg-slate-50">
         <p className="text-slate-500 mb-6 font-medium">Quer ver o ANIKO em ação?</p>
