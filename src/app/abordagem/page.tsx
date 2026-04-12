@@ -270,21 +270,21 @@ export default function Abordagem() {
                   <div className="bg-slate-50 p-6 rounded-2xl relative">
                     <div className="absolute -top-3 left-6 px-3 py-1 bg-[#0E3A5F] text-white text-[10px] font-black uppercase rounded-lg">Gumball</div>
                     <p className="text-slate-800 font-bold leading-relaxed">
-                      "Ei, Nickolas! Shhh... você não vai acreditar. Aquela cadeira ali na frente? Não é uma cadeira de dentista... É o HANGAR DE LANÇAMENTO DA NAVE ELMORE-1!"
+                      "Oi, Nikolas! Tudo bem? Eu fiquei sabendo que você vai ao dentista e vim te contar uma coisa: eu também vou hoje! Sabe, às vezes a gente fica com um pouquinho de medo quando vai a um lugar novo, mas não precisa se preocupar. O dentista é nosso amigo e ele só vai olhar se os nossos dentes estão limpinhos e fortes para a gente continuar tendo um sorriso bem bonito."
                     </p>
                   </div>
 
                   <div className="relative pl-6 border-l-4 border-cyan-400">
-                    <p className="text-xs font-black text-cyan-500 uppercase mb-2">Cena 2: Ação</p>
+                    <p className="text-xs font-black text-cyan-500 uppercase mb-2">Cena 2: O Foguete</p>
                     <p className="text-slate-700 font-medium leading-relaxed">
-                      "Gumball abre um bocão enorme."
+                      "Gumball aponta para a cadeira do dentista com entusiasmo."
                     </p>
                   </div>
 
                   <div className="bg-slate-50 p-6 rounded-2xl relative">
                     <div className="absolute -top-3 left-6 px-3 py-1 bg-[#0E3A5F] text-white text-[10px] font-black uppercase rounded-lg">Gumball</div>
                     <p className="text-slate-800 font-bold leading-relaxed">
-                      "Quando o Comandante Dentista pedir, você abre o hangar assim: AAAAAAA! Eu vou estar aqui do seu lado pilotando a nave. Estamos juntos nessa missão, parceiro!"
+                      "Lá tem uma cadeira muito legal que sobe e desce, parece até um foguete! Eu vou primeiro para você ver como é fácil, e vou ficar o tempo todo ali do seu lado. Quando a gente vai conferir o que vai acontecer, o medo logo vai embora. Vamos juntos deixar nossos dentes brilhando? Uga-muga para você, Nikolas! A gente se vê lá!"
                     </p>
                   </div>
                 </div>
