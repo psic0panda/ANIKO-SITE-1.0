@@ -449,7 +449,10 @@ export default function Dashboard() {
       const res = await fetch('/api/validate-coupon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: couponCode }),
+        body: JSON.stringify({ 
+          code: couponCode,
+          profile_id: user?.id
+        }),
       });
       const data = await res.json();
       
