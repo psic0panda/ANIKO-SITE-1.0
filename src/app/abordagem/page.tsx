@@ -286,11 +286,7 @@ export default function Abordagem() {
                   </div>
                 </div>
 
-                <div className="mt-10 flex justify-center">
-                  <div className="px-6 py-3 bg-brand-warmth/10 rounded-2xl text-brand-warmth font-black text-sm animate-pulse">
-                    ✨ João sorri e abre a boca com confiança
-                  </div>
-                </div>
+
               </div>
             </div>
           </div>
