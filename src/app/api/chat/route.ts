@@ -4,8 +4,9 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
     const groqKey = process.env.GROQ_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
 
-    if (!groqKey) {
+    if (!groqKey && !geminiKey) {
       return NextResponse.json(
         { content: "Opa! Para eu conversar 'de verdade', o Henrique precisa configurar minha chave de IA no servidor. Por enquanto, posso te responder o básico! 🐧✨" },
         { status: 200 }
@@ -77,44 +78,79 @@ REGRAS CRÍTICAS:
 - Responda apenas o que foi solicitado. Não seja prolixo.
 - Never diga que é uma inteligência artificial ou modelo de linguagem. Você é o Aniko!`;
 
-    const conversation = [
-      { role: "system", content: systemPrompt },
-      ...messages.filter((m: any) => m.role !== "system")
-    ];
+    // Tentar com Groq primeiro se a chave existir
+    if (groqKey) {
+      try {
+        const conversation = [
+          { role: "system", content: systemPrompt },
+          ...messages.filter((m: any) => m.role !== "system")
+        ];
 
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${groqKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
-          messages: conversation,
-          temperature: 0.75,
-          max_tokens: 250,
-        })
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Groq Error:", response.status, errorText);
-      
-      if (response.status === 429) {
-        return NextResponse.json(
-          { content: "Puxa, minha cabeça de pinguim deu um nó de tanto conversar! 🐧❄️ Tente novamente daqui a uns segundinhos!" },
-          { status: 200 }
+        const response = await fetch(
+          "https://api.groq.com/openai/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${groqKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "llama-3.1-8b-instant",
+              messages: conversation,
+              temperature: 0.75,
+              max_tokens: 250,
+            })
+          }
         );
+
+        if (response.ok) {
+          const data = await response.json();
+          const aiText = data.choices?.[0]?.message?.content;
+          if (aiText) return NextResponse.json({ content: aiText });
+        }
+      } catch (e) {
+        console.error("Groq Fallback Error:", e);
       }
-      throw new Error(`Groq API error: ${response.status}`);
     }
 
-    const data = await response.json();
-    
-    const aiText = data.choices?.[0]?.message?.content || "Puxa, minha cabeça de pinguim deu um nó! Pode me perguntar de novo? 🐧";
+    // Fallback para Gemini se Groq falhar ou não existir
+    if (geminiKey) {
+      try {
+        const geminiHistory = messages.map((m: any) => ({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text: m.content }]
+        }));
+
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              system_instruction: { parts: [{ text: systemPrompt }] },
+              contents: geminiHistory,
+              generationConfig: {
+                temperature: 0.75,
+                maxOutputTokens: 250,
+              }
+            })
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (aiText) return NextResponse.json({ content: aiText });
+        }
+      } catch (e) {
+        console.error("Gemini Fallback Error:", e);
+      }
+    }
+
+    return NextResponse.json(
+      { content: "O Aniko está descansando um pouco na geleira! 🐧❄️ Tente me perguntar novamente em um minuto!" },
+      { status: 200 }
+    );data.choices?.[0]?.message?.content || "Puxa, minha cabeça de pinguim deu um nó! Pode me perguntar de novo? 🐧";
 
     return NextResponse.json({ content: aiText });
   } catch (error: any) {
