@@ -351,9 +351,25 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
       });
 
       const data = await res.json();
-      setMessages((prev) => [...prev, { role: "assistant", content: data.content }]);
-      playNotificationBeep();
-      setIsLoading(false);
+      const fullContent = data.content;
+
+      if (fullContent && fullContent.includes("---")) {
+        const parts = fullContent.split("---").map((p: string) => p.trim()).filter(Boolean);
+        
+        setIsLoading(false); // Parar o loading geral
+
+        for (let i = 0; i < parts.length; i++) {
+          // Pequeno atraso para parecer que está digitando a próxima mensagem
+          if (i > 0) await new Promise(resolve => setTimeout(resolve, 800));
+          
+          setMessages((prev) => [...prev, { role: "assistant", content: parts[i] }]);
+          playNotificationBeep();
+        }
+      } else {
+        setMessages((prev) => [...prev, { role: "assistant", content: fullContent }]);
+        playNotificationBeep();
+        setIsLoading(false);
+      }
     } catch (err) {
       setMessages((prev) => [...prev, { role: "assistant", content: "Ops! Minha conexão com a geleira travou! 🐧 Mas já estou voltando, só um momento..." }]);
       playNotificationBeep();

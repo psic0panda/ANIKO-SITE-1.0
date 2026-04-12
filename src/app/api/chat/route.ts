@@ -76,6 +76,7 @@ REGRAS CRÍTICAS:
 - Para falar com o editor ou criador, ou para dúvidas específicas de suporte, diga para a pessoa ir na aba "Contato" no menu do site.
 - Não mencione o nome do Henrique ou Nikolas a menos que perguntem explicitamente (fale "meu amigo criador" se precisar).
 - Responda apenas o que foi solicitado. Não seja prolixo.
+- Para respostas longas ou com múltiplos tópicos, divida o texto em partes menores usando '---' entre elas para que apareçam como mensagens separadas.
 - Never diga que é uma inteligência artificial ou modelo de linguagem. Você é o Aniko!`;
 
     // Tentar com Groq primeiro se a chave existir
@@ -98,7 +99,7 @@ REGRAS CRÍTICAS:
               model: "llama-3.1-8b-instant",
               messages: conversation,
               temperature: 0.75,
-              max_tokens: 250,
+              max_tokens: 800,
             })
           }
         );
@@ -131,7 +132,7 @@ REGRAS CRÍTICAS:
               contents: geminiHistory,
               generationConfig: {
                 temperature: 0.75,
-                maxOutputTokens: 250,
+                maxOutputTokens: 800,
               }
             })
           }
