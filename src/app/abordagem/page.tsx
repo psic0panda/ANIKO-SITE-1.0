@@ -254,8 +254,7 @@ export default function Abordagem() {
                 <div className="flex items-center gap-4 mb-10 border-b border-slate-100 pb-6">
                   <div className="h-12 w-12 bg-yellow-400 rounded-xl flex items-center justify-center text-2xl shadow-lg">🎬</div>
                   <div>
-                    <h4 className="font-black text-[#0E3A5F] text-lg">Script #042</h4>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Gumball Encoraja João</p>
+                    <h4 className="font-black text-[#0E3A5F] text-xl tracking-tight uppercase">Gumball Encoraja João</h4>
                   </div>
                 </div>
 
