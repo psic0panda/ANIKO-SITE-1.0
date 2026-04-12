@@ -235,14 +235,14 @@ export default function Abordagem() {
               <p className="text-cyan-100/70 text-lg mb-8 leading-relaxed">
                 Veja como transformamos uma situação de medo em uma aventura espacial épica com o Gumball.
               </p>
-              <div className="relative w-64 h-64 mt-12 group">
-                <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-3xl group-hover:bg-cyan-400/30 transition-colors"></div>
+               <div className="relative w-full max-w-lg mt-12 group">
+                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-cyan-400/20 rounded-[3rem] blur-3xl group-hover:bg-cyan-400/30 transition-colors"></div>
                 <Image 
                   src="/assets/gumball.png" 
                   alt="Gumball Watterson" 
-                  width={256} 
-                  height={256} 
-                  className="relative z-10 w-full h-full object-contain transform hover:scale-110 transition-transform duration-500" 
+                  width={600} 
+                  height={600} 
+                  className="relative z-10 w-full h-auto rounded-[2.5rem] shadow-2xl transform hover:scale-[1.02] transition-transform duration-500" 
                 />
               </div>
             </div>
