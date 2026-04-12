@@ -244,7 +244,7 @@ export default function Abordagem() {
                   ))}
                 </div>
                 <p className="text-sm text-cyan-200/50 font-medium">
-                  Roteiro gerado via IA <br /> personalizado para Nickolas
+                  Roteiro gerado via IA <br /> personalizado para João
                 </p>
               </div>
             </div>
@@ -255,7 +255,7 @@ export default function Abordagem() {
                   <div className="h-12 w-12 bg-yellow-400 rounded-xl flex items-center justify-center text-2xl shadow-lg">🎬</div>
                   <div>
                     <h4 className="font-black text-[#0E3A5F] text-lg">Script #042</h4>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Gumball Encoraja Nickolas</p>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Gumball Encoraja João</p>
                   </div>
                 </div>
 
@@ -291,7 +291,7 @@ export default function Abordagem() {
 
                 <div className="mt-10 flex justify-center">
                   <div className="px-6 py-3 bg-brand-warmth/10 rounded-2xl text-brand-warmth font-black text-sm animate-pulse">
-                    ✨ Nickolas sorri e abre a boca com confiança
+                    ✨ João sorri e abre a boca com confiança
                   </div>
                 </div>
               </div>
