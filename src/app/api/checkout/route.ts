@@ -1,16 +1,45 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
   console.log(">>> CHECKOUT: Iniciando...");
-  console.log(">>> MP_ACCESS_TOKEN presente?", !!process.env.MP_ACCESS_TOKEN);
-  console.log(">>> SUPABASE_SERVICE_ROLE_KEY presente?", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-
+  
   try {
-    const { description, profile_id, user_email } = await request.json();
-    console.log(">>> CHECKOUT: Dados recebidos:", { description: description?.substring(0, 30), profile_id, user_email });
+    const { description, profile_id, user_email, coupon_code } = await request.json();
+    console.log(">>> CHECKOUT: Dados recebidos:", { description: description?.substring(0, 30), profile_id, user_email, coupon_code });
+
+    let finalAmount = 80;
+    let couponId = null;
+    let discountAmount = 0;
+
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+    );
+
+    // PASSO 0: Validar cupom se houver
+    if (coupon_code) {
+      const { data: coupon } = await supabaseAdmin
+        .from('coupons')
+        .select('*')
+        .eq('code', coupon_code.toUpperCase())
+        .eq('active', true)
+        .single();
+
+      if (coupon) {
+        // Verificar expiração
+        const isNotExpired = !coupon.expires_at || new Date(coupon.expires_at) > new Date();
+        if (isNotExpired) {
+          discountAmount = coupon.discount_fixed;
+          finalAmount = Math.max(0, 80 - discountAmount);
+          couponId = coupon.id;
+          console.log(`>>> CHECKOUT: Cupom aplicado! Desconto: R$ ${discountAmount}, Final: R$ ${finalAmount}`);
+        }
+      }
+    }
 
     // PASSO 1: Chamar Mercado Pago
-    console.log(">>> CHECKOUT: Chamando Mercado Pago...");
+    console.log(">>> CHECKOUT: Chamando Mercado Pago com valor:", finalAmount);
     const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
@@ -19,7 +48,7 @@ export async function POST(request: Request) {
         'X-Idempotency-Key': `aniko-${Date.now()}`,
       },
       body: JSON.stringify({
-        transaction_amount: 80,
+        transaction_amount: finalAmount,
         description: `Video Aniko: ${(description || '').substring(0, 50)}`,
         payment_method_id: 'pix',
         payer: {
@@ -29,10 +58,9 @@ export async function POST(request: Request) {
     });
 
     const mpData = await mpResponse.json();
-    console.log(">>> CHECKOUT: Status MP:", mpResponse.status);
-    console.log(">>> CHECKOUT: Resposta MP:", JSON.stringify(mpData).substring(0, 300));
-
+    
     if (!mpResponse.ok || !mpData.id) {
+      console.error(">>> CHECKOUT: Erro MP:", mpData);
       return NextResponse.json({ 
         error: `Mercado Pago erro (${mpResponse.status}): ${mpData.message || JSON.stringify(mpData)}` 
       }, { status: 500 });
@@ -43,21 +71,17 @@ export async function POST(request: Request) {
 
     // PASSO 2: Salvar no Supabase
     console.log(">>> CHECKOUT: Salvando no Supabase...");
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-    );
-
     const { data: paymentData, error: dbError } = await supabaseAdmin
       .from('payments')
       .insert([{
         profile_id,
-        amount: 80,
+        amount: finalAmount,
         status: 'pending',
         external_id: mpData.id.toString(),
         pix_qr_code: qr_code,
         pix_qr_code_base64: qr_code_base64,
+        coupon_id: couponId,
+        discount_amount: discountAmount
       }])
       .select()
       .single();
@@ -72,6 +96,8 @@ export async function POST(request: Request) {
       payment_id: paymentData.id,
       qr_code: qr_code,
       qr_code_base64: qr_code_base64,
+      amount: finalAmount,
+      discount: discountAmount
     });
 
   } catch (error: any) {

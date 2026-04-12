@@ -181,6 +181,10 @@ export default function Dashboard() {
   const [feedbackScore, setFeedbackScore] = useState(0);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [historicoExpandido, setHistoricoExpandido] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState("");
   const router = useRouter();
 
   const handleDeleteVideo = async (videoId: number) => {
@@ -280,8 +284,8 @@ export default function Dashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           description: requestText,
-          profile_id: user.id,
-          user_email: user.email
+          user_email: user.email,
+          coupon_code: appliedCoupon?.code
         }),
       });
 
@@ -407,6 +411,32 @@ export default function Dashboard() {
       setIsEditModalOpen(false);
     } else {
       alert("Erro ao atualizar perfil: " + error.message);
+    }
+  };
+
+  const handleValidateCoupon = async () => {
+    if (!couponCode || isValidatingCoupon) return;
+    setIsValidatingCoupon(true);
+    setCouponError("");
+    
+    try {
+      const res = await fetch('/api/validate-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode }),
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setAppliedCoupon(data);
+        setCouponCode("");
+      } else {
+        setCouponError(data.error || "Cupom inválido.");
+      }
+    } catch (e) {
+      setCouponError("Erro ao validar cupom.");
+    } finally {
+      setIsValidatingCoupon(false);
     }
   };
 
@@ -573,13 +603,56 @@ export default function Dashboard() {
                 placeholder="Escreva aqui os detalhes do vídeo que você precisa..."
                 className="w-full h-40 px-8 py-6 rounded-3xl bg-slate-50 border-2 border-transparent focus:border-brand-accent focus:bg-white transition-all outline-none text-brand-primary font-medium resize-none mb-6 shadow-inner"
              />
+
+             {/* Cupom de Desconto */}
+             <div className="mb-8 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+               {!appliedCoupon ? (
+                 <div className="flex flex-col md:flex-row gap-4 items-end">
+                   <div className="flex-1 w-full">
+                     <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-2">Tem um cupom?</label>
+                     <input 
+                       type="text"
+                       placeholder="Insira o código aqui"
+                       className="w-full px-6 py-4 rounded-2xl bg-white border-2 border-slate-200 outline-none focus:border-brand-accent uppercase font-bold"
+                       value={couponCode}
+                       onChange={(e) => { setCouponCode(e.target.value); setCouponError(""); }}
+                     />
+                   </div>
+                   <button 
+                     onClick={handleValidateCoupon}
+                     disabled={!couponCode || isValidatingCoupon}
+                     className="px-8 py-4 bg-slate-800 text-white font-bold rounded-2xl hover:bg-slate-700 transition-all disabled:opacity-50"
+                   >
+                     {isValidatingCoupon ? "..." : "Aplicar"}
+                   </button>
+                 </div>
+               ) : (
+                 <div className="flex items-center justify-between bg-brand-accent/10 p-4 rounded-2xl border border-brand-accent/20">
+                   <div className="flex items-center gap-3">
+                     <div className="h-10 w-10 bg-brand-accent rounded-xl flex items-center justify-center text-white text-xl">🎟️</div>
+                     <div>
+                       <p className="text-xs font-bold text-brand-accent uppercase">Cupom Aplicado!</p>
+                       <p className="text-brand-primary font-black">{appliedCoupon.code} (-R$ {appliedCoupon.discount})</p>
+                     </div>
+                   </div>
+                   <button 
+                     onClick={() => setAppliedCoupon(null)}
+                     className="text-slate-400 hover:text-red-500 font-bold text-sm"
+                   >
+                     Remover
+                   </button>
+                 </div>
+               )}
+               {couponError && <p className="mt-2 ml-2 text-red-500 text-xs font-bold">{couponError}</p>}
+             </div>
+
              <div className="flex flex-col md:flex-row gap-4">
                <button 
                   onClick={handleRequest}
                   disabled={!requestText || paymentLoading}
                   className="disabled:opacity-50 flex-1 px-10 py-5 bg-brand-accent text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all text-lg"
                >
-                  {paymentLoading ? "Gerando PIX..." : "Enviar Solicitação (R$ 80)"}
+                  {paymentLoading ? "Gerando PIX..." : `Enviar Solicitação ${appliedCoupon ? `(R$ ${80 - appliedCoupon.discount})` : '(R$ 80)'}`}
                </button>
                {videos.length > 0 && (
                   <button 

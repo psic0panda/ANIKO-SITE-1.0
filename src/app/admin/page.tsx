@@ -21,6 +21,10 @@ export default function AdminDashboard() {
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [newCouponCode, setNewCouponCode] = useState("");
+  const [newCouponDiscount, setNewCouponDiscount] = useState("");
+  const [isCreatingCoupon, setIsCreatingCoupon] = useState(false);
 
   // Verificar se já está logado (sessionStorage)
   useEffect(() => {
@@ -82,7 +86,60 @@ export default function AdminDashboard() {
       setLoading(false);
     }
     fetchData();
+    fetchCoupons();
   }, [isAuthenticated]);
+
+  const fetchCoupons = async () => {
+    try {
+      const res = await fetch('/api/admin/cupons?key=aniko_admin_segredo_2026');
+      const data = await res.json();
+      if (data.coupons) setCoupons(data.coupons);
+    } catch (e) {
+      console.error('Erro ao buscar cupons:', e);
+    }
+  };
+
+  const handleCreateCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCouponCode || !newCouponDiscount || isCreatingCoupon) return;
+    setIsCreatingCoupon(true);
+
+    try {
+      const res = await fetch('/api/admin/cupons?key=aniko_admin_segredo_2026', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: newCouponCode,
+          discount_fixed: newCouponDiscount
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNewCouponCode("");
+        setNewCouponDiscount("");
+        fetchCoupons();
+      } else {
+        alert("Erro ao criar cupom: " + data.error);
+      }
+    } catch (err: any) {
+      alert("Erro ao criar cupom: " + err.message);
+    } finally {
+      setIsCreatingCoupon(false);
+    }
+  };
+
+  const handleDeleteCoupon = async (id: string) => {
+    if (!confirm("Excluir este cupom?")) return;
+    try {
+      const res = await fetch(`/api/admin/cupons?key=aniko_admin_segredo_2026&id=${id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) fetchCoupons();
+    } catch (err: any) {
+      alert("Erro ao excluir cupom: " + err.message);
+    }
+  };
 
   // Enviar vídeo
   const handleSendVideo = async (e: React.FormEvent) => {
@@ -382,6 +439,74 @@ export default function AdminDashboard() {
                   )}
                 </div>
              </form>
+          </div>
+        </div>
+
+        {/* Gerenciamento de Cupons */}
+        <div className="mt-16 bg-slate-800 rounded-[3rem] p-10 border border-slate-700 shadow-2xl">
+          <h2 className="text-3xl font-black mb-8 flex items-center gap-3">
+            <span>🎟️</span> Gerenciar Cupons de Desconto
+          </h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            {/* Form criar cupom */}
+            <div className="bg-slate-700/50 p-8 rounded-[2rem] border border-slate-600 h-fit">
+              <h3 className="text-xl font-bold mb-6">Criar Novo Cupom</h3>
+              <form onSubmit={handleCreateCoupon} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Código do Cupom</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: ANIKO20"
+                    className="w-full px-5 py-3 rounded-xl bg-slate-800 border border-slate-600 outline-none focus:border-brand-accent uppercase font-mono"
+                    value={newCouponCode}
+                    onChange={(e) => setNewCouponCode(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Desconto Fixo (R$)</label>
+                  <input 
+                    type="number" 
+                    placeholder="Ex: 20"
+                    className="w-full px-5 py-3 rounded-xl bg-slate-800 border border-slate-600 outline-none focus:border-brand-accent"
+                    value={newCouponDiscount}
+                    onChange={(e) => setNewCouponDiscount(e.target.value)}
+                    required
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  disabled={isCreatingCoupon}
+                  className="w-full py-4 bg-brand-accent text-white font-black rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 mt-2"
+                >
+                  {isCreatingCoupon ? "Criando..." : "Criar Cupom"}
+                </button>
+              </form>
+            </div>
+
+            {/* Lista de cupons */}
+            <div className="lg:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {coupons.length === 0 ? (
+                  <p className="text-slate-500 italic">Nenhum cupom criado ainda.</p>
+                ) : coupons.map((c) => (
+                  <div key={c.id} className="bg-slate-900/50 p-6 rounded-2xl border border-slate-700 flex justify-between items-center group hover:border-slate-500 transition-all">
+                    <div>
+                      <p className="font-mono font-black text-xl text-brand-accent">{c.code}</p>
+                      <p className="text-sm text-slate-400 font-bold">Desconto: R$ {c.discount_fixed},00</p>
+                      <p className="text-[10px] text-slate-600 mt-1 uppercase tracking-widest">{new Date(c.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <button 
+                      onClick={() => handleDeleteCoupon(c.id)}
+                      className="p-3 bg-red-500/10 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
