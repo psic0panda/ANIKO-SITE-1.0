@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -18,16 +20,34 @@ export default function Login() {
     setError("");
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const loginPromise = supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      setError("E-mail ou senha incorretos. Verifique seus dados.");
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("TIMEOUT")), 10000)
+      );
+
+      const { error } = await Promise.race([loginPromise, timeoutPromise]) as Awaited<typeof loginPromise>;
+
+      if (error) {
+        console.error("[Login] Supabase error:", error.message, error.status);
+        setError("E-mail ou senha incorretos. Verifique seus dados.");
+        setLoading(false);
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erro desconhecido";
+      console.error("[Login] Catch error:", msg);
+      if (msg === "TIMEOUT") {
+        setError("O servidor demorou para responder. Tente novamente em alguns segundos.");
+      } else {
+        setError("Erro de conexão. Verifique sua internet e tente novamente.");
+      }
       setLoading(false);
-    } else {
-      router.push("/dashboard");
     }
   };
 
@@ -74,16 +94,24 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div>
+            <div className="relative">
               <label className="block text-sm font-bold text-brand-primary mb-2 ml-1">Senha</label>
               <input 
-                type="password" 
+                type={showPassword ? "text" : "password"} 
                 placeholder="••••••••"
                 required
-                className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-brand-secondary focus:bg-white transition-all outline-none text-brand-primary font-medium"
+                className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-brand-secondary focus:bg-white transition-all outline-none text-brand-primary font-medium pr-14"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-[42px] p-2 text-slate-400 hover:text-brand-primary transition-colors"
+                aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
               <div className="flex justify-end mt-2 mr-1">
                 <Link href="/esqueci-senha" font-medium className="text-xs text-slate-400 hover:text-brand-primary font-bold">
                   Esqueceu sua senha?

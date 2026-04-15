@@ -4,11 +4,13 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginUser, setLoginUser] = useState("");
   const [loginPass, setLoginPass] = useState("");
+  const [showLoginPass, setShowLoginPass] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
 
@@ -201,14 +203,23 @@ export default function AdminDashboard() {
               required
               className="w-full px-6 py-4 rounded-2xl bg-slate-700 text-white border-2 border-transparent focus:border-brand-accent outline-none font-medium placeholder:text-slate-500"
             />
-            <input
-              type="password"
-              placeholder="Senha"
-              value={loginPass}
-              onChange={(e) => setLoginPass(e.target.value)}
-              required
-              className="w-full px-6 py-4 rounded-2xl bg-slate-700 text-white border-2 border-transparent focus:border-brand-accent outline-none font-medium placeholder:text-slate-500"
-            />
+            <div className="relative">
+              <input
+                type={showLoginPass ? "text" : "password"}
+                placeholder="Senha"
+                value={loginPass}
+                onChange={(e) => setLoginPass(e.target.value)}
+                required
+                className="w-full px-6 py-4 rounded-2xl bg-slate-700 text-white border-2 border-transparent focus:border-brand-accent outline-none font-medium placeholder:text-slate-500 pr-14"
+              />
+              <button
+                type="button"
+                onClick={() => setShowLoginPass(!showLoginPass)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-white transition-colors"
+              >
+                {showLoginPass ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
 
             {loginError && (
               <p className="text-red-400 text-sm font-bold animate-pulse">{loginError}</p>

@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [parentName, setParentName] = useState("");
   const [childName, setChildName] = useState("");
   const [phone, setPhone] = useState("");
@@ -134,17 +136,25 @@ export default function Signup() {
               />
             </div>
             
-            <div className="md:col-span-2">
+            <div className="md:col-span-2 relative">
               <label className="block text-sm font-bold text-brand-primary mb-2 ml-1">Senha (mín. 6 caracteres)</label>
               <input 
-                type="password" 
+                type={showPassword ? "text" : "password"} 
                 placeholder="••••••••"
                 required
                 minLength={6}
-                className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-brand-accent focus:bg-white transition-all outline-none text-brand-primary font-medium"
+                className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-brand-accent focus:bg-white transition-all outline-none text-brand-primary font-medium pr-14"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-[42px] p-2 text-slate-400 hover:text-brand-primary transition-colors"
+                aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
             
             <button 

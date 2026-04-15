@@ -17,16 +17,37 @@ export default function ForgotPassword() {
     setError("");
     setLoading(true);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/resetar-senha`,
-    });
+    const redirectTo = process.env.NODE_ENV === 'development' 
+      ? `${window.location.origin}/resetar-senha`
+      : 'https://www.aniko.com.br/resetar-senha';
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setMessage("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+    console.log("[Auth] Requesting password reset with redirectTo:", redirectTo);
+
+    try {
+      // Adicionar timeout para evitar travamento "Enviando..."
+      const resetPromise = supabase.auth.resetPasswordForEmail(email, {
+        redirectTo,
+      });
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout de conexão")), 10000)
+      );
+
+      const { error } = await Promise.race([resetPromise, timeoutPromise]) as any;
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setMessage("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+      }
+    } catch (err: any) {
+      console.error("[Auth Error]", err);
+      setError(err.message === "Timeout de conexão" 
+        ? "O servidor demorou muito para responder. Verifique sua internet ou tente novamente." 
+        : "Erro ao enviar e-mail de recuperação.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
