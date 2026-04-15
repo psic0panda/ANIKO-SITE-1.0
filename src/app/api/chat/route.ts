@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
-    const groqKey = process.env.GROQ_API_KEY;
-    const geminiKey = process.env.GEMINI_API_KEY;
+    const groqKey = process.env.GROQ_API_KEY?.trim();
+    const geminiKey = process.env.GEMINI_API_KEY?.trim();
 
     if (!groqKey && !geminiKey) {
       return NextResponse.json(
