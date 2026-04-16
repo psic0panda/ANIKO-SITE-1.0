@@ -48,7 +48,7 @@ export default function ComoFunciona() {
               {
                 step: "01",
                 title: "O Primeiro Contato",
-                description: "Entendemos o grau de autismo, o histórico de acompanhamento e o nível de acesso a telas que a criança possui.",
+                description: "Entendemos o nível de suporte de cada criança, o histórico de acompanhamento e o acesso a telas que a criança possui.",
                 details: "Essa fase é essencial para calibrar os estímulos sensoriais da animação.",
                 icon: (
                   <svg className="h-10 w-10 text-brand-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">

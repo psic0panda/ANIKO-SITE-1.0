@@ -23,9 +23,13 @@ export default function Home() {
 
   // Galeria de Demos
   const demos = [
-    { src: '/assets/demo.mp4', title: 'Vídeo 1' },
-    { src: '/assets/demo 2.mp4', title: 'Vídeo 2' },
-    { src: '/assets/demo 3.mp4', title: 'Vídeo 3' },
+    { src: '/assets/demos/demo 1.mp4', title: 'Habilidades Sociais' },
+    { src: '/assets/demos/demo 2.mp4', title: 'Rotina e Autocuidado' },
+    { src: '/assets/demos/demo 3.mp4', title: 'Comunicação e PECS' },
+    { src: '/assets/demos/demo 4.mp4', title: 'Interação Lúdica 1' },
+    { src: '/assets/demos/demo 5.mp4', title: 'Interação Lúdica 2' },
+    { src: '/assets/demos/demo 6.mp4', title: 'Interação Lúdica 3' },
+    { src: '/assets/demos/dem7 .mp4', title: 'Demonstração Geral' },
   ];
   const [currentDemoIndex, setCurrentDemoIndex] = useState(0);
 
@@ -104,6 +108,8 @@ export default function Home() {
   const drawings = [
     { src: 'daniel.jpg', name: 'Daniel Tigre' },
     { src: 'bluey.jpg', name: 'Bluey' },
+    { src: 'dragon ball.png', name: 'Dragon Ball' },
+    { src: 'bob sponja.jpg', name: 'Bob Sponja' },
     { src: 'kratts.jpg', name: 'Irmãos Kratts' },
     { src: 'caillou.jpg', name: 'Caillou' },
     { src: 'luna.webp', name: 'Show da Luna' },
@@ -214,7 +220,8 @@ export default function Home() {
           <Link href="/abordagem" className="hover:text-brand-accent transition-colors">Abordagem</Link>
           <Link href="/tecnologia" className="hover:text-brand-accent transition-colors">Tecnologia</Link>
           <Link href="/valores" className="hover:text-brand-accent transition-colors">Valores</Link>
-          <Link href="/contato" className="hover:text-brand-accent transition-colors font-bold">Contato</Link>
+          <Link href="/duvidas" className="hover:text-brand-accent transition-colors font-bold">Dúvidas</Link>
+          <Link href="/contato" className="hover:text-brand-accent transition-colors">Contato</Link>
           <Link href="/login" className="rounded-full bg-brand-primary px-6 py-2.5 text-white shadow-xl hover:bg-brand-primary/90 transition-all hover:scale-105 active:scale-95">
             Começar Agora
           </Link>
@@ -246,6 +253,7 @@ export default function Home() {
               <Link href="/abordagem" onClick={() => setIsMenuOpen(false)}>Abordagem</Link>
               <Link href="/tecnologia" onClick={() => setIsMenuOpen(false)}>Tecnologia</Link>
               <Link href="/valores" onClick={() => setIsMenuOpen(false)}>Valores</Link>
+              <Link href="/duvidas" onClick={() => setIsMenuOpen(false)}>Dúvidas</Link>
               <Link href="/contato" onClick={() => setIsMenuOpen(false)}>Contato</Link>
               <Link 
                 href="/login" 
@@ -277,7 +285,7 @@ export default function Home() {
             </Link>
             <button onClick={() => setShowVideo(true)} className="rounded-2xl glass-modern px-10 py-5 text-xl font-black flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all text-brand-primary">
               Ver Demo
-              <span className="bg-brand-primary/10 px-2 py-0.5 rounded-lg text-xs">x3</span>
+              <span className="bg-brand-primary/10 px-2 py-0.5 rounded-lg text-xs">x7</span>
             </button>
           </div>
         </div>
@@ -300,7 +308,7 @@ export default function Home() {
       <section className="w-full py-16 bg-white border-y border-brand-secondary/5 relative overflow-hidden">
         <div className="mb-12 px-6 text-center">
           <h2 className="text-sm font-bold uppercase tracking-[0.3em] text-brand-primary/30">
-            Estilos de Animação Adaptáveis
+            Aqui a imaginação cria vida
           </h2>
         </div>
         

@@ -12,7 +12,8 @@ import {
   ChevronRight, 
   PlayCircle,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  RefreshCcw
 } from 'lucide-react';
 
 const AVATARS = [
@@ -185,6 +186,13 @@ export default function Dashboard() {
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [couponError, setCouponError] = useState("");
+  
+  // Estados para Solicitar Alteração
+  const [activeAlterationId, setActiveAlterationId] = useState<number | null>(null);
+  const [alterationText, setAlterationText] = useState("");
+  const [isSubmittingAlteration, setIsSubmittingAlteration] = useState(false);
+  const [alterationSuccess, setAlterationSuccess] = useState<number | null>(null);
+
   const router = useRouter();
 
   const handleDeleteVideo = async (videoId: number) => {
@@ -413,6 +421,34 @@ export default function Dashboard() {
     setIsSubmittingFeedback(false);
   };
 
+  const handleRequestAlteration = async (videoId: number) => {
+    if (!alterationText.trim() || isSubmittingAlteration) return;
+    setIsSubmittingAlteration(true);
+
+    const { error } = await supabase
+      .from('videos')
+      .update({ 
+        requested_alteration: alterationText.trim(),
+        status: 'alteracao_solicitada' 
+      })
+      .eq('id', videoId);
+    
+    if (!error) {
+      setVideos(prev => prev.map(v => v.id === videoId ? { 
+        ...v, 
+        requested_alteration: alterationText.trim(),
+        status: 'alteracao_solicitada'
+      } : v));
+      setAlterationSuccess(videoId);
+      setTimeout(() => setAlterationSuccess(null), 3000);
+      setActiveAlterationId(null);
+      setAlterationText("");
+    } else {
+      alert("Erro ao enviar solicitação: " + error.message);
+    }
+    setIsSubmittingAlteration(false);
+  };
+
   // 4. Salvar Alterações de Perfil
   const handleSaveProfile = async () => {
     if (!user) return;
@@ -492,7 +528,7 @@ export default function Dashboard() {
           </Link>
           <div className="flex items-center gap-4">
              <Link href="/valores" className="hidden md:block text-slate-400 font-bold hover:text-brand-accent transition-colors text-sm">Valores</Link>
-             <Link href="/contato" className="hidden md:block text-slate-400 font-bold hover:text-brand-accent transition-colors text-sm">Dúvidas?</Link>
+             <Link href="/duvidas" className="hidden md:block text-slate-400 font-bold hover:text-brand-accent transition-colors text-sm">Dúvidas?</Link>
              <button 
                onClick={() => { supabase.auth.signOut(); window.location.href = "/"; }}
                className="px-6 py-2 bg-slate-100 text-brand-primary font-bold rounded-xl hover:bg-slate-200 transition-all text-sm"
@@ -579,24 +615,81 @@ export default function Dashboard() {
                         </div>
                       )}
                     </div>
-                    <div className="px-2 flex justify-between items-start">
-                      <div>
-                        <span className="inline-block px-3 py-1 bg-brand-secondary/50 rounded-full text-[10px] font-black uppercase tracking-widest text-brand-primary">{v.category || 'Animação'}</span>
-                        <h4 className="text-lg font-bold text-brand-primary mt-1">{v.title}</h4>
-                        <p className="text-slate-400 text-sm">{new Date(v.created_at).toLocaleDateString()}</p>
+                      <div className="px-2 flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-block px-3 py-1 bg-brand-secondary/50 rounded-full text-[10px] font-black uppercase tracking-widest text-brand-primary">
+                              {v.status === 'alteracao_solicitada' ? 'Alteração Solicitada' : (v.category || 'Animação')}
+                            </span>
+                            {v.requested_alteration && (
+                              <div className="h-2 w-2 rounded-full bg-brand-accent animate-pulse" title="Alteração pendente" />
+                            )}
+                          </div>
+                          <h4 className="text-lg font-bold text-brand-primary mt-1">{v.title}</h4>
+                          <p className="text-slate-400 text-sm">{new Date(v.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            type="button"
+                            onClick={() => { setActiveAlterationId(v.id); setAlterationText(v.requested_alteration || ""); }}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:scale-105 active:scale-95 ${
+                              v.status === 'alteracao_solicitada' 
+                                ? 'bg-amber-100 text-amber-600' 
+                                : v.requested_alteration 
+                                  ? 'bg-brand-accent/20 text-brand-accent' 
+                                  : 'bg-slate-100 text-slate-500 hover:bg-brand-accent/10 hover:text-brand-accent'
+                            }`}
+                            title="Solicitar 1 Alteração"
+                          >
+                            <RefreshCcw className={`h-4 w-4 ${v.status === 'alteracao_solicitada' ? 'animate-spin-slow' : ''}`} />
+                            <span className="text-[10px] font-black uppercase tracking-wider">Ajustar</span>
+                          </button>
+                          
+                          <button 
+                            type="button"
+                            onClick={() => handleDeleteVideo(v.id)}
+                            className="p-2.5 bg-slate-100 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                            title="Excluir vídeo"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                            </svg>
+                          </button>
+                        </div>
                       </div>
-                      <button 
-                        type="button"
-                        onClick={() => handleDeleteVideo(v.id)}
-                        className="p-2 text-slate-300 hover:text-red-500 transition-colors"
-                        title="Excluir vídeo"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                        </svg>
-                      </button>
+
+                      {/* Modal de Solicitação de Alteração */}
+                      {activeAlterationId === v.id && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-brand-primary/40 backdrop-blur-md p-4 animate-fade-in">
+                          <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl p-8 md:p-10 space-y-6 animate-scale-up border border-white">
+                            <div className="flex justify-between items-center">
+                              <h3 className="text-2xl font-black text-brand-primary">Solicitar Alteração</h3>
+                              <button onClick={() => setActiveAlterationId(null)} className="h-10 w-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200">✕</button>
+                            </div>
+                            <p className="text-slate-500 text-sm font-medium leading-relaxed">
+                              Diga-nos o que você gostaria de ajustar neste vídeo. <br />
+                              <span className="text-xs font-bold text-brand-accent uppercase tracking-wider">* Limite de 1 alteração por vídeo personalizado.</span>
+                            </p>
+                            <textarea 
+                              value={alterationText}
+                              onChange={(e) => setAlterationText(e.target.value)}
+                              placeholder="Ex: Gostaria que o pinguim falasse um pouco mais devagar nesta parte..."
+                              className="w-full h-32 px-6 py-4 rounded-3xl bg-slate-50 border-2 border-transparent focus:border-brand-accent focus:bg-white transition-all outline-none text-brand-primary font-medium resize-none shadow-inner"
+                            />
+                            <div className="flex gap-4">
+                              <button onClick={() => setActiveAlterationId(null)} className="flex-1 py-4 font-bold text-slate-400">Cancelar</button>
+                              <button 
+                                onClick={() => handleRequestAlteration(v.id)}
+                                disabled={!alterationText.trim() || isSubmittingAlteration}
+                                className="flex-[2] py-4 bg-brand-accent text-white font-black rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-lg disabled:opacity-50"
+                              >
+                                {isSubmittingAlteration ? "Enviando..." : "Enviar Pedido"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
                   );
                 })
               ) : (

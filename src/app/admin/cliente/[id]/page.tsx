@@ -378,12 +378,44 @@ export default function AdminClientDashboard({ params }: { params: Promise<{ id:
                         </div>
                       )}
                     </div>
-                    <div className="px-2 flex justify-between items-start">
-                      <div>
-                        <span className="inline-block px-3 py-1 bg-brand-secondary/50 rounded-full text-[10px] font-black uppercase tracking-widest text-brand-primary">{v.category || 'Animação'}</span>
-                        <h4 className="text-lg font-bold text-brand-primary mt-1">{v.title}</h4>
-                        <p className="text-slate-400 text-sm">{new Date(v.created_at).toLocaleDateString()}</p>
+                    <div className="px-2">
+                       <div className="flex justify-between items-start">
+                        <div>
+                          <span className="inline-block px-3 py-1 bg-brand-secondary/50 rounded-full text-[10px] font-black uppercase tracking-widest text-brand-primary">{v.category || 'Animação'}</span>
+                          <h4 className="text-lg font-bold text-brand-primary mt-1">{v.title}</h4>
+                          <p className="text-slate-400 text-sm">{new Date(v.created_at).toLocaleDateString()}</p>
+                        </div>
                       </div>
+
+                      {v.requested_alteration && (
+                        <div className="mt-4 p-4 bg-amber-50 border-2 border-amber-100 rounded-2xl">
+                          <div className="flex justify-between items-start mb-1">
+                            <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">⚠️ Alteração Solicitada</p>
+                            <button 
+                              onClick={async () => {
+                                if (!confirm("Deseja marcar esta alteração como concluída? O texto do pedido será removido.")) return;
+                                const { error } = await supabase
+                                  .from('videos')
+                                  .update({ requested_alteration: null, status: null })
+                                  .eq('id', v.id);
+                                
+                                if (!error) {
+                                  // Atualiza estado local
+                                  setVideos(prev => prev.map(vid => vid.id === v.id ? { ...vid, requested_alteration: null, status: null } : vid));
+                                } else {
+                                  alert("Erro ao remover: " + error.message);
+                                }
+                              }}
+                              className="px-3 py-1 bg-amber-500 text-white text-[10px] font-bold rounded-lg hover:bg-amber-600 transition-all shadow-sm"
+                            >
+                              Marcar como Concluída
+                            </button>
+                          </div>
+                          <p className="text-sm text-amber-900 font-medium leading-relaxed italic">
+                            "{v.requested_alteration}"
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   );

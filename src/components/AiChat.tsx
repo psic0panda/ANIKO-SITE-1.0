@@ -251,7 +251,6 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
     setShowProactiveBadge(true);
     setPopupMessage(newMessage);
     setShowPopup(true);
-    performNotificationBeep();
     
     setTimeout(() => setShowPopup(false), 4000);
     
@@ -339,7 +338,7 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
 
       if (aiResponseParts.length > 0) {
         setMessages((prev) => [...prev, { role: "assistant", content: aiResponseParts.join(" Além disso, ") }]);
-        playNotificationBeep();
+        performNotificationBeep();
         setIsLoading(false);
         return;
       }
@@ -363,16 +362,16 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
           if (i > 0) await new Promise(resolve => setTimeout(resolve, 800));
           
           setMessages((prev) => [...prev, { role: "assistant", content: parts[i] }]);
-          playNotificationBeep();
+          performNotificationBeep();
         }
       } else {
         setMessages((prev) => [...prev, { role: "assistant", content: fullContent }]);
-        playNotificationBeep();
+        performNotificationBeep();
         setIsLoading(false);
       }
     } catch (err) {
       setMessages((prev) => [...prev, { role: "assistant", content: "Ops! Minha conexão com a geleira travou! 🐧 Mas já estou voltando, só um momento..." }]);
-      playNotificationBeep();
+      performNotificationBeep();
       setIsLoading(false);
     }
   };
@@ -411,7 +410,7 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
                   if (!newMuted) {
                     const lastMsg = messages[messages.length - 1];
                     if (lastMsg && lastMsg.role === 'assistant') {
-                      speak(lastMsg.content);
+                      performTTS(lastMsg.content);
                     }
                   }
                 }}
@@ -441,7 +440,7 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
                   {m.content}
                   {m.role === 'assistant' && (
                     <button 
-                      onClick={() => speak(m.content)}
+                      onClick={() => performTTS(m.content)}
                       className="absolute -right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 h-8 w-8 rounded-full bg-white shadow-md border border-slate-100 flex items-center justify-center text-xs text-slate-400 hover:text-brand-accent transition-all animate-fade-in"
                       title="Ouvir novamente"
                     >
@@ -484,7 +483,9 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
       {showPopup && !isOpen && (
         <div className="absolute bottom-4 -left-64 mb-2 mr-2 max-w-[250px] bg-white rounded-2xl shadow-2xl border border-cyan-100 p-3 animate-bounce-once">
           <div className="flex items-start gap-2">
-            <img src="/assets/avatars/avatar_aniko.png" alt="Aniko" className="w-8 h-8 rounded-full flex-shrink-0" />
+            <div className="w-8 h-8 relative flex-shrink-0">
+               <Image src="/assets/avatars/avatar_aniko.png" alt="Aniko" fill className="object-cover rounded-full" />
+            </div>
             <p className="text-xs text-slate-700 leading-tight">{popupMessage}</p>
           </div>
         </div>
@@ -498,7 +499,7 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         ) : (
           <div className="relative h-full w-full rounded-full overflow-hidden border-2 border-white/20 bg-white">
-             <img src="/assets/avatars/avatar_aniko.png" alt="Aniko" className="w-full h-full object-cover rounded-full" />
+             <Image src="/assets/avatars/avatar_aniko.png" alt="Aniko" fill className="object-cover rounded-full" />
              {showProactiveBadge && (
                <div className="absolute top-2 right-2 h-4 w-4 bg-green-400 rounded-full border-2 border-white z-10 animate-pulse" />
              )}

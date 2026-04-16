@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import Link from "next/link";
@@ -62,6 +62,16 @@ export default function AdminDashboard() {
   };
 
   // Carregar dados
+  const refreshCoupons = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/cupons?key=aniko_admin_segredo_2026');
+      const data = await res.json();
+      if (data.coupons) setCoupons(data.coupons);
+    } catch (e) {
+      console.error('Erro ao buscar cupons:', e);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isAuthenticated) return;
     async function fetchData() {
@@ -91,16 +101,6 @@ export default function AdminDashboard() {
     refreshCoupons();
   }, [isAuthenticated, refreshCoupons]);
 
-  const refreshCoupons = useCallback(async () => {
-    try {
-      const res = await fetch('/api/admin/cupons?key=aniko_admin_segredo_2026');
-      const data = await res.json();
-      if (data.coupons) setCoupons(data.coupons);
-    } catch (e) {
-      console.error('Erro ao buscar cupons:', e);
-    }
-  }, []);
-
   const handleCreateCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCouponCode || !newCouponDiscount || isCreatingCoupon) return;
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
       if (data.success) {
         setNewCouponCode("");
         setNewCouponDiscount("");
-        fetchCoupons();
+        refreshCoupons();
       } else {
         alert("Erro ao criar cupom: " + data.error);
       }
@@ -137,7 +137,7 @@ export default function AdminDashboard() {
         method: 'DELETE'
       });
       const data = await res.json();
-      if (data.success) fetchCoupons();
+      if (data.success) refreshCoupons();
     } catch (err: any) {
       alert("Erro ao excluir cupom: " + err.message);
     }
@@ -272,10 +272,15 @@ export default function AdminDashboard() {
               requests.map((req) => (
                 <div key={req.id} className="bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-xl transition-all hover:border-brand-accent/50">
                   <div className="flex justify-between items-start mb-4">
-                    <span className="px-3 py-1 bg-brand-accent/20 text-brand-accent text-xs font-bold rounded-full uppercase">
-                      {req.status}
+                    <span className={`px-3 py-1 text-xs font-bold rounded-full uppercase ${
+                      req.is_alteration 
+                        ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30' 
+                        : 'bg-brand-accent/20 text-brand-accent'
+                    }`}>
+                      {req.is_alteration ? '⚠️ Alteração' : req.status}
                     </span>
-                    <span className="text-slate-500 text-xs">
+                    <span className="text-slate-500 text-xs text-right">
+                      {req.is_alteration && <p className="text-amber-500/70 font-bold mb-1 italic">Vídeo original: {req.original_title}</p>}
                       {new Date(req.created_at).toLocaleString()}
                     </span>
                   </div>
@@ -297,11 +302,16 @@ export default function AdminDashboard() {
                               phone: req.profiles?.phone,
                               email: req.profiles?.email
                             });
-                            setVideoTitle(`Especial para você: ${req.description?.slice(0, 20) || 'vídeo'}...`);
+                            
+                            const defaultTitle = req.is_alteration 
+                              ? `Ajuste: ${req.original_title || 'Pedido'}`
+                              : `Especial para você: ${req.description?.slice(0, 20) || 'vídeo'}...`;
+                            
+                            setVideoTitle(defaultTitle);
                         }}
-                        className="text-sm font-bold text-brand-accent hover:underline"
+                        className={`text-sm font-bold hover:underline ${req.is_alteration ? 'text-amber-500' : 'text-brand-accent'}`}
                       >
-                        Responder este pedido →
+                        {req.is_alteration ? 'Responder Alteração →' : 'Responder este pedido →'}
                       </button>
                     </div>
                     
