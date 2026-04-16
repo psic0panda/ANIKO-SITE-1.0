@@ -20,32 +20,63 @@ export default function Login() {
     setError("");
     setLoading(true);
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("[Login] Supabase credentials missing from environment.");
+      setError("Erro de configuração: Credenciais do banco de dados não encontradas. Verifique o arquivo .env ou o painel do Vercel.");
+      setLoading(false);
+      return;
+    }
+
     try {
+      console.log("[Login] Starting authentication for:", email);
+      
       const loginPromise = supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("TIMEOUT")), 10000)
+        setTimeout(() => reject(new Error("TIMEOUT")), 15000)
       );
 
-      const { error } = await Promise.race([loginPromise, timeoutPromise]) as Awaited<typeof loginPromise>;
+      const result = await Promise.race([loginPromise, timeoutPromise]);
+      
+      if (result instanceof Error || (result && (result as any).message === "TIMEOUT")) {
+        throw new Error("TIMEOUT");
+      }
+
+      const { data, error } = result as any;
 
       if (error) {
         console.error("[Login] Supabase error:", error.message, error.status);
         setError("E-mail ou senha incorretos. Verifique seus dados.");
         setLoading(false);
       } else {
-        router.push("/dashboard");
+        console.log("[Login] Success! Redirecting to dashboard...");
+        // Garantimos que a sessão persistiu
+        const session = data?.session;
+        if (session) {
+           // Usando window.location.href para forçar recarregamento e evitar que o App Router
+           // trave a tela parecendo que o login está infinito enquanto compila a página.
+           setError("redirecting");
+           window.location.href = "/dashboard";
+        } else {
+           console.error("[Login] No session returned after success");
+           setError("Erro ao estabelecer sessão. Tente novamente.");
+           setLoading(false);
+        }
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erro desconhecido";
-      console.error("[Login] Catch error:", msg);
+      console.error("[Login] Final catch error:", msg);
+      
       if (msg === "TIMEOUT") {
-        setError("O servidor demorou para responder. Tente novamente em alguns segundos.");
+        setError("O servidor do banco de dados demorou para responder (Timeout). Verifique se as chaves do Supabase estão corretas ou tente novamente.");
       } else {
-        setError("Erro de conexão. Verifique sua internet e tente novamente.");
+        setError(`Erro de conexão: ${msg}. Verifique sua internet.`);
       }
       setLoading(false);
     }
@@ -76,7 +107,7 @@ export default function Login() {
             <p className="text-slate-400 font-medium">Bem-vindo à jornada de seu filho.</p>
           </div>
 
-          {error && (
+          {error && error !== "redirecting" && (
             <div className="mb-6 p-4 bg-red-50 text-red-500 text-sm font-bold rounded-2xl border border-red-100 animate-shake">
               {error}
             </div>
@@ -124,7 +155,7 @@ export default function Login() {
               disabled={loading}
               className="w-full py-5 rounded-2xl bg-brand-primary text-white font-black text-xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
             >
-              {loading ? "Acessando..." : "Acessar Painel"}
+              {loading ? (error === "redirecting" ? "Aprovado! Redirecionando..." : "Acessando...") : "Acessar Painel"}
             </button>
           </form>
 

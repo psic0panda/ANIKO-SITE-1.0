@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const AVATARS = [
   "avatar_bear.png", "avatar_bird.png", "avatar_cat.png", "avatar_dog.png",
@@ -27,24 +27,12 @@ const Scribble = ({ style }: { style: React.CSSProperties }) => (
 );
 
 export default function BackgroundDecor() {
-  const [elements, setElements] = useState<{
-    id: number;
-    type: 'avatar' | 'scribble';
-    src?: string;
-    top: string;
-    left: string;
-    size: number;
-    delay: string;
-    duration: string;
-    color?: string;
-  }[]>([]);
-
-  useEffect(() => {
-    const newElements = [];
+  const [elements] = useState(() => {
+    const initialElements = [];
     
     // Gerar Avatars
     for (let i = 0; i < 12; i++) {
-      newElements.push({
+      initialElements.push({
         id: i,
         type: 'avatar' as const,
         src: AVATARS[Math.floor(Math.random() * AVATARS.length)],
@@ -59,7 +47,7 @@ export default function BackgroundDecor() {
     // Gerar Rabiscos
     const colors = ['#003d6d', '#ffa646', '#56e0a3', '#a9dff5'];
     for (let i = 0; i < 10; i++) {
-      newElements.push({
+        initialElements.push({
         id: i + 20,
         type: 'scribble' as const,
         top: `${Math.random() * 100}%`,
@@ -71,8 +59,8 @@ export default function BackgroundDecor() {
       });
     }
 
-    setElements(newElements);
-  }, []);
+    return initialElements;
+  });
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">

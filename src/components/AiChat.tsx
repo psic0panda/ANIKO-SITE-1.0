@@ -206,7 +206,7 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
     }
   }, [isMuted]);
 
-  const playNotificationBeep = useCallback(async () => {
+  const performNotificationBeep = useCallback(async () => {
     if (typeof window === 'undefined') return;
     
     try {
@@ -233,7 +233,7 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
     }
   }, []);
 
-  const sendProactiveMessage = useCallback(() => {
+  const performProactiveMessage = useCallback(() => {
     const now = Date.now();
     if (now - lastProactiveTime.current < 13000) return;
     if (messages.length === 0) return;
@@ -251,20 +251,20 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
     setShowProactiveBadge(true);
     setPopupMessage(newMessage);
     setShowPopup(true);
-    playNotificationBeep();
+    performNotificationBeep();
     
     setTimeout(() => setShowPopup(false), 4000);
     
     setTimeout(() => setShowProactiveBadge(false), 5000);
-  }, [messages.length, playNotificationSound, isOpen, isLoading]);
+  }, [messages, isOpen, isLoading, performNotificationBeep]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      sendProactiveMessage();
+      performProactiveMessage();
     }, 15000);
     
     return () => clearInterval(interval);
-  }, [sendProactiveMessage]);
+  }, [performProactiveMessage]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -272,7 +272,7 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
     }
   }, [messages]);
 
-  const speak = useCallback(async (text: string) => {
+  const performTTS = useCallback(async (text: string) => {
     if (isMuted) return;
     
     try {
@@ -310,9 +310,9 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (lastMessage && lastMessage.role === 'assistant' && !isLoading && !isMuted) {
-      speak(lastMessage.content);
+      performTTS(lastMessage.content);
     }
-  }, [messages, isLoading, isMuted, speak]);
+  }, [messages, isLoading, isMuted, performTTS]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -392,8 +392,8 @@ export default function AiChat({ isHigh = false }: { isHigh?: boolean }) {
         <div className="mb-4 w-[350px] md:w-[400px] h-[500px] bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-scale-up origin-bottom-right">
           <div className="bg-brand-primary p-6 text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full border-2 border-white/20 overflow-hidden shadow-inner bg-white">
-                 <img src="/assets/avatars/avatar_aniko.png" alt="Aniko" className="w-full h-full object-cover rounded-full" />
+              <div className="h-10 w-10 rounded-full border-2 border-white/20 overflow-hidden shadow-inner bg-white relative">
+                 <Image src="/assets/avatars/avatar_aniko.png" alt="Aniko" fill className="object-cover rounded-full" />
               </div>
               <div>
                 <p className="font-black text-sm uppercase tracking-tight">Assistente Aniko</p>

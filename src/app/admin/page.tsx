@@ -88,10 +88,10 @@ export default function AdminDashboard() {
       setLoading(false);
     }
     fetchData();
-    fetchCoupons();
-  }, [isAuthenticated]);
+    refreshCoupons();
+  }, [isAuthenticated, refreshCoupons]);
 
-  const fetchCoupons = async () => {
+  const refreshCoupons = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/cupons?key=aniko_admin_segredo_2026');
       const data = await res.json();
@@ -99,7 +99,7 @@ export default function AdminDashboard() {
     } catch (e) {
       console.error('Erro ao buscar cupons:', e);
     }
-  };
+  }, []);
 
   const handleCreateCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
