@@ -16,19 +16,6 @@ export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Mascot Reaction Logic
-  const [mascotBubble, setMascotBubble] = useState<string | null>(null);
-  
-  useEffect(() => {
-    if (isSensoryFriendly) {
-      setMascotBubble("Aah, muito melhor! 🌬️");
-    } else {
-      setMascotBubble("Vamos brincar! 🎈");
-    }
-    const timer = setTimeout(() => setMascotBubble(null), 3000);
-    return () => clearTimeout(timer);
-  }, [isSensoryFriendly]);
-
   // Efeito de Glassmorphism na Navbar ao rolar
   useEffect(() => {
     const handleScroll = () => {
@@ -378,21 +365,6 @@ export default function Home() {
           onMouseEnter={() => setIsPenguinHovered(true)}
           onMouseLeave={() => setIsPenguinHovered(false)}
         >
-          {/* Mascot Reaction Bubble */}
-          <AnimatePresence>
-            {mascotBubble && (
-              <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.5 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                className="absolute -top-24 left-1/2 -translate-x-1/2 glass-modern px-6 py-3 rounded-3xl text-sm font-black text-brand-primary shadow-2xl border-brand-accent/30 z-30 whitespace-nowrap"
-              >
-                {mascotBubble}
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/60 backdrop-blur-md rotate-45 border-r border-b border-brand-accent/10" />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           <div className="relative pointer-events-none">
             <video 
               ref={penguinVideoRef}

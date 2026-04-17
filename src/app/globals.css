@@ -52,23 +52,6 @@ html {
   scroll-behavior: auto !important;
 }
 
-/* Focus Mode - Dims non-essential UI */
-[data-focus="active"] .hero-text-area,
-[data-focus="active"] .penguin-area {
-  z-index: 101;
-}
-
-[data-focus="active"]::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.4);
-  backdrop-filter: blur(4px);
-  z-index: 100;
-  pointer-events: none;
-  animation: fade-in 0.5s ease-out forwards;
-}
-
 @theme {
   --color-brand-primary: var(--color-primary);
   --color-brand-secondary: var(--color-secondary);

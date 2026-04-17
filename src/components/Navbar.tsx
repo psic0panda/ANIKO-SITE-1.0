@@ -4,10 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import SensoryHub from "./SensoryHub";
+import { Sparkles, X, Menu } from "lucide-react";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isSensoryOpen, setIsSensoryOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -22,6 +25,7 @@ export default function Navbar() {
     { name: "Abordagem", href: "/abordagem" },
     { name: "Tecnologia", href: "/tecnologia" },
     { name: "Valores", href: "/valores" },
+    { name: "Dúvidas", href: "/duvidas" },
     { name: "Contato", href: "/contato" },
   ];
 
@@ -41,22 +45,42 @@ export default function Navbar() {
           height={40}
           className="rounded-xl shadow-lg border-2 border-brand-secondary/20 transition-transform group-hover:scale-110"
         />
-        <span className="text-xl font-black tracking-tighter text-brand-primary">ANIKO</span>
+        <span className="text-xl font-black tracking-tighter text-brand-primary uppercase">ANIKO</span>
       </Link>
 
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center gap-8 font-medium text-brand-primary/80">
-        {navLinks.map((link) => (
+        <div className="flex items-center gap-6">
           <Link 
-            key={link.href} 
-            href={link.href} 
-            className={`hover:text-brand-accent transition-colors ${
-              pathname === link.href ? 'text-brand-accent font-bold' : ''
-            }`}
+            href="/abordagem" 
+            className={`hover:text-brand-accent transition-colors ${pathname === '/abordagem' ? 'text-brand-accent font-bold' : ''}`}
           >
-            {link.name}
+            Abordagem
           </Link>
-        ))}
+
+          {/* Sensory Trigger */}
+          <div className="relative">
+            <button 
+              onClick={() => setIsSensoryOpen(!isSensoryOpen)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${isSensoryOpen ? 'bg-brand-accent/20 text-brand-primary font-bold shadow-inner' : 'hover:bg-brand-primary/5 hover:text-brand-accent'}`}
+            >
+              <Sparkles size={16} className={isSensoryOpen ? 'text-brand-accent' : ''} />
+              Modo Sensorial
+            </button>
+            <SensoryHub isOpen={isSensoryOpen} onClose={() => setIsSensoryOpen(false)} />
+          </div>
+
+          {navLinks.slice(1).map((link) => (
+            <Link 
+              key={link.href} 
+              href={link.href} 
+              className={`hover:text-brand-accent transition-colors ${pathname === link.href ? 'text-brand-accent font-bold' : ''}`}
+            >
+              {link.name}
+            </Link>
+          ))}
+        </div>
+
         <Link 
           href="/login" 
           className="rounded-full bg-brand-primary px-6 py-2.5 text-white shadow-xl hover:bg-brand-primary/90 transition-all hover:scale-105 active:scale-95"
@@ -71,11 +95,7 @@ export default function Navbar() {
         className="md:hidden p-2 text-brand-primary hover:bg-slate-100 rounded-xl transition-all"
         aria-label="Toggle menu"
       >
-        {isMenuOpen ? (
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-        )}
+        {isMenuOpen ? <X size={32} /> : <Menu size={32} />}
       </button>
 
       {/* Mobile Menu Overlay */}
@@ -87,11 +107,26 @@ export default function Navbar() {
               <span className="text-xl font-bold text-brand-primary">ANIKO</span>
             </Link>
             <button onClick={() => setIsMenuOpen(false)} className="p-2 bg-slate-100 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              <X size={28} />
             </button>
           </div>
           <div className="flex flex-col gap-8 text-3xl font-black text-brand-primary uppercase tracking-tighter">
-            {navLinks.map((link) => (
+            <Link href="/abordagem" onClick={() => setIsMenuOpen(false)}>Abordagem</Link>
+            
+            <button 
+              onClick={() => setIsSensoryOpen(!isSensoryOpen)}
+              className="flex items-center gap-4 text-left border-l-4 border-brand-accent pl-4 text-brand-accent"
+            >
+              <Sparkles size={28} />
+              Modo Sensorial
+            </button>
+            {isSensoryOpen && (
+              <div className="ml-4 mb-4">
+                 <SensoryHub isOpen={isSensoryOpen} onClose={() => setIsSensoryOpen(false)} />
+              </div>
+            )}
+
+            {navLinks.slice(1).map((link) => (
               <Link 
                 key={link.href} 
                 href={link.href} 
@@ -101,13 +136,6 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <Link 
-              href="/login" 
-              onClick={() => setIsMenuOpen(false)}
-              className="mt-4 rounded-full bg-brand-primary px-8 py-5 text-xl text-white text-center shadow-2xl hover:bg-brand-primary/90 transition-all active:scale-95"
-            >
-              Começar Agora
-            </Link>
           </div>
         </div>
       )}
