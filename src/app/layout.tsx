@@ -8,7 +8,6 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SensoryProvider } from "@/context/SensoryContext";
 import BackgroundDecor from "@/components/BackgroundDecor";
-import SensoryHub from "@/components/SensoryHub";
 
 const baloo = Baloo_2({
   variable: "--font-baloo",
@@ -45,7 +44,6 @@ export default function RootLayout({
           </Suspense>
           <Clarity />
           <BackgroundDecor />
-          <SensoryHub />
           {children}
           <Analytics />
           <SpeedInsights />
