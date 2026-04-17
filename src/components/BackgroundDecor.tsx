@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import { useEffect, useState, useRef } from 'react';
 import { useSensory } from '@/context/SensoryContext';
 
@@ -84,11 +85,20 @@ export default function BackgroundDecor() {
       {elements.map((el) => {
         const parallaxX = isSensoryFriendly ? 0 : mousePos.x * el.depth;
         const parallaxY = isSensoryFriendly ? 0 : mousePos.y * el.depth;
+        
+        // Depth of Field: elements further back (lower depth) are more blurred
+        const blurAmount = isSensoryFriendly ? 0 : (1 - el.depth) * 4;
 
         return el.type === 'avatar' ? (
-          <div
+          <motion.div
             key={el.id}
-            className={`absolute animate-float-slow transition-transform duration-1000 ease-out grayscale hover:grayscale-0 ${isSensoryFriendly ? 'opacity-[0.02]' : 'opacity-[0.05]'}`}
+            animate={{ 
+              x: parallaxX, 
+              y: parallaxY,
+              filter: `blur(${blurAmount}px) grayscale(${isSensoryFriendly ? 1 : 0.5})`
+            }}
+            transition={{ type: "spring", stiffness: 50, damping: 20, mass: 0.5 }}
+            className={`absolute animate-float-slow transition-opacity duration-1000 ease-out hover:grayscale-0 ${isSensoryFriendly ? 'opacity-[0.02]' : 'opacity-[0.05]'}`}
             style={{
               top: `${el.top}%`,
               left: `${el.left}%`,
@@ -96,7 +106,6 @@ export default function BackgroundDecor() {
               height: `${el.size}px`,
               animationDelay: `${el.delay}s`,
               animationDuration: `${el.duration}s`,
-              transform: `translate(${parallaxX}px, ${parallaxY}px)`,
             }}
           >
             <Image
@@ -106,20 +115,29 @@ export default function BackgroundDecor() {
               height={el.size}
               className="object-contain"
             />
-          </div>
+          </motion.div>
         ) : (
-          <Scribble
+          <motion.div
             key={el.id}
-            isSensory={isSensoryFriendly}
+            animate={{ x: parallaxX, y: parallaxY, filter: `blur(${blurAmount}px)` }}
+            transition={{ type: "spring", stiffness: 50, damping: 20, mass: 1 }}
+            className="absolute"
             style={{
               top: `${el.top}%`,
               left: `${el.left}%`,
               width: `${el.size}px`,
               height: `${el.size}px`,
-              color: el.color,
-              transform: `translate(${parallaxX}px, ${parallaxY}px)`,
             }}
-          />
+          >
+            <Scribble
+              isSensory={isSensoryFriendly}
+              style={{
+                width: '100%',
+                height: '100%',
+                color: el.color,
+              }}
+            />
+          </motion.div>
         );
       })}
     </div>

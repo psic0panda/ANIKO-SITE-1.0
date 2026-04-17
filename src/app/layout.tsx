@@ -7,6 +7,8 @@ import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SensoryProvider } from "@/context/SensoryContext";
+import BackgroundDecor from "@/components/BackgroundDecor";
+import SensoryHub from "@/components/SensoryHub";
 
 const baloo = Baloo_2({
   variable: "--font-baloo",
@@ -22,7 +24,7 @@ const quicksand = Quicksand({
 
 export const metadata: Metadata = {
   title: "Aniko - Animações Adaptativas para Crianças com TEA",
-  description: "Sistema de animações personalizadas que se adaptam ao perfil de cada criança autista.",
+  description: "Plataforma de criação de animações personalizadas e roteiros adaptativos para crianças com autismo.",
 };
 
 
@@ -42,6 +44,8 @@ export default function RootLayout({
             <FacebookPixel />
           </Suspense>
           <Clarity />
+          <BackgroundDecor />
+          <SensoryHub />
           {children}
           <Analytics />
           <SpeedInsights />

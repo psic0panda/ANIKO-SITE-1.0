@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import AiChat from "@/components/AiChat";
 import BackgroundDecor from "@/components/BackgroundDecor";
 import { useSensory } from "@/context/SensoryContext";
@@ -14,6 +15,19 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Mascot Reaction Logic
+  const [mascotBubble, setMascotBubble] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (isSensoryFriendly) {
+      setMascotBubble("Aah, muito melhor! 🌬️");
+    } else {
+      setMascotBubble("Vamos brincar! 🎈");
+    }
+    const timer = setTimeout(() => setMascotBubble(null), 3000);
+    return () => clearTimeout(timer);
+  }, [isSensoryFriendly]);
 
   // Efeito de Glassmorphism na Navbar ao rolar
   useEffect(() => {
@@ -303,18 +317,46 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section id="abordagem" className="flex w-full max-w-7xl flex-col items-center gap-16 px-6 py-32 md:flex-row md:px-12 lg:py-48 scroll-mt-20">
-        <div className="flex flex-1 flex-col gap-8 text-center md:text-left">
-          <div className="inline-block self-center md:self-start rounded-full glass-modern px-5 py-2 text-xs font-black uppercase tracking-widest text-brand-primary animate-fade-up">
+      <section id="abordagem" className="relative flex w-full max-w-7xl flex-col items-center gap-16 px-6 py-32 md:flex-row md:px-12 lg:py-48 scroll-mt-20 mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="hero-text-area flex flex-1 flex-col gap-8 text-center md:text-left z-10"
+        >
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="inline-block self-center md:self-start rounded-full glass-modern px-5 py-2 text-xs font-black uppercase tracking-widest text-brand-primary"
+          >
             ✨ Educação Adaptativa para TEA
-          </div>
-          <h1 className="text-5xl font-heading font-black leading-[1.1] tracking-tighter text-brand-primary md:text-7xl lg:text-9xl animate-fade-up">
+          </motion.div>
+          
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-5xl font-heading font-black leading-[1.1] tracking-tighter text-brand-primary md:text-7xl lg:text-9xl"
+          >
             Animações <br /> que <span className="text-brand-accent italic">evoluem</span>.
-          </h1>
-          <p className="max-w-xl text-xl leading-relaxed text-slate-700/80 font-medium animate-fade-up" style={{ animationDelay: '0.2s' }}>
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="max-w-xl text-xl leading-relaxed text-slate-700/80 font-medium"
+          >
             O Aniko utiliza inteligência artificial para criar roteiros e animações personalizadas para cada criança.
-          </p>
-          <div className="flex flex-col gap-4 sm:flex-row justify-center md:justify-start animate-fade-up stagger-3">
+          </motion.p>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex flex-col gap-4 sm:flex-row justify-center md:justify-start"
+          >
             <button 
               onClick={() => setShowWelcome(true)}
               className="rounded-2xl bg-brand-warmth px-10 py-5 text-xl font-black text-white shadow-[0_20px_50px_rgba(255,166,70,0.3)] hover:scale-105 active:scale-95 transition-all text-glow-warmth"
@@ -325,23 +367,47 @@ export default function Home() {
               Ver Demo
               <span className="bg-brand-primary/10 px-2 py-0.5 rounded-lg text-xs">x7</span>
             </button>
-          </div>
-        </div>
-        <div 
-          className="relative flex flex-1 items-center justify-center animate-fade-up stagger-2 cursor-pointer group/hero"
+          </motion.div>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9, rotate: -5 }}
+          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+          transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="penguin-area relative flex flex-1 items-center justify-center cursor-pointer group/hero z-10"
           onMouseEnter={() => setIsPenguinHovered(true)}
           onMouseLeave={() => setIsPenguinHovered(false)}
         >
-          {/* Welcome Video Trigger Bubble removed as it is now the primary CTA button */}
+          {/* Mascot Reaction Bubble */}
+          <AnimatePresence>
+            {mascotBubble && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.5 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                className="absolute -top-24 left-1/2 -translate-x-1/2 glass-modern px-6 py-3 rounded-3xl text-sm font-black text-brand-primary shadow-2xl border-brand-accent/30 z-30 whitespace-nowrap"
+              >
+                {mascotBubble}
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white/60 backdrop-blur-md rotate-45 border-r border-b border-brand-accent/10" />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <video 
-            ref={penguinVideoRef}
-            src="/assets/ANIKO ANIMAÇÃO HOME.mp4" 
-            muted 
-            playsInline
-            className="w-full max-w-[550px] object-contain mix-blend-multiply transition-all group-hover/hero:scale-105"
-          />
-        </div>
+          <div className="relative pointer-events-none">
+            <video 
+              ref={penguinVideoRef}
+              src="/assets/ANIKO ANIMAÇÃO HOME.mp4" 
+              muted 
+              playsInline
+              loop
+              disablePictureInPicture
+              disableRemotePlayback
+              className="w-full max-w-[550px] object-contain mix-blend-multiply transition-all group-hover/hero:scale-105"
+            />
+          </div>
+          {/* Invisible overlay to block browser video controls on hover */}
+          <div className="absolute inset-0 z-10" />
+        </motion.div>
       </section>
 
       {/* Cartoon Showcase (Interativo, Infinito e Automático) */}

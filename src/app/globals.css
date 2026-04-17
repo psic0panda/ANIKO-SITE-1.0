@@ -52,6 +52,23 @@ html {
   scroll-behavior: auto !important;
 }
 
+/* Focus Mode - Dims non-essential UI */
+[data-focus="active"] .hero-text-area,
+[data-focus="active"] .penguin-area {
+  z-index: 101;
+}
+
+[data-focus="active"]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  pointer-events: none;
+  animation: fade-in 0.5s ease-out forwards;
+}
+
 @theme {
   --color-brand-primary: var(--color-primary);
   --color-brand-secondary: var(--color-secondary);
@@ -60,6 +77,30 @@ html {
   
   --font-heading: var(--font-baloo);
   --font-body: var(--font-quicksand);
+
+  --animate-spin-slow: spin 8s linear infinite;
+}
+
+/* Custom Utilities */
+.text-glow-primary {
+  text-shadow: 0 0 20px hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.3);
+}
+
+.text-glow-warmth {
+  text-shadow: 0 0 20px hsla(var(--warmth-h), var(--warmth-s), var(--warmth-l), 0.4);
+}
+
+.shadow-glow-accent {
+  box-shadow: 0 10px 40px -10px hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.5);
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
 }
 
 body {
