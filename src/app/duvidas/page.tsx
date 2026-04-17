@@ -13,7 +13,6 @@ import {
   MessageCircle,
   Sparkles
 } from 'lucide-react';
-import AiChat from "@/components/AiChat";
 
 export default function Duvidas() {
   const faqs = [
@@ -154,8 +153,6 @@ export default function Duvidas() {
           </div>
         </div>
       </footer>
-
-      <AiChat />
     </main>
   );
 }

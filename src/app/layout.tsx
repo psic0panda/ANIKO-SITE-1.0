@@ -1,10 +1,23 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
+import { Baloo_2, Quicksand } from "next/font/google";
 import "./globals.css";
+import { FacebookPixel } from "@/components/analytics/FacebookPixel";
+import { Clarity } from "@/components/analytics/Clarity";
+import { Suspense } from "react";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { SensoryProvider } from "@/context/SensoryContext";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const baloo = Baloo_2({
+  variable: "--font-baloo",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const quicksand = Quicksand({
+  variable: "--font-quicksand",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -21,10 +34,18 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${outfit.variable} h-full antialiased`}
+      className={`${baloo.variable} ${quicksand.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        {children}
+      <body className="min-h-full flex flex-col font-body">
+        <SensoryProvider>
+          <Suspense fallback={null}>
+            <FacebookPixel />
+          </Suspense>
+          <Clarity />
+          {children}
+          <Analytics />
+          <SpeedInsights />
+        </SensoryProvider>
       </body>
     </html>
   );

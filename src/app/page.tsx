@@ -5,9 +5,12 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import AiChat from "@/components/AiChat";
 import BackgroundDecor from "@/components/BackgroundDecor";
+import { useSensory } from "@/context/SensoryContext";
 
 export default function Home() {
+  const { isSensoryFriendly, toggleSensoryFriendly } = useSensory();
   const [showVideo, setShowVideo] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -106,16 +109,11 @@ export default function Home() {
   }, [isPenguinHovered]);
 
   const drawings = [
-    { src: 'daniel.jpg', name: 'Daniel Tigre' },
-    { src: 'bluey.jpg', name: 'Bluey' },
-    { src: 'dragon ball.png', name: 'Dragon Ball' },
-    { src: 'bob sponja.jpg', name: 'Bob Sponja' },
-    { src: 'kratts.jpg', name: 'Irmãos Kratts' },
-    { src: 'caillou.jpg', name: 'Caillou' },
-    { src: 'luna.webp', name: 'Show da Luna' },
-    { src: 'arthur.jpg', name: 'Arthur' },
-    { src: 'octonauts.jpg', name: 'Octonauts' },
-    { src: 'peixonauta.jpg', name: 'Peixonauta' },
+    { src: 'daniel.jpg', name: 'Daniel Tigre', videoIndex: 4 },
+    { src: 'bluey.jpg', name: 'Bluey', videoIndex: 1 },
+    { src: 'dragon ball.png', name: 'Dragon Ball', videoIndex: 0 },
+    { src: 'bob sponja.jpg', name: 'Bob Sponja', videoIndex: 3 },
+    { src: 'kratts.jpg', name: 'Irmãos Kratts', videoIndex: 6 },
   ];
 
   // Triplicar para o efeito infinito visual
@@ -203,6 +201,36 @@ export default function Home() {
         </div>
       )}
 
+      {/* Welcome Video Modal (Standalone) */}
+      {showWelcome && (
+        <div 
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-brand-primary/95 p-4 backdrop-blur-xl animate-fade-in"
+          onClick={() => setShowWelcome(false)}
+        >
+          <button 
+            className="absolute top-8 right-8 text-white p-3 bg-white/10 rounded-full hover:bg-white/20 transition-all z-20"
+            onClick={() => setShowWelcome(false)}
+          >
+             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+          
+          <div 
+            className="relative w-full max-w-2xl aspect-square rounded-[3rem] overflow-hidden border-8 border-white/20 shadow-2xl animate-scale-up bg-brand-primary/20"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <video 
+              src="/assets/bem-vindo_ao_aniko.mp4" 
+              controls 
+              autoPlay 
+              className="h-full w-full object-contain"
+            />
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 glass-modern px-8 py-3 rounded-full border border-white/10 text-brand-primary font-black shadow-xl">
+               Boas-vindas à Aniko! 🐧
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className={`fixed top-0 left-0 right-0 flex w-full items-center justify-between px-6 py-4 md:px-12 z-50 transition-all duration-300 ${isScrolled ? 'glass-modern py-3 shadow-lg' : 'bg-transparent'}`}>
         <div className="flex items-center gap-3">
@@ -213,10 +241,17 @@ export default function Home() {
             height={40}
             className="rounded-xl shadow-lg border-2 border-brand-secondary/20"
           />
-          <span className="text-xl font-black tracking-tighter text-brand-primary">ANIKO</span>
+          <span className="text-xl font-heading font-black tracking-tighter text-brand-primary">ANIKO</span>
         </div>
 
         <div className="hidden md:flex items-center gap-8 font-medium text-brand-primary/80">
+          <button 
+            onClick={toggleSensoryFriendly}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 transition-all ${isSensoryFriendly ? 'bg-brand-accent/20 border-brand-accent text-brand-accent' : 'border-slate-200 hover:border-brand-secondary'}`}
+            title={isSensoryFriendly ? "Desativar Modo Sensorial" : "Ativar Modo Sensorial"}
+          >
+            {isSensoryFriendly ? '✨ Sensorial On' : '🍃 Modo Sensorial'}
+          </button>
           <Link href="/abordagem" className="hover:text-brand-accent transition-colors">Abordagem</Link>
           <Link href="/tecnologia" className="hover:text-brand-accent transition-colors">Tecnologia</Link>
           <Link href="/valores" className="hover:text-brand-accent transition-colors">Valores</Link>
@@ -273,16 +308,19 @@ export default function Home() {
           <div className="inline-block self-center md:self-start rounded-full glass-modern px-5 py-2 text-xs font-black uppercase tracking-widest text-brand-primary animate-fade-up">
             ✨ Educação Adaptativa para TEA
           </div>
-          <h1 className="text-5xl font-extrabold leading-[1.1] tracking-tighter text-brand-primary md:text-7xl lg:text-9xl animate-fade-up stagger-1">
+          <h1 className="text-5xl font-heading font-black leading-[1.1] tracking-tighter text-brand-primary md:text-7xl lg:text-9xl animate-fade-up">
             Animações <br /> que <span className="text-brand-accent italic">evoluem</span>.
           </h1>
-          <p className="max-w-xl text-xl leading-relaxed text-slate-700/80 animate-fade-up stagger-2">
+          <p className="max-w-xl text-xl leading-relaxed text-slate-700/80 font-medium animate-fade-up" style={{ animationDelay: '0.2s' }}>
             O Aniko utiliza inteligência artificial para criar roteiros e animações personalizadas para cada criança.
           </p>
           <div className="flex flex-col gap-4 sm:flex-row justify-center md:justify-start animate-fade-up stagger-3">
-            <Link href="/como-funciona" className="rounded-2xl bg-brand-warmth px-10 py-5 text-xl font-black text-white shadow-[0_20px_50px_rgba(255,166,70,0.3)] hover:scale-105 active:scale-95 transition-all">
-              Conheça o Sistema
-            </Link>
+            <button 
+              onClick={() => setShowWelcome(true)}
+              className="rounded-2xl bg-brand-warmth px-10 py-5 text-xl font-black text-white shadow-[0_20px_50px_rgba(255,166,70,0.3)] hover:scale-105 active:scale-95 transition-all text-glow-warmth"
+            >
+              Conheça o Aniko (com a Blue! 🐧)
+            </button>
             <button onClick={() => setShowVideo(true)} className="rounded-2xl glass-modern px-10 py-5 text-xl font-black flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all text-brand-primary">
               Ver Demo
               <span className="bg-brand-primary/10 px-2 py-0.5 rounded-lg text-xs">x7</span>
@@ -290,16 +328,18 @@ export default function Home() {
           </div>
         </div>
         <div 
-          className="relative flex flex-1 items-center justify-center animate-fade-up stagger-2 cursor-pointer"
+          className="relative flex flex-1 items-center justify-center animate-fade-up stagger-2 cursor-pointer group/hero"
           onMouseEnter={() => setIsPenguinHovered(true)}
           onMouseLeave={() => setIsPenguinHovered(false)}
         >
+          {/* Welcome Video Trigger Bubble removed as it is now the primary CTA button */}
+
           <video 
             ref={penguinVideoRef}
             src="/assets/ANIKO ANIMAÇÃO HOME.mp4" 
             muted 
             playsInline
-            className="w-full max-w-[550px] object-contain mix-blend-multiply"
+            className="w-full max-w-[550px] object-contain mix-blend-multiply transition-all group-hover/hero:scale-105"
           />
         </div>
       </section>
@@ -330,7 +370,14 @@ export default function Home() {
             className={`flex gap-12 overflow-x-auto no-scrollbar py-8 cursor-grab active:cursor-grabbing px-10 items-center ${isDragging ? 'scroll-auto select-none' : 'scroll-smooth'}`}
           >
             {infiniteDrawings.map((d, i) => (
-              <div key={i} className="flex-shrink-0">
+              <div 
+                key={i} 
+                className="flex-shrink-0 cursor-pointer"
+                onClick={() => {
+                  setCurrentDemoIndex(d.videoIndex);
+                  setShowVideo(true);
+                }}
+              >
                 <div className="relative h-64 w-[28rem] md:w-[40rem] overflow-hidden rounded-[50px] border-[12px] border-white shadow-[0_30px_60px_rgba(0,0,0,0.08)] transition-all hover:scale-[1.02] group/card">
                   <Image 
                     src={`/assets/drawings/${d.src}`} 

@@ -13,8 +13,12 @@ import {
   PlayCircle,
   CheckCircle2,
   AlertCircle,
-  RefreshCcw
+  RefreshCcw,
+  Sparkles,
+  Wind
 } from 'lucide-react';
+import { useSensory } from "@/context/SensoryContext";
+import BackgroundDecor from "@/components/BackgroundDecor";
 
 const AVATARS = [
   { id: 'lion', label: 'Leão' },
@@ -151,6 +155,7 @@ function GraficoRespostaCustom({ videos }: { videos: any[] }) {
 }
 
 export default function Dashboard() {
+  const { isSensoryFriendly, toggleSensoryFriendly } = useSensory();
   const [showVideo, setShowVideo] = useState(false);
   const [requestText, setRequestText] = useState("");
   const [videos, setVideos] = useState<any[]>([]);
@@ -518,7 +523,8 @@ export default function Dashboard() {
 
 
   return (
-    <main className="min-h-screen bg-slate-50 text-brand-primary pb-20">
+    <main className="min-h-screen bg-slate-50 text-brand-primary pb-20 relative">
+      <BackgroundDecor />
       {/* Navigation */}
       <nav className="w-full bg-white border-b border-slate-100 px-6 py-4 md:px-12 sticky top-0 z-30 shadow-sm">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
@@ -527,6 +533,13 @@ export default function Dashboard() {
              <span className="text-xl font-bold tracking-tight text-brand-primary uppercase">ANIKO</span>
           </Link>
           <div className="flex items-center gap-4">
+             <button 
+               onClick={toggleSensoryFriendly}
+               className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-xs font-bold ${isSensoryFriendly ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-slate-50 border-slate-200 text-slate-400 hover:border-brand-secondary'}`}
+             >
+               {isSensoryFriendly ? <Sparkles className="h-3.5 w-3.5" /> : <Wind className="h-3.5 w-3.5" />}
+               <span className="hidden sm:inline">{isSensoryFriendly ? 'Modo Sensorial On' : 'Ativar Modo Sensorial'}</span>
+             </button>
              <Link href="/valores" className="hidden md:block text-slate-400 font-bold hover:text-brand-accent transition-colors text-sm">Valores</Link>
              <Link href="/duvidas" className="hidden md:block text-slate-400 font-bold hover:text-brand-accent transition-colors text-sm">Dúvidas?</Link>
              <button 

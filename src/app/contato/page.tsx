@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import AiChat from "@/components/AiChat";
 
 export default function Contato() {
   return (
@@ -130,7 +129,6 @@ export default function Contato() {
           <p className="text-slate-400 font-medium">© 2026 Aniko — Feito com <span className="text-red-400">♥</span> para o Nikolas.</p>
         </div>
       </footer>
-      <AiChat />
     </main>
   );
 }

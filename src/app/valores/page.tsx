@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import BackgroundDecor from "@/components/BackgroundDecor";
-import AiChat from "@/components/AiChat";
 
 export default function Valores() {
   return (
@@ -107,8 +106,6 @@ export default function Valores() {
           <p className="text-slate-500 font-medium">© 2026 Aniko - Transformando educação em animação.</p>
         </div>
       </footer>
-
-      <AiChat />
     </main>
   );
 }
