@@ -22,13 +22,13 @@ export default function SensoryHub({ isOpen, onClose }: SensoryHubProps) {
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
-          className="absolute top-full right-0 mt-4 z-[100] glass-modern p-6 rounded-[2rem] shadow-2xl border-2 border-brand-primary/10 flex flex-col gap-6 min-w-[280px]"
+          className="md:absolute md:top-full md:right-0 mt-4 z-[100] glass-modern p-6 rounded-[2rem] shadow-2xl border-2 border-brand-primary/10 flex flex-col gap-6 min-w-[280px] w-full md:w-auto"
         >
           <div className="flex items-center justify-between">
-            <h3 className="font-heading text-lg text-brand-primary">Modo Sensorial</h3>
+            <h3 className="font-heading text-lg text-brand-primary">Configurações</h3>
             <button 
               onClick={onClose}
-              className="p-1 hover:bg-brand-primary/5 rounded-full transition-colors"
+              className="p-1 hover:bg-brand-primary/5 rounded-full transition-colors md:block hidden"
             >
               <X size={18} className="text-brand-primary/40" />
             </button>
