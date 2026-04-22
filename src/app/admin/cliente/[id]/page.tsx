@@ -262,6 +262,19 @@ export default function AdminClientDashboard({ params }: { params: Promise<{ id:
     setIsSubmittingFeedback(false);
   };
 
+  const handleUpdateTags = async (videoId: number, tags: string) => {
+    const { error } = await supabase
+      .from('videos')
+      .update({ tags })
+      .eq('id', videoId);
+    
+    if (!error) {
+      setVideos(prev => prev.map(v => v.id === videoId ? { ...v, tags } : v));
+    } else {
+      alert("Erro ao atualizar tags: " + error.message);
+    }
+  };
+
   if (!resolvedParams) {
     return (
       <main className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -384,6 +397,21 @@ export default function AdminClientDashboard({ params }: { params: Promise<{ id:
                           <span className="inline-block px-3 py-1 bg-brand-secondary/50 rounded-full text-[10px] font-black uppercase tracking-widest text-brand-primary">{v.category || 'Animação'}</span>
                           <h4 className="text-lg font-bold text-brand-primary mt-1">{v.title}</h4>
                           <p className="text-slate-400 text-sm">{new Date(v.created_at).toLocaleDateString()}</p>
+                          
+                          {/* Tags Management (Admin) */}
+                          <div className="mt-3 flex flex-col gap-2">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tags Comportamentais</label>
+                            <div className="flex gap-2">
+                              <input 
+                                type="text" 
+                                defaultValue={v.tags || ""}
+                                placeholder="Ex: Educação, Alimentação, Família, Social, Higiene"
+                                onBlur={(e) => handleUpdateTags(v.id, e.target.value)}
+                                className="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-brand-accent transition-all"
+                              />
+                            </div>
+                            <p className="text-[9px] text-slate-300">Separe por vírgula. Salva ao clicar fora.</p>
+                          </div>
                         </div>
                       </div>
 

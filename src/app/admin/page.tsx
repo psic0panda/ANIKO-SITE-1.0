@@ -19,6 +19,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [videoUrl, setVideoUrl] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
+  const [videoTags, setVideoTags] = useState("");
   const [selectedProfileId, setSelectedProfileId] = useState("");
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -158,7 +159,8 @@ export default function AdminDashboard() {
           profile_id: selectedProfileId,
           title: videoTitle || "Sua nova animação!",
           video_url: videoUrl,
-          category: "Personalizado"
+          category: "Personalizado",
+          tags: videoTags
         }),
       });
       
@@ -168,6 +170,7 @@ export default function AdminDashboard() {
         alert("Vídeo enviado com sucesso para os pais!");
         setVideoUrl("");
         setVideoTitle("");
+        setVideoTags("");
       } else {
         alert("Erro ao enviar vídeo: " + (data.error || "Erro desconhecido na API"));
       }
@@ -308,6 +311,7 @@ export default function AdminDashboard() {
                               : `Especial para você: ${req.description?.slice(0, 20) || 'vídeo'}...`;
                             
                             setVideoTitle(defaultTitle);
+                            setVideoTags(req.tags || "");
                         }}
                         className={`text-sm font-bold hover:underline ${req.is_alteration ? 'text-amber-500' : 'text-brand-accent'}`}
                       >
@@ -437,6 +441,18 @@ export default function AdminDashboard() {
                       value={videoUrl}
                       onChange={(e) => setVideoUrl(e.target.value)}
                     />
+                 </div>
+                 
+                 <div>
+                    <label className="block text-sm font-bold mb-2">Tags Comportamentais (Automáticas)</label>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: Educação, Social"
+                      className="w-full px-5 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-brand-accent outline-none text-sm"
+                      value={videoTags}
+                      onChange={(e) => setVideoTags(e.target.value)}
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1 italic">Inferidas automaticamente da solicitação. Você pode editar.</p>
                  </div>
                   
                   <div className="space-y-3 pt-2">

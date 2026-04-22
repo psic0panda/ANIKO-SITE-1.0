@@ -6,17 +6,19 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { 
-  Star, 
-  MessageSquare, 
   TrendingUp, 
-  ChevronRight, 
-  PlayCircle,
-  CheckCircle2,
-  AlertCircle,
-  RefreshCcw,
-  Sparkles,
+  RefreshCcw, 
+  Sparkles, 
+  CheckCircle2, 
+  LogOut, 
+  Menu, 
+  X, 
+  MessageSquare, 
+  Star, 
+  Send,
+  Play,
   Wind
-} from 'lucide-react';
+} from "lucide-react";
 import { useSensory } from "@/context/SensoryContext";
 import BackgroundDecor from "@/components/BackgroundDecor";
 
@@ -200,6 +202,30 @@ export default function Dashboard() {
 
   const router = useRouter();
 
+  // Helper para inferir tags automaticamente a partir do texto
+  const inferTags = (text: string): string => {
+    const t = text.toLowerCase();
+    const tags: string[] = [];
+    
+    if (t.includes('banho') || t.includes('escovar') || t.includes('dente') || t.includes('mão') || t.includes('higiene') || t.includes('limpeza')) {
+      tags.push('Higiene');
+    }
+    if (t.includes('escola') || t.includes('estudar') || t.includes('aprender') || t.includes('aula') || t.includes('educação') || t.includes('número') || t.includes('letra')) {
+      tags.push('Educação');
+    }
+    if (t.includes('comer') || t.includes('alimento') || t.includes('fruta') || t.includes('legume') || t.includes('alimentação') || t.includes('comida') || t.includes('jantar') || t.includes('almoço')) {
+      tags.push('Alimentação');
+    }
+    if (t.includes('pai') || t.includes('mãe') || t.includes('família') || t.includes('irmão') || t.includes('casa') || t.includes('avô') || t.includes('avó')) {
+      tags.push('Família');
+    }
+    if (t.includes('amigo') || t.includes('brincar') || t.includes('social') || t.includes('conversar') || t.includes('pessoas') || t.includes('compartilhar') || t.includes('sentimento')) {
+      tags.push('Social');
+    }
+    
+    return tags.join(', ');
+  };
+
   const handleDeleteVideo = async (videoId: number) => {
     if (!confirm('Tem certeza que deseja excluir este vídeo?')) return;
     
@@ -214,14 +240,28 @@ export default function Dashboard() {
       alert('Erro ao excluir vídeo: ' + error.message);
     }
   };
-
+  
+  // Função para converter links do Google Drive em links diretos para o player
+  const getDirectLink = (url: string) => {
+    if (!url) return "";
+    
+    // Suporte para Google Drive
+    if (url.includes('drive.google.com')) {
+      // Tenta extrair o ID do arquivo de vários formatos de URL do Drive
+      const match = url.match(/\/d\/(.+?)\//) || url.match(/id=(.+?)(&|$)/);
+      const fileId = match ? match[1] : null;
+      
+      if (fileId) {
+        return `https://drive.google.com/uc?export=download&id=${fileId}`;
+      }
+    }
+    
+    return url;
+  };
 
   const handleOpenVideo = (url: string) => {
-    if (url.includes('drive.google.com')) {
-      window.open(url, '_blank');
-    } else {
-      setSelectedVideo(url);
-    }
+    const directUrl = getDirectLink(url);
+    setSelectedVideo(directUrl);
   };
 
   // 1. Verificar Sessão e Buscar Vídeos
@@ -327,7 +367,8 @@ export default function Dashboard() {
               status: 'pendente',
               profile_id: user.id,
               payment_id: data.payment_id,
-              coupon_code: appliedCoupon?.code
+              coupon_code: appliedCoupon?.code,
+              tags: inferTags(requestText)
             }]);
         }
 
@@ -375,7 +416,8 @@ export default function Dashboard() {
                 description: requestText, 
                 status: 'pendente',
                 profile_id: user.id,
-                payment_id: pixData.payment_id
+                payment_id: pixData.payment_id,
+                tags: inferTags(requestText)
               }]);
           }
 
@@ -401,27 +443,30 @@ export default function Dashboard() {
   }, [isPaymentModalOpen, pixData]);
 
   // 3. Avaliar vídeo com Nota e Feedback
-  const handleRate = async (videoId: number) => {
+  const handleRate = async (videoId: number, score?: number, text?: string) => {
+    const finalScore = score !== undefined ? score : feedbackScore;
+    const finalText = text !== undefined ? text : feedbackText;
+
     setIsSubmittingFeedback(true);
     const { error } = await supabase
       .from('videos')
       .update({ 
-        response_score: feedbackScore,
-        feedback: feedbackText,
-        rating: Math.ceil(feedbackScore / 2) // Mantém compatibilidade com estrelas 0-5 se necessário
+        response_score: finalScore,
+        feedback: finalText,
+        rating: Math.ceil(finalScore / 2)
       })
       .eq('id', videoId);
     
     if (!error) {
       setVideos(prev => prev.map(v => v.id === videoId ? { 
         ...v, 
-        response_score: feedbackScore, 
-        feedback: feedbackText,
-        rating: Math.ceil(feedbackScore / 2)
+        response_score: finalScore, 
+        feedback: finalText,
+        rating: Math.ceil(finalScore / 2)
       } : v));
       setActiveFeedbackId(null);
-      setFeedbackText("");
-      setFeedbackScore(0);
+      // Don't clear global state here if parameters were used, 
+      // but usually it's fine as they are temporary.
     }
     setIsSubmittingFeedback(false);
   };
@@ -534,6 +579,15 @@ export default function Dashboard() {
           </Link>
           <div className="flex items-center gap-4">
              <button 
+               onClick={() => {
+                 document.getElementById('solicitar-video')?.scrollIntoView({ behavior: 'smooth' });
+               }}
+               className="flex items-center gap-2 px-4 md:px-6 py-2 bg-brand-accent text-white font-black rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all text-[10px] md:text-sm"
+             >
+               <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4" />
+               <span>Solicitar Vídeo</span>
+             </button>
+             <button 
                onClick={toggleSensoryFriendly}
                className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-xs font-bold ${isSensoryFriendly ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-slate-50 border-slate-200 text-slate-400 hover:border-brand-secondary'}`}
              >
@@ -555,18 +609,27 @@ export default function Dashboard() {
       <div className="mx-auto max-w-7xl px-6 py-12 md:px-12 grid gap-12 lg:grid-cols-[1fr_350px]">
         {/* Main Content */}
         <div className="space-y-12">
-          {/* Video Gallery */}
-          <section className="space-y-8 animate-fade-up">
+          {/* Video Gallery - Timeline UX */}
+          <section className="space-y-12 animate-fade-up">
             <div className="flex items-center justify-between">
-              <h1 className="text-4xl font-black">Vídeos Solicitados</h1>
-              <span className="text-brand-secondary font-bold cursor-pointer hover:underline">Ver Histórico</span>
+              <div>
+                <h1 className="text-4xl font-black">Sua Jornada Aniko</h1>
+                <p className="text-slate-400 font-medium mt-1">Acompanhe as animações criadas para {profile.child_name || "seu filho"}</p>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-2xl shadow-sm border border-slate-100">
+                <div className="h-2 w-2 rounded-full bg-brand-accent animate-pulse" />
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{videos.length} Vídeos</span>
+              </div>
             </div>
             
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="relative space-y-16 pl-4 md:pl-8">
+              {/* Vertical Timeline Line */}
+              <div className="absolute left-[21px] md:left-[37px] top-4 bottom-4 w-1 bg-gradient-to-b from-brand-accent/40 via-brand-secondary/20 to-transparent rounded-full" />
+
               {loading ? (
-                <div className="col-span-2 py-10 text-center text-slate-400 font-bold animate-pulse">Carregando seus vídeos...</div>
+                <div className="py-20 text-center text-slate-400 font-bold animate-pulse">Carregando sua linha do tempo...</div>
               ) : videos.length > 0 ? (
-                videos.map((v, i) => {
+                videos.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((v, i) => {
                   const titleLower = (v.title || '').toLowerCase();
                   const thumb = v.thumbnail_url || (
                     titleLower.includes('bluey') ? '/assets/drawings/bluey.jpg' :
@@ -578,100 +641,177 @@ export default function Dashboard() {
                     titleLower.includes('peixonauta') ? '/assets/drawings/peixonauta.jpg' :
                     titleLower.includes('kratts') || titleLower.includes('irmãos kratts') ? '/assets/drawings/kratts.jpg' : null
                   );
+                  const isLatest = i === 0;
+
                   return (
-                  <div key={i} className="space-y-4">
-                    <div className="group relative aspect-video rounded-[2.5rem] overflow-hidden shadow-lg border-4 border-white hover:scale-[1.02] transition-all">
-                      {thumb ? (
-                        <img src={thumb} alt={v.title} className="absolute inset-0 w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-brand-primary to-brand-secondary" />
-                      )}
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
-                      <button type="button" onClick={() => handleOpenVideo(v.video_url)} className="absolute inset-0 w-full h-full flex items-center justify-center cursor-pointer border-none">
-                        <div className="h-16 w-16 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-2xl transition-transform group-hover:scale-110">
-                          <svg className="h-6 w-6 fill-brand-primary ml-1" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                        </div>
-                      </button>
-                      <div className="absolute top-6 right-6 group/rating">
-                        <div className="flex items-center gap-2 bg-black/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 cursor-help">
-                          <span className="text-white font-bold text-sm">{v.response_score || v.rating * 2 || 0}/10</span>
-                          {v.feedback && (
-                            <div className="absolute top-full right-0 mt-2 w-48 p-3 bg-white rounded-xl shadow-xl border border-slate-100 opacity-0 group-hover/rating:opacity-100 transition-opacity z-30 pointer-events-none">
-                              <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Feedback</p>
-                              <p className="text-sm text-brand-primary font-medium">{v.feedback}</p>
-                            </div>
-                          )}
-                          <button type="button" onClick={(e) => { e.stopPropagation(); setActiveFeedbackId(v.id); setFeedbackScore(v.response_score || v.rating * 2 || 0); setFeedbackText(v.feedback || ""); }} className="h-8 w-8 rounded-full bg-brand-accent flex items-center justify-center hover:scale-110 transition-transform">
-                            <Star className="h-4 w-4 fill-white text-white" />
-                          </button>
-                        </div>
+                    <div key={v.id} className="relative group">
+                      {/* Timeline Dot */}
+                      <div className={`absolute left-[-24px] md:left-[-40px] top-6 h-10 w-10 rounded-full border-4 border-slate-50 flex items-center justify-center z-10 transition-transform group-hover:scale-110 shadow-lg ${isLatest ? 'bg-brand-accent animate-pulse' : 'bg-white'}`}>
+                        {isLatest ? <Sparkles className="h-5 w-5 text-white" /> : <CheckCircle2 className="h-5 w-5 text-brand-secondary" />}
                       </div>
-                      {activeFeedbackId === v.id && (
-                        <div className="absolute inset-0 bg-brand-primary/95 backdrop-blur-md p-6 md:p-8 flex flex-col justify-center animate-fade-in z-20 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex justify-between items-center mb-4">
-                            <h4 className="text-white font-black text-lg">Como {profile.child_name || "a criança"} reagiu?</h4>
-                            <button type="button" onClick={() => setActiveFeedbackId(null)} className="text-white/60 hover:text-white">✕</button>
-                          </div>
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <div className="flex justify-between text-xs font-bold text-white/60 uppercase tracking-widest">
-                                <span>Feedback</span>
-                                <span className="text-brand-accent">{feedbackScore}/10</span>
-                              </div>
-                              <input type="range" min="0" max="10" value={feedbackScore} onChange={(e) => setFeedbackScore(parseInt(e.target.value))} className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-brand-accent" />
-                            </div>
-                            <textarea value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)} placeholder="Opcional: O que ela mais gostou?" className="w-full h-16 md:h-20 bg-white/10 border border-white/10 rounded-2xl p-3 md:p-4 text-white text-sm outline-none focus:border-brand-accent transition-colors resize-none" />
-                            <button type="button" disabled={isSubmittingFeedback} onClick={() => handleRate(v.id)} className="w-full py-3 bg-brand-accent text-white font-bold rounded-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
-                              {isSubmittingFeedback ? "Salvando..." : "Salvar Feedback"}
-                            </button>
-                          </div>
+
+                      <div className="bg-white rounded-[3rem] p-8 md:p-10 shadow-xl border border-white hover:shadow-2xl transition-all relative overflow-hidden group/item">
+                        {/* Status Ribbon */}
+                        <div className={`absolute top-0 right-10 px-6 py-2 rounded-b-2xl text-[10px] font-black uppercase tracking-widest text-white z-10 ${v.status === 'alteracao_solicitada' ? 'bg-amber-500' : 'bg-brand-secondary'}`}>
+                          {v.status === 'alteracao_solicitada' ? 'Ajuste em Curso' : 'Entregue'}
                         </div>
-                      )}
-                    </div>
-                      <div className="px-2 flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="inline-block px-3 py-1 bg-brand-secondary/50 rounded-full text-[10px] font-black uppercase tracking-widest text-brand-primary">
-                              {v.status === 'alteracao_solicitada' ? 'Alteração Solicitada' : (v.category || 'Animação')}
-                            </span>
-                            {v.requested_alteration && (
-                              <div className="h-2 w-2 rounded-full bg-brand-accent animate-pulse" title="Alteração pendente" />
+
+                        <div className="grid lg:grid-cols-[1fr_350px] gap-10">
+                          {/* Video Section */}
+                          <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h3 className="text-2xl font-black text-brand-primary">{v.title}</h3>
+                                <p className="text-slate-400 font-bold text-sm">{new Date(v.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                                {/* Tags Display */}
+                                {v.tags && (
+                                  <div className="flex flex-wrap gap-2 mt-3">
+                                    {v.tags.split(',').map((tag: string, idx: number) => {
+                                      const t = tag.trim().toLowerCase();
+                                      let colorClass = "bg-brand-secondary/10 text-brand-secondary border-brand-secondary/20";
+                                      
+                                      if (t.includes('educação')) colorClass = "bg-blue-50 text-blue-500 border-blue-100";
+                                      else if (t.includes('alimentação')) colorClass = "bg-orange-50 text-orange-500 border-orange-100";
+                                      else if (t.includes('família')) colorClass = "bg-purple-50 text-purple-500 border-purple-100";
+                                      else if (t.includes('higiene')) colorClass = "bg-teal-50 text-teal-500 border-teal-100";
+                                      else if (t.includes('social')) colorClass = "bg-emerald-50 text-emerald-500 border-emerald-100";
+
+                                      return (
+                                        <span key={idx} className={`px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border ${colorClass}`}>
+                                          {tag.trim()}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={() => { setActiveAlterationId(v.id); setAlterationText(v.requested_alteration || ""); }}
+                                  className="p-3 bg-slate-50 text-slate-400 hover:text-brand-accent hover:bg-brand-accent/5 rounded-2xl transition-all"
+                                  title="Solicitar Ajuste"
+                                >
+                                  <RefreshCcw className="h-5 w-5" />
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteVideo(v.id)}
+                                  className="p-3 bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"
+                                  title="Excluir"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                </button>
+                              </div>
+                            </div>
+                            
+                            {!v.response_score && (
+                              <div className="bg-brand-accent/10 border border-brand-accent/20 px-6 py-3 rounded-2xl flex items-center gap-3 animate-pulse">
+                                <span className="text-xl">⭐</span>
+                                <div>
+                                  <p className="text-[10px] font-black text-brand-accent uppercase tracking-[0.2em] leading-none mb-1">Feedback Pendente</p>
+                                  <p className="text-sm font-bold text-brand-primary">Sua avaliação é muito importante para nós!</p>
+                                </div>
+                              </div>
+                            )}
+ 
+                            <div className="group/video relative aspect-video rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-slate-50">
+                              {thumb ? (
+                                <img src={thumb} alt={v.title} className="absolute inset-0 w-full h-full object-cover transition-transform group-hover/video:scale-105" />
+                              ) : (
+                                <div className="absolute inset-0 bg-gradient-to-br from-brand-primary to-brand-secondary" />
+                              )}
+                              <div className="absolute inset-0 bg-black/20 group-hover/video:bg-black/40 transition-colors flex items-center justify-center">
+                                <button 
+                                  onClick={() => handleOpenVideo(v.video_url)}
+                                  className="h-20 w-20 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all group/play"
+                                >
+                                  <div className="h-14 w-14 rounded-full bg-white flex items-center justify-center shadow-xl group-hover/play:bg-brand-accent transition-all duration-500">
+                                    <Play className="h-7 w-7 text-brand-accent group-hover/play:text-white fill-current ml-1 transition-colors" />
+                                  </div>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Feedback & Interaction Section */}
+                          <div className="flex flex-col justify-between space-y-8 bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100">
+                            <div className="space-y-6">
+                              <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="font-black text-brand-primary flex items-center gap-2">
+                                    <Star className="h-5 w-5 text-brand-accent fill-brand-accent" />
+                                    Avaliação
+                                  </h4>
+                                  <span className={`text-xl font-black ${v.response_score >= 8 ? 'text-green-500' : v.response_score >= 5 ? 'text-amber-500' : 'text-slate-400'}`}>
+                                    {v.response_score || 0}/10
+                                  </span>
+                                </div>
+                                <div className="flex gap-1.5">
+                                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
+                                    <button
+                                      key={star}
+                                      onClick={() => { setFeedbackScore(star); handleRate(v.id, star, v.feedback || ""); }}
+                                      className={`flex-1 h-8 rounded-lg transition-all ${star <= (v.response_score || 0) ? 'bg-brand-accent shadow-glow-accent' : 'bg-white border border-slate-100 hover:border-brand-accent/30'}`}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div className="space-y-3">
+                                <h4 className="font-black text-brand-primary flex items-center gap-2">
+                                  <MessageSquare className="h-5 w-5 text-brand-secondary" />
+                                  Comentários
+                                </h4>
+                                {activeFeedbackId === v.id ? (
+                                  <div className="space-y-3 animate-fade-in">
+                                    <textarea 
+                                      value={feedbackText}
+                                      onChange={(e) => setFeedbackText(e.target.value)}
+                                      placeholder="O que o(a) pequeno(a) achou?"
+                                      className="w-full h-24 p-4 rounded-2xl bg-white border border-slate-200 text-sm outline-none focus:border-brand-accent resize-none shadow-inner"
+                                    />
+                                    <div className="flex gap-2">
+                                      <button onClick={() => setActiveFeedbackId(null)} className="flex-1 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-all">Cancelar</button>
+                                      <button 
+                                        onClick={() => handleRate(v.id, feedbackScore, feedbackText)}
+                                        disabled={isSubmittingFeedback}
+                                        className="flex-2 px-6 py-2 bg-brand-primary text-white text-xs font-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg"
+                                      >
+                                        {isSubmittingFeedback ? 'Salvando...' : 'Salvar'}
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div 
+                                    onClick={() => { setActiveFeedbackId(v.id); setFeedbackText(v.feedback || ""); setFeedbackScore(v.response_score || 0); }}
+                                    className="p-4 bg-white rounded-2xl border border-slate-100 cursor-pointer hover:border-brand-accent/30 transition-all min-h-[100px] flex flex-col"
+                                  >
+                                    {v.feedback ? (
+                                      <p className="text-sm text-slate-600 leading-relaxed">{v.feedback}</p>
+                                    ) : (
+                                      <p className="text-sm text-slate-300 italic flex-1 flex items-center justify-center">Clique para deixar um comentário...</p>
+                                    )}
+                                    {v.feedback && <span className="text-[10px] font-black text-brand-accent uppercase mt-3 self-end">Editar</span>}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {v.status === 'alteracao_solicitada' && (
+                              <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex items-start gap-3">
+                                <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                                  <RefreshCcw className="h-4 w-4 animate-spin-slow" />
+                                </div>
+                                <div>
+                                  <p className="text-xs font-black text-amber-700 uppercase tracking-wider">Ajuste Solicitado</p>
+                                  <p className="text-[10px] text-amber-600 font-medium line-clamp-2 mt-0.5">{v.requested_alteration}</p>
+                                </div>
+                              </div>
                             )}
                           </div>
-                          <h4 className="text-lg font-bold text-brand-primary mt-1">{v.title}</h4>
-                          <p className="text-slate-400 text-sm">{new Date(v.created_at).toLocaleDateString()}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button 
-                            type="button"
-                            onClick={() => { setActiveAlterationId(v.id); setAlterationText(v.requested_alteration || ""); }}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all hover:scale-105 active:scale-95 ${
-                              v.status === 'alteracao_solicitada' 
-                                ? 'bg-amber-100 text-amber-600' 
-                                : v.requested_alteration 
-                                  ? 'bg-brand-accent/20 text-brand-accent' 
-                                  : 'bg-slate-100 text-slate-500 hover:bg-brand-accent/10 hover:text-brand-accent'
-                            }`}
-                            title="Solicitar 1 Alteração"
-                          >
-                            <RefreshCcw className={`h-4 w-4 ${v.status === 'alteracao_solicitada' ? 'animate-spin-slow' : ''}`} />
-                            <span className="text-[10px] font-black uppercase tracking-wider">Ajustar</span>
-                          </button>
-                          
-                          <button 
-                            type="button"
-                            onClick={() => handleDeleteVideo(v.id)}
-                            className="p-2.5 bg-slate-100 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                            title="Excluir vídeo"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                            </svg>
-                          </button>
                         </div>
                       </div>
 
-                      {/* Modal de Solicitação de Alteração */}
+                      {/* Modal de Solicitação de Alteração (Inside Timeline for better context) */}
                       {activeAlterationId === v.id && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-brand-primary/40 backdrop-blur-md p-4 animate-fade-in">
                           <div className="bg-white w-full max-w-lg rounded-[3rem] shadow-2xl p-8 md:p-10 space-y-6 animate-scale-up border border-white">
@@ -706,16 +846,16 @@ export default function Dashboard() {
                   );
                 })
               ) : (
-                 <div className="col-span-2 py-20 bg-white rounded-[3rem] border border-dashed border-slate-200 text-center space-y-4">
-                    <p className="text-slate-400 font-bold uppercase tracking-widest">Nenhum vídeo disponível ainda.</p>
-                    <p className="text-sm text-slate-300">Faça sua primeira solicitação abaixo!</p>
+                 <div className="py-20 bg-white rounded-[3rem] border border-dashed border-slate-200 text-center space-y-4">
+                    <p className="text-slate-400 font-bold uppercase tracking-widest">Nenhuma animação na sua linha do tempo ainda.</p>
+                    <p className="text-sm text-slate-300">Sua jornada começa com a primeira solicitação abaixo!</p>
                  </div>
               )}
             </div>
           </section>
 
           {/* Video Request Form */}
-          <section className="bg-white rounded-[3rem] p-10 shadow-xl border border-white animate-fade-up delay-100">
+          <section id="solicitar-video" className="bg-white rounded-[3rem] p-10 shadow-xl border border-white animate-fade-up delay-100 scroll-mt-24">
              <div className="flex items-center gap-4 mb-8">
                 <div className="h-12 w-12 rounded-2xl bg-brand-accent/10 flex items-center justify-center text-2xl">✍️</div>
                 <h3 className="text-2xl font-black">Nova Solicitação</h3>

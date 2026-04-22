@@ -225,9 +225,6 @@ export default function Home() {
               autoPlay 
               className="h-full w-full object-contain"
             />
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 glass-modern px-8 py-3 rounded-full border border-white/10 text-brand-primary font-black shadow-xl">
-               Boas-vindas à Aniko! 🐧
-            </div>
           </div>
         </div>
       )}
@@ -348,7 +345,7 @@ export default function Home() {
               onClick={() => setShowWelcome(true)}
               className="rounded-2xl bg-brand-warmth px-10 py-5 text-xl font-black text-white shadow-[0_20px_50px_rgba(255,166,70,0.3)] hover:scale-105 active:scale-95 transition-all text-glow-warmth"
             >
-              Conheça o Aniko (com a Blue! 🐧)
+              Conheça o Aniko (com a Bluey! 🐧)
             </button>
             <button onClick={() => setShowVideo(true)} className="rounded-2xl glass-modern px-10 py-5 text-xl font-black flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all text-brand-primary">
               Ver Demo
