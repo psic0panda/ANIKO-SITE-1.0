@@ -466,7 +466,17 @@ export default function AdminDashboard() {
 
                   {selectedProfile?.phone && (
                     <a 
-                      href={`https://wa.me/55${selectedProfile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! 😊\n\nO vídeo personalizado que você solicitou já está disponível na plataforma do Aniko.\n\nEle foi criado com base nas preferências e objetivos que você informou, pensando no melhor desenvolvimento e experiência para a criança.\n\nQuando puder, acesse a plataforma para assistir. Qualquer dúvida ou feedback, fico à disposição!\n\nObrigado por confiar no Aniko 💙\n\nhttps://aniko-web.vercel.app`)}`}
+                      href={`https://wa.me/55${selectedProfile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá! 😊 
+Passando para avisar que preparamos com muito carinho o vídeo personalizado que você solicitou! 🐧💙
+
+Ele já está disponível na jornada do seu pequeno no portal do Aniko. Foi criado pensando em cada detalhe que você compartilhou conosco para tornar esse momento de aprendizado ainda mais especial.
+
+Quando puderem, assistam juntos e nos contem o que acharam! O seu feedback é o que nos ajuda a evoluir.
+
+Com carinho,
+Equipe Aniko 💙
+
+Acesse aqui: https://aniko.com.br`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full py-3 bg-green-500 text-white font-bold rounded-2xl shadow-lg hover:bg-green-600 transition-all flex items-center justify-center gap-2 text-sm"

@@ -416,22 +416,22 @@ export default function AdminClientDashboard({ params }: { params: Promise<{ id:
                       </div>
 
                       {v.requested_alteration && (
-                        <div className="mt-4 p-4 bg-amber-50 border-2 border-amber-100 rounded-2xl">
-                          <div className="flex justify-between items-start mb-1">
-                            <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">⚠️ Alteração Solicitada</p>
+                        <div className="mt-4 p-5 bg-amber-50 border-2 border-amber-100 rounded-[2rem] shadow-sm">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center gap-2">
+                              <AlertCircle className="h-4 w-4 text-amber-500" />
+                              <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Ajuste Solicitado</p>
+                            </div>
                             <button 
                               onClick={async () => {
-                                if (!confirm("Deseja marcar esta alteração como concluída? O texto do pedido será removido.")) return;
+                                if (!confirm("Deseja marcar esta alteração como concluída?")) return;
                                 const { error } = await supabase
                                   .from('videos')
                                   .update({ requested_alteration: null, status: null })
                                   .eq('id', v.id);
                                 
                                 if (!error) {
-                                  // Atualiza estado local
                                   setVideos(prev => prev.map(vid => vid.id === v.id ? { ...vid, requested_alteration: null, status: null } : vid));
-                                } else {
-                                  alert("Erro ao remover: " + error.message);
                                 }
                               }}
                               className="px-3 py-1 bg-amber-500 text-white text-[10px] font-bold rounded-lg hover:bg-amber-600 transition-all shadow-sm"
@@ -442,6 +442,23 @@ export default function AdminClientDashboard({ params }: { params: Promise<{ id:
                           <p className="text-sm text-amber-900 font-medium leading-relaxed italic">
                             "{v.requested_alteration}"
                           </p>
+                        </div>
+                      )}
+
+                      {v.feedback && (
+                        <div className="mt-4 p-5 bg-white border-2 border-brand-accent/20 rounded-[2rem] shadow-sm relative overflow-hidden group/feedback">
+                          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover/feedback:opacity-20 transition-opacity">
+                            <MessageSquare className="h-12 w-12 text-brand-accent" />
+                          </div>
+                          <div className="relative z-10">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="h-2 w-2 rounded-full bg-brand-accent" />
+                              <p className="text-[10px] font-black text-brand-accent uppercase tracking-widest">Feedback dos Pais</p>
+                            </div>
+                            <p className="text-sm text-brand-primary font-bold leading-relaxed italic pr-8">
+                              "{v.feedback}"
+                            </p>
+                          </div>
                         </div>
                       )}
                     </div>
