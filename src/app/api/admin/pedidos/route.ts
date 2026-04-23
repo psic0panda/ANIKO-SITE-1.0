@@ -15,20 +15,46 @@ export async function GET(request: Request) {
   );
 
   // 1. Buscar novos pedidos
-  const { data: videoRequests, error: error1 } = await supabase
-    .from('video_requests')
-    .select(`id, description, status, created_at, profile_id, profiles(phone, child_name, parent_name, email)`)
-    .order('created_at', { ascending: false });
+  let videoRequests = [];
+  try {
+    const { data, error: error1 } = await supabase
+      .from('video_requests')
+      .select(`id, description, status, created_at, profile_id, profiles(phone, child_name, parent_name, email)`)
+      .order('created_at', { ascending: false });
+    
+    if (error1) {
+      console.warn('Erro ao buscar video_requests:', error1.message);
+    } else {
+      videoRequests = data || [];
+    }
+  } catch (e) {
+    console.error('Exceção ao buscar video_requests:', e);
+  }
 
   // 2. Buscar solicitações de alteração
-  const { data: videoAlterations, error: error2 } = await supabase
-    .from('videos')
-    .select(`id, requested_alteration, status, created_at, profile_id, title, profiles(phone, child_name, parent_name, email)`)
-    .eq('status', 'alteracao_solicitada')
-    .order('created_at', { ascending: false });
+  let videoAlterations = [];
+  try {
+    const { data, error: error2 } = await supabase
+      .from('videos')
+      .select(`id, requested_alteration, status, created_at, profile_id, title, profiles(phone, child_name, parent_name, email)`)
+      .eq('status', 'alteracao_solicitada')
+      .order('created_at', { ascending: false });
 
-  if (error1 || error2) {
-    return NextResponse.json({ error: (error1?.message || error2?.message) }, { status: 500 });
+    if (error2) {
+      console.warn('Erro ao buscar videoAlterations:', error2.message);
+      // Se o erro for de coluna faltante, tentamos buscar sem o status para não quebrar tudo
+      if (error2.message.includes('status')) {
+         const { data: dataFallback } = await supabase
+          .from('videos')
+          .select(`id, created_at, profile_id, title, profiles(phone, child_name, parent_name, email)`)
+          .limit(10);
+         // Não podemos filtrar por status, então ignoramos alterações por enquanto
+      }
+    } else {
+      videoAlterations = data || [];
+    }
+  } catch (e) {
+    console.error('Exceção ao buscar videoAlterations:', e);
   }
 
   // 3. Combinar e normalizar

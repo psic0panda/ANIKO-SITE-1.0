@@ -247,12 +247,13 @@ export default function Dashboard() {
     
     // Suporte para Google Drive
     if (url.includes('drive.google.com')) {
-      // Tenta extrair o ID do arquivo de vários formatos de URL do Drive
+      // Tenta extrair o ID do arquivo
       const match = url.match(/\/d\/(.+?)\//) || url.match(/id=(.+?)(&|$)/);
       const fileId = match ? match[1] : null;
       
       if (fileId) {
-        return `https://drive.google.com/uc?export=download&id=${fileId}`;
+        // Adicionando confirm=t para burlar o aviso de verificação de vírus do Google Drive para arquivos grandes
+        return `https://drive.google.com/uc?export=download&confirm=t&id=${fileId}`;
       }
     }
     
@@ -661,14 +662,15 @@ export default function Dashboard() {
                           <div className="space-y-6">
                             <div className="flex items-center justify-between">
                               <div>
-                                <h3 className="text-2xl font-black text-brand-primary">{v.title}</h3>
-                                <p className="text-slate-400 font-bold text-sm">{new Date(v.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-                                {/* Tags Display */}
-                                {v.tags && (
-                                  <div className="flex flex-wrap gap-2 mt-3">
-                                    {v.tags.split(',').map((tag: string, idx: number) => {
+                                  <div className="flex flex-wrap gap-2 mb-3">
+                                    {v.category && (
+                                      <span className="px-3 py-1 bg-brand-secondary/10 text-brand-secondary rounded-lg text-[10px] font-black uppercase tracking-wider border border-brand-secondary/20">
+                                        {v.category}
+                                      </span>
+                                    )}
+                                    {v.tags && v.tags.split(',').map((tag: string, idx: number) => {
                                       const t = tag.trim().toLowerCase();
-                                      let colorClass = "bg-brand-secondary/10 text-brand-secondary border-brand-secondary/20";
+                                      let colorClass = "bg-slate-50 text-slate-500 border-slate-200";
                                       
                                       if (t.includes('educação')) colorClass = "bg-blue-50 text-blue-500 border-blue-100";
                                       else if (t.includes('alimentação')) colorClass = "bg-orange-50 text-orange-500 border-orange-100";
@@ -683,7 +685,8 @@ export default function Dashboard() {
                                       );
                                     })}
                                   </div>
-                                )}
+                                <h3 className="text-2xl font-black text-brand-primary">{v.title}</h3>
+                                <p className="text-slate-400 font-bold text-sm">{new Date(v.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                               </div>
                               <div className="flex gap-2">
                                 <button 

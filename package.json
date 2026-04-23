@@ -12,6 +12,7 @@
     "@supabase/supabase-js": "^2.100.1",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
+    "cloudinary": "^2.9.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.7.0",
     "mercadopago": "^2.12.0",

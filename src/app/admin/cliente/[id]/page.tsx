@@ -13,7 +13,8 @@ import {
   PlayCircle,
   CheckCircle2,
   AlertCircle,
-  ArrowLeft
+  ArrowLeft,
+  Sparkles
 } from 'lucide-react';
 
 const AVATARS = [
@@ -229,12 +230,28 @@ export default function AdminClientDashboard({ params }: { params: Promise<{ id:
     setIsSaving(false);
   };
 
-  const handleOpenVideo = (url: string) => {
+  // Função para converter links do Google Drive em links diretos para o player
+  const getDirectLink = (url: string) => {
+    if (!url) return "";
+    
+    // Suporte para Google Drive
     if (url.includes('drive.google.com')) {
-      window.open(url, '_blank');
-    } else {
-      setSelectedVideo(url);
+      // Tenta extrair o ID do arquivo
+      const match = url.match(/\/d\/(.+?)\//) || url.match(/id=(.+?)(&|$)/);
+      const fileId = match ? match[1] : null;
+      
+      if (fileId) {
+        // Adicionando confirm=t para burlar o aviso de verificação de vírus do Google Drive para arquivos grandes
+        return `https://drive.google.com/uc?export=download&confirm=t&id=${fileId}`;
+      }
     }
+    
+    return url;
+  };
+
+  const handleOpenVideo = (url: string) => {
+    const directUrl = getDirectLink(url);
+    setSelectedVideo(directUrl);
   };
 
   const handleRate = async (videoId: number) => {
@@ -317,205 +334,256 @@ export default function AdminClientDashboard({ params }: { params: Promise<{ id:
 
       <div className="mx-auto max-w-7xl px-6 py-12 md:px-12 grid gap-12 lg:grid-cols-[1fr_350px]">
         {/* Main Content */}
-        <div className="space-y-12">
-          {/* Video Gallery */}
-          <section className="space-y-8">
-            <div className="flex items-center justify-between">
-              <h1 className="text-4xl font-black">Vídeos Solicitados</h1>
-              <span className="text-brand-secondary font-bold cursor-pointer hover:underline">Ver Histórico</span>
-            </div>
-            
-            <div className="grid gap-6 md:grid-cols-2">
-              {loading ? (
-                <div className="col-span-2 py-10 text-center text-slate-400 font-bold animate-pulse">Carregando vídeos...</div>
-              ) : videos.length > 0 ? (
-                videos.map((v, i) => {
-                  const titleLower = (v.title || '').toLowerCase();
-                  const thumb = v.thumbnail_url || (
-                    titleLower.includes('bluey') ? '/assets/drawings/bluey.jpg' :
-                    titleLower.includes('daniel') ? '/assets/drawings/daniel.jpg' :
-                    titleLower.includes('caillou') ? '/assets/drawings/caillou.jpg' :
-                    titleLower.includes('luna') ? '/assets/drawings/luna.webp' :
-                    titleLower.includes('arthur') ? '/assets/drawings/arthur.jpg' :
-                    titleLower.includes('octonaut') ? '/assets/drawings/octonauts.jpg' :
-                    titleLower.includes('peixonauta') ? '/assets/drawings/peixonauta.jpg' :
-                    titleLower.includes('kratts') || titleLower.includes('irmãos kratts') ? '/assets/drawings/kratts.jpg' : null
-                  );
-                  return (
-                  <div key={i} className="space-y-4">
-                    <div className="group relative aspect-video rounded-[2.5rem] overflow-hidden shadow-lg border-4 border-white hover:scale-[1.02] transition-all">
-                      {thumb ? (
-                        <img src={thumb} alt={v.title} className="absolute inset-0 w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-brand-primary to-brand-secondary" />
-                      )}
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
-                      <button type="button" onClick={() => handleOpenVideo(v.video_url)} className="absolute inset-0 w-full h-full flex items-center justify-center cursor-pointer border-none">
-                        <div className="h-16 w-16 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-2xl transition-transform group-hover:scale-110">
-                          <svg className="h-6 w-6 fill-brand-primary ml-1" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                        </div>
-                      </button>
-                      <div className="absolute top-6 right-6 group/rating">
-                        <div className="flex items-center gap-2 bg-black/20 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 cursor-help">
-                          <span className="text-white font-bold text-sm">{v.response_score || v.rating * 2 || 0}/10</span>
-                          {v.feedback && (
-                            <div className="absolute top-full right-0 mt-2 w-48 p-3 bg-white rounded-xl shadow-xl border border-slate-100 opacity-0 group-hover/rating:opacity-100 transition-opacity z-30 pointer-events-none">
-                              <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Feedback</p>
-                              <p className="text-sm text-brand-primary font-medium">{v.feedback}</p>
-                            </div>
-                          )}
-                          <button type="button" onClick={(e) => { e.stopPropagation(); setActiveFeedbackId(v.id); setFeedbackScore(v.response_score || v.rating * 2 || 0); setFeedbackText(v.feedback || ""); }} className="h-8 w-8 rounded-full bg-brand-accent flex items-center justify-center hover:scale-110 transition-transform">
-                            <Star className="h-4 w-4 fill-white text-white" />
-                          </button>
-                        </div>
-                      </div>
-                      {activeFeedbackId === v.id && (
-                        <div className="absolute inset-0 bg-brand-primary/95 backdrop-blur-md p-6 md:p-8 flex flex-col justify-center animate-fade-in z-20 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex justify-between items-center mb-4">
-                            <h4 className="text-white font-black text-lg">Como {profile.child_name || "a criança"} reagiu?</h4>
-                            <button type="button" onClick={() => setActiveFeedbackId(null)} className="text-white/60 hover:text-white">✕</button>
-                          </div>
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <div className="flex justify-between text-xs font-bold text-white/60 uppercase tracking-widest">
-                                <span>Feedback</span>
-                                <span className="text-brand-accent">{feedbackScore}/10</span>
-                              </div>
-                              <input type="range" min="0" max="10" value={feedbackScore} onChange={(e) => setFeedbackScore(parseInt(e.target.value))} className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-brand-accent" />
-                            </div>
-                            <textarea value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)} placeholder="Opcional: O que ela mais gostou?" className="w-full h-16 md:h-20 bg-white/10 border border-white/10 rounded-2xl p-3 md:p-4 text-white text-sm outline-none focus:border-brand-accent transition-colors resize-none" />
-                            <button type="button" disabled={isSubmittingFeedback} onClick={() => handleRate(v.id)} className="w-full py-3 bg-brand-accent text-white font-bold rounded-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
-                              {isSubmittingFeedback ? "Salvando..." : "Salvar Feedback"}
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="px-2">
-                       <div className="flex justify-between items-start">
-                        <div>
-                          <span className="inline-block px-3 py-1 bg-brand-secondary/50 rounded-full text-[10px] font-black uppercase tracking-widest text-brand-primary">{v.category || 'Animação'}</span>
-                          <h4 className="text-lg font-bold text-brand-primary mt-1">{v.title}</h4>
-                          <p className="text-slate-400 text-sm">{new Date(v.created_at).toLocaleDateString()}</p>
-                          
-                          {/* Tags Management (Admin) */}
-                          <div className="mt-3 flex flex-col gap-2">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tags Comportamentais</label>
-                            <div className="flex gap-2">
-                              <input 
-                                type="text" 
-                                defaultValue={v.tags || ""}
-                                placeholder="Ex: Educação, Alimentação, Família, Social, Higiene"
-                                onBlur={(e) => handleUpdateTags(v.id, e.target.value)}
-                                className="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-brand-accent transition-all"
-                              />
-                            </div>
-                            <p className="text-[9px] text-slate-300">Separe por vírgula. Salva ao clicar fora.</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {v.requested_alteration && (
-                        <div className="mt-4 p-5 bg-amber-50 border-2 border-amber-100 rounded-[2rem] shadow-sm">
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2">
-                              <AlertCircle className="h-4 w-4 text-amber-500" />
-                              <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Ajuste Solicitado</p>
-                            </div>
-                            <button 
-                              onClick={async () => {
-                                if (!confirm("Deseja marcar esta alteração como concluída?")) return;
-                                const { error } = await supabase
-                                  .from('videos')
-                                  .update({ requested_alteration: null, status: null })
-                                  .eq('id', v.id);
-                                
-                                if (!error) {
-                                  setVideos(prev => prev.map(vid => vid.id === v.id ? { ...vid, requested_alteration: null, status: null } : vid));
-                                }
-                              }}
-                              className="px-3 py-1 bg-amber-500 text-white text-[10px] font-bold rounded-lg hover:bg-amber-600 transition-all shadow-sm"
-                            >
-                              Marcar como Concluída
-                            </button>
-                          </div>
-                          <p className="text-sm text-amber-900 font-medium leading-relaxed italic">
-                            "{v.requested_alteration}"
-                          </p>
-                        </div>
-                      )}
-
-                      {v.feedback && (
-                        <div className="mt-4 p-5 bg-white border-2 border-brand-accent/20 rounded-[2rem] shadow-sm relative overflow-hidden group/feedback">
-                          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover/feedback:opacity-20 transition-opacity">
-                            <MessageSquare className="h-12 w-12 text-brand-accent" />
-                          </div>
-                          <div className="relative z-10">
-                            <div className="flex items-center gap-2 mb-2">
-                              <div className="h-2 w-2 rounded-full bg-brand-accent" />
-                              <p className="text-[10px] font-black text-brand-accent uppercase tracking-widest">Feedback dos Pais</p>
-                            </div>
-                            <p className="text-sm text-brand-primary font-bold leading-relaxed italic pr-8">
-                              "{v.feedback}"
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  );
-                })
-              ) : (
-                 <div className="col-span-2 py-20 bg-white rounded-[3rem] border border-dashed border-slate-200 text-center space-y-4">
-                    <p className="text-slate-400 font-bold uppercase tracking-widest">Nenhum vídeo disponível ainda.</p>
-                 </div>
-              )}
-            </div>
-          </section>
-
-          {/* Progress Section */}
-          <section className="bg-white rounded-[3rem] p-10 shadow-xl border border-white">
-             <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                   <div className="h-10 w-10 rounded-xl bg-brand-accent/10 flex items-center justify-center text-brand-accent">
-                      <TrendingUp className="h-5 w-5" />
-                   </div>
-                   <h3 className="text-2xl font-black">Gráfico de Resposta</h3>
+          <div className="space-y-12">
+            <section className="space-y-12 animate-fade-up">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-4xl font-black text-brand-primary">Jornada de {profile.child_name || "Cliente"}</h1>
+                  <p className="text-slate-400 font-medium mt-1">Acompanhe todos os vídeos e feedbacks</p>
                 </div>
-             </div>
-             
+                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-2xl shadow-sm border border-slate-100">
+                  <div className="h-2 w-2 rounded-full bg-brand-accent animate-pulse" />
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{videos.length} Vídeos</span>
+                </div>
+              </div>
+
+              <div className="relative space-y-16 pl-4 md:pl-8">
+                {/* Vertical Timeline Line */}
+                <div className="absolute left-[21px] md:left-[37px] top-4 bottom-4 w-1 bg-gradient-to-b from-brand-accent/40 via-brand-secondary/20 to-transparent rounded-full" />
+
+                {loading ? (
+                  <div className="py-20 text-center text-slate-400 font-bold animate-pulse">Carregando jornada...</div>
+                ) : videos.length > 0 ? (
+                  videos.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((v, i) => {
+                    const titleLower = (v.title || '').toLowerCase();
+                    const thumb = v.thumbnail_url || (
+                      titleLower.includes('bluey') ? '/assets/drawings/bluey.jpg' :
+                      titleLower.includes('daniel') ? '/assets/drawings/daniel.jpg' :
+                      titleLower.includes('caillou') ? '/assets/drawings/caillou.jpg' :
+                      titleLower.includes('luna') ? '/assets/drawings/luna.webp' :
+                      titleLower.includes('arthur') ? '/assets/drawings/arthur.jpg' :
+                      titleLower.includes('octonaut') ? '/assets/drawings/octonauts.jpg' :
+                      titleLower.includes('peixonauta') ? '/assets/drawings/peixonauta.jpg' :
+                      titleLower.includes('kratts') || titleLower.includes('irmãos kratts') ? '/assets/drawings/kratts.jpg' : null
+                    );
+                    const isLatest = i === 0;
+
+                    return (
+                      <div key={v.id} className="relative group">
+                        {/* Timeline Dot */}
+                        <div className={`absolute left-[-24px] md:left-[-40px] top-6 h-10 w-10 rounded-full border-4 border-slate-50 flex items-center justify-center z-10 transition-transform group-hover:scale-110 shadow-lg ${isLatest ? 'bg-brand-accent animate-pulse' : 'bg-white'}`}>
+                          {isLatest ? <Sparkles className="h-5 w-5 text-white" /> : <CheckCircle2 className="h-5 w-5 text-brand-secondary" />}
+                        </div>
+
+                        <div className="bg-white rounded-[3rem] p-8 md:p-10 shadow-xl border border-white hover:shadow-2xl transition-all relative overflow-hidden group/item">
+                          {/* Status Ribbon */}
+                          <div className={`absolute top-0 right-10 px-6 py-2 rounded-b-2xl text-[10px] font-black uppercase tracking-widest text-white z-10 ${v.status === 'alteracao_solicitada' ? 'bg-amber-500' : 'bg-brand-secondary'}`}>
+                            {v.status === 'alteracao_solicitada' ? 'Ajuste Solicitado' : 'Entregue'}
+                          </div>
+
+                          <div className="grid lg:grid-cols-[1fr_350px] gap-10">
+                            {/* Video Section */}
+                            <div className="space-y-6">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="flex flex-wrap gap-2 mb-3">
+                                    {v.category && (
+                                      <span className="px-3 py-1 bg-brand-secondary/10 text-brand-secondary rounded-lg text-[10px] font-black uppercase tracking-wider border border-brand-secondary/20">
+                                        {v.category}
+                                      </span>
+                                    )}
+                                    {v.tags && v.tags.split(',').map((tag: string, idx: number) => {
+                                      const t = tag.trim().toLowerCase();
+                                      let colorClass = "bg-slate-50 text-slate-500 border-slate-200";
+                                      
+                                      if (t.includes('educação')) colorClass = "bg-blue-50 text-blue-500 border-blue-100";
+                                      else if (t.includes('alimentação')) colorClass = "bg-orange-50 text-orange-500 border-orange-100";
+                                      else if (t.includes('família')) colorClass = "bg-purple-50 text-purple-500 border-purple-100";
+                                      else if (t.includes('higiene')) colorClass = "bg-teal-50 text-teal-500 border-teal-100";
+                                      else if (t.includes('social')) colorClass = "bg-emerald-50 text-emerald-500 border-emerald-100";
+
+                                      return (
+                                        <span key={idx} className={`px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border ${colorClass}`}>
+                                          {tag.trim()}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                  <h3 className="text-2xl font-black text-brand-primary">{v.title}</h3>
+                                  <p className="text-slate-400 font-bold text-sm">{new Date(v.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button 
+                                    onClick={async () => {
+                                      const newWinStatus = !v.is_win;
+                                      const { error } = await supabase.from('videos').update({ is_win: newWinStatus }).eq('id', v.id);
+                                      if (!error) {
+                                        setVideos(prev => prev.map(vid => vid.id === v.id ? { ...vid, is_win: newWinStatus } : vid));
+                                      }
+                                    }}
+                                    className={`p-3 rounded-2xl transition-all ${v.is_win ? 'bg-amber-100 text-amber-600 border border-amber-200' : 'bg-slate-50 text-slate-400 hover:text-amber-500 hover:bg-amber-50'}`}
+                                    title={v.is_win ? "Remover da Biblioteca de Wins" : "Adicionar à Biblioteca de Wins (Referência)"}
+                                  >
+                                    <Star className={`h-5 w-5 ${v.is_win ? 'fill-amber-600' : ''}`} />
+                                  </button>
+                                  <button 
+                                    onClick={async () => {
+                                      if (!confirm("Excluir este vídeo permanentemente?")) return;
+                                      const { error } = await supabase.from('videos').delete().eq('id', v.id);
+                                      if (!error) setVideos(prev => prev.filter(vid => vid.id !== v.id));
+                                    }}
+                                    className="p-3 bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="group/video relative aspect-video rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-slate-50 bg-slate-100">
+                                {thumb ? (
+                                  <img src={thumb} alt={v.title} className="absolute inset-0 w-full h-full object-cover transition-transform group-hover/video:scale-105" />
+                                ) : (
+                                  <div className="absolute inset-0 bg-gradient-to-br from-brand-primary to-brand-secondary" />
+                                )}
+                                <div className="absolute inset-0 bg-black/20 group-hover/video:bg-black/40 transition-colors flex items-center justify-center">
+                                  <button 
+                                    onClick={() => handleOpenVideo(v.video_url)}
+                                    className="h-20 w-20 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all group/play"
+                                  >
+                                    <div className="h-14 w-14 rounded-full bg-white flex items-center justify-center shadow-xl group-hover/play:bg-brand-accent transition-all duration-500">
+                                      <PlayCircle className="h-7 w-7 text-brand-accent group-hover/play:text-white fill-current transition-colors" />
+                                    </div>
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Admin Tags Editor */}
+                              <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Tags Comportamentais (Admin)</p>
+                                <input 
+                                  type="text"
+                                  defaultValue={v.tags || ""}
+                                  placeholder="Ex: Educação, Social, Alimentação"
+                                  onBlur={async (e) => {
+                                    const val = e.target.value;
+                                    const { error } = await supabase.from('videos').update({ tags: val }).eq('id', v.id);
+                                    if (error) alert("Erro ao salvar tags: " + error.message);
+                                  }}
+                                  className="w-full px-5 py-3 rounded-xl bg-white border border-slate-200 text-sm font-bold text-brand-primary outline-none focus:border-brand-accent transition-all"
+                                />
+                                {v.tags && (
+                                  <div className="flex flex-wrap gap-2 mt-4">
+                                    {v.tags.split(',').map((tag: string, idx: number) => {
+                                      const t = tag.trim().toLowerCase();
+                                      let colorClass = "bg-slate-200 text-slate-600 border-slate-300";
+                                      if (t.includes('educação')) colorClass = "bg-blue-50 text-blue-500 border-blue-100";
+                                      else if (t.includes('alimentação')) colorClass = "bg-orange-50 text-orange-500 border-orange-100";
+                                      else if (t.includes('família')) colorClass = "bg-purple-50 text-purple-500 border-purple-100";
+                                      else if (t.includes('higiene')) colorClass = "bg-teal-50 text-teal-500 border-teal-100";
+                                      else if (t.includes('social')) colorClass = "bg-emerald-50 text-emerald-500 border-emerald-100";
+                                      return (
+                                        <span key={idx} className={`px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg border ${colorClass}`}>
+                                          {tag.trim()}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Sidebar Interaction Section */}
+                            <div className="flex flex-col justify-between space-y-8 bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100">
+                              <div className="space-y-6">
+                                <div className="space-y-4">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="font-black text-brand-primary flex items-center gap-2">
+                                      <Star className="h-5 w-5 text-brand-accent fill-brand-accent" />
+                                      Avaliação do Cliente
+                                    </h4>
+                                    <span className={`text-xl font-black ${v.response_score >= 8 ? 'text-green-500' : v.response_score >= 5 ? 'text-amber-500' : 'text-slate-400'}`}>
+                                      {v.response_score !== null ? `${v.response_score}/10` : 'Pendente'}
+                                    </span>
+                                  </div>
+                                  <div className="flex gap-1.5 opacity-50 grayscale pointer-events-none">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
+                                      <div key={star} className={`flex-1 h-6 rounded-md ${star <= (v.response_score || 0) ? 'bg-brand-accent' : 'bg-white border border-slate-200'}`} />
+                                    ))}
+                                  </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                  <h4 className="font-black text-brand-primary flex items-center gap-2">
+                                    <MessageSquare className="h-5 w-5 text-brand-secondary" />
+                                    Comentários dos Pais
+                                  </h4>
+                                  <div className="p-5 bg-white rounded-2xl border border-slate-100 shadow-sm min-h-[100px]">
+                                    {v.feedback ? (
+                                      <p className="text-sm text-brand-primary font-bold italic leading-relaxed">"{v.feedback}"</p>
+                                    ) : (
+                                      <p className="text-sm text-slate-300 italic flex items-center justify-center h-full">Nenhum comentário enviado ainda.</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {v.requested_alteration && (
+                                <div className="bg-amber-50 p-6 rounded-[2.5rem] border border-amber-100 shadow-sm">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                                        <AlertCircle className="h-4 w-4 animate-pulse" />
+                                      </div>
+                                      <p className="text-xs font-black text-amber-700 uppercase">Ajuste Solicitado</p>
+                                    </div>
+                                    <button 
+                                      onClick={async () => {
+                                        if (!confirm("Marcar como concluída?")) return;
+                                        await supabase.from('videos').update({ status: 'concluido', requested_alteration: null }).eq('id', v.id);
+                                        setVideos(prev => prev.map(vid => vid.id === v.id ? { ...vid, status: 'concluido', requested_alteration: null } : vid));
+                                      }}
+                                      className="px-4 py-2 bg-amber-500 text-white text-[10px] font-black rounded-xl hover:bg-amber-600 transition-all shadow-md"
+                                    >
+                                      Concluir
+                                    </button>
+                                  </div>
+                                  <p className="text-sm text-amber-900 font-bold leading-relaxed italic">"{v.requested_alteration}"</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="py-20 bg-white rounded-[3rem] border border-dashed border-slate-200 text-center space-y-4">
+                    <p className="text-slate-400 font-bold uppercase tracking-widest">Nenhuma animação enviada ainda.</p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Response Chart */}
+            <section className="bg-white rounded-[3rem] p-10 shadow-xl border border-white">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-10 w-10 rounded-xl bg-brand-accent/10 flex items-center justify-center text-brand-accent">
+                  <TrendingUp className="h-5 w-5" />
+                </div>
+                <h3 className="text-2xl font-black">Análise de Engajamento</h3>
+              </div>
               <div className="w-full">
                 {videos.length > 0 ? (
                   <GraficoRespostaAdmin videos={videos} />
                 ) : (
                   <div className="flex flex-col items-center justify-center h-48 text-slate-300">
                     <TrendingUp className="h-10 w-10 opacity-20" />
-                    <p className="text-sm font-bold uppercase tracking-widest mt-2">Aguardando avaliações...</p>
+                    <p className="text-sm font-bold mt-2 uppercase tracking-widest">Aguardando dados...</p>
                   </div>
                 )}
               </div>
-              
-              {videos.length > 0 && (
-                <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
-                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Média de Resposta</p>
-                      <p className="text-xl font-black text-brand-primary">
-                         {(() => {
-                           const videosComNota = videos.filter(v => v.response_score !== null && v.response_score !== undefined);
-                           if (videosComNota.length === 0) return '-';
-                           const media = videosComNota.reduce((acc, v) => acc + v.response_score, 0) / videosComNota.length;
-                           return `${media.toFixed(1)}/10`;
-                         })()}
-                      </p>
-                   </div>
-                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Total de Vídeos</p>
-                      <p className="text-xl font-black text-brand-primary">{videos.length}</p>
-                   </div>
-                </div>
-              )}
-          </section>
-        </div>
+            </section>
+          </div>
 
         {/* Sidebar */}
         <aside className="space-y-8">
