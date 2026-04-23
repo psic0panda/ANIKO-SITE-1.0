@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   );
 
   // 1. Buscar novos pedidos
-  let videoRequests = [];
+  let videoRequests: any[] = [];
   try {
     const { data, error: error1 } = await supabase
       .from('video_requests')
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   }
 
   // 2. Buscar solicitações de alteração
-  let videoAlterations = [];
+  let videoAlterations: any[] = [];
   try {
     const { data, error: error2 } = await supabase
       .from('videos')

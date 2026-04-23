@@ -31,8 +31,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Este cupom já expirou.' }, { status: 400 });
     }
 
-    // 3. Verificar se o usuário já usou este cupom (se profile_id foi fornecido)
-    if (profile_id) {
+    // 3. Verificar se o cupom já foi usado
+    if (coupon.code.startsWith('UNICO_')) {
+      // Verificação GLOBAL: ninguém mais pode usar
+      const { data: globalPayment } = await supabaseAdmin
+        .from('payments')
+        .select('id')
+        .eq('coupon_id', coupon.id)
+        .eq('status', 'approved')
+        .limit(1)
+        .maybeSingle();
+
+      if (globalPayment) {
+        return NextResponse.json({ success: false, error: 'Este cupom era de uso único e já foi utilizado.' }, { status: 400 });
+      }
+    } else if (profile_id) {
+      // Verificação POR CONTA: limite de 1 por usuário
       const { data: existingPayment } = await supabaseAdmin
         .from('payments')
         .select('id')

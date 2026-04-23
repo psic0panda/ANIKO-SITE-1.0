@@ -368,8 +368,7 @@ export default function Dashboard() {
               status: 'pendente',
               profile_id: user.id,
               payment_id: data.payment_id,
-              coupon_code: appliedCoupon?.code,
-              tags: inferTags(requestText)
+              coupon_code: appliedCoupon?.code
             }]);
         }
 
@@ -417,8 +416,7 @@ export default function Dashboard() {
                 description: requestText, 
                 status: 'pendente',
                 profile_id: user.id,
-                payment_id: pixData.payment_id,
-                tags: inferTags(requestText)
+                payment_id: pixData.payment_id
               }]);
           }
 
@@ -633,14 +631,18 @@ export default function Dashboard() {
                 videos.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((v, i) => {
                   const titleLower = (v.title || '').toLowerCase();
                   const thumb = v.thumbnail_url || (
-                    titleLower.includes('bluey') ? '/assets/drawings/bluey.jpg' :
-                    titleLower.includes('daniel') ? '/assets/drawings/daniel.jpg' :
-                    titleLower.includes('caillou') ? '/assets/drawings/caillou.jpg' :
-                    titleLower.includes('luna') ? '/assets/drawings/luna.webp' :
-                    titleLower.includes('arthur') ? '/assets/drawings/arthur.jpg' :
-                    titleLower.includes('octonaut') ? '/assets/drawings/octonauts.jpg' :
-                    titleLower.includes('peixonauta') ? '/assets/drawings/peixonauta.jpg' :
-                    titleLower.includes('kratts') || titleLower.includes('irmãos kratts') ? '/assets/drawings/kratts.jpg' : null
+                    (v.video_url && v.video_url.includes('cloudinary.com')) 
+                      ? v.video_url.replace(/\.(mp4|mov|webm)$/i, '.jpg') 
+                      : (
+                          titleLower.includes('bluey') ? '/assets/drawings/bluey.jpg' :
+                          titleLower.includes('daniel') ? '/assets/drawings/daniel.jpg' :
+                          titleLower.includes('caillou') ? '/assets/drawings/caillou.jpg' :
+                          titleLower.includes('luna') ? '/assets/drawings/luna.webp' :
+                          titleLower.includes('arthur') ? '/assets/drawings/arthur.jpg' :
+                          titleLower.includes('octonaut') ? '/assets/drawings/octonauts.jpg' :
+                          titleLower.includes('peixonauta') ? '/assets/drawings/peixonauta.jpg' :
+                          titleLower.includes('kratts') || titleLower.includes('irmãos kratts') ? '/assets/drawings/kratts.jpg' : null
+                        )
                   );
                   const isLatest = i === 0;
 

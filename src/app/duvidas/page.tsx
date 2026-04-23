@@ -119,25 +119,7 @@ export default function Duvidas() {
         </div>
       </div>
 
-      {/* Bot Chat Invitation */}
-      <div className="max-w-3xl mx-auto px-6 mb-24 text-center">
-        <div className="bg-white rounded-[3rem] p-12 shadow-inner border shadow-slate-200/50">
-           <div className="text-4xl mb-6">🐧💬</div>
-           <h3 className="text-2xl font-black mb-4">Ou fale com nosso Pinguim!</h3>
-           <p className="text-slate-500 font-medium mb-8">
-             Nosso assistente IA está sempre online no canto da tela para tirar dúvidas rápidas sobre o funcionamento do site e sobre autismo.
-           </p>
-           <button 
-             onClick={() => {
-                // Trigger chat opening if possible via a global event or similar
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-             }}
-             className="px-8 py-4 bg-brand-primary text-white font-black rounded-2xl hover:scale-105 active:scale-95 transition-all text-sm"
-           >
-             Abrir Chat Agora
-           </button>
-        </div>
-      </div>
+
 
       {/* Footer */}
       <footer className="w-full border-t border-slate-200 py-12 bg-white">

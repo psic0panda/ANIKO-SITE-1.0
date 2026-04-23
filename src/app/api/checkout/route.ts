@@ -27,20 +27,35 @@ export async function POST(request: Request) {
         .single();
 
       if (coupon) {
-        // A. Verificar se já usou (Limite de 1 por conta)
-        const { data: alreadyUsed } = await supabaseAdmin
-          .from('payments')
-          .select('id')
-          .eq('profile_id', profile_id)
-          .eq('coupon_id', coupon.id)
-          .eq('status', 'approved')
-          .limit(1)
-          .maybeSingle();
+        if (coupon.code.startsWith('UNICO_')) {
+          // A. Verificar se já usou (Limite GLOBAL)
+          const { data: globalUsed } = await supabaseAdmin
+            .from('payments')
+            .select('id')
+            .eq('coupon_id', coupon.id)
+            .eq('status', 'approved')
+            .limit(1)
+            .maybeSingle();
 
-        if (alreadyUsed) {
-          console.warn(`>>> CHECKOUT: Usuário ${profile_id} tentou reutilizar cupom ${coupon_code}`);
-          // Prossegue sem o cupom ou retorna erro? O usuário pediu para "sair" o cupom, então vamos barrar.
-          return NextResponse.json({ error: 'Você já utilizou este cupom anteriormente.' }, { status: 400 });
+          if (globalUsed) {
+            console.warn(`>>> CHECKOUT: Cupom único ${coupon_code} já foi utilizado globalmente`);
+            return NextResponse.json({ error: 'Este cupom era de uso único e já foi utilizado.' }, { status: 400 });
+          }
+        } else {
+          // A. Verificar se já usou (Limite de 1 por conta)
+          const { data: alreadyUsed } = await supabaseAdmin
+            .from('payments')
+            .select('id')
+            .eq('profile_id', profile_id)
+            .eq('coupon_id', coupon.id)
+            .eq('status', 'approved')
+            .limit(1)
+            .maybeSingle();
+
+          if (alreadyUsed) {
+            console.warn(`>>> CHECKOUT: Usuário ${profile_id} tentou reutilizar cupom ${coupon_code}`);
+            return NextResponse.json({ error: 'Você já utilizou este cupom anteriormente.' }, { status: 400 });
+          }
         }
 
         // B. Verificar expiração

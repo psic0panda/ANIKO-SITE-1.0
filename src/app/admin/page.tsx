@@ -37,6 +37,7 @@ export default function AdminDashboard() {
   const [newCouponCode, setNewCouponCode] = useState("");
   const [newCouponDiscount, setNewCouponDiscount] = useState("");
   const [isCreatingCoupon, setIsCreatingCoupon] = useState(false);
+  const [isSingleUse, setIsSingleUse] = useState(false);
 
   const [viewMode, setViewMode] = useState<'pendentes' | 'historico'>('pendentes');
   const [isUploading, setIsUploading] = useState(false);
@@ -117,12 +118,17 @@ export default function AdminDashboard() {
     if (!newCouponCode || !newCouponDiscount || isCreatingCoupon) return;
     setIsCreatingCoupon(true);
 
+    let codeToCreate = newCouponCode.toUpperCase();
+    if (isSingleUse && !codeToCreate.startsWith('UNICO_')) {
+      codeToCreate = `UNICO_${codeToCreate}`;
+    }
+
     try {
       const res = await fetch('/api/admin/cupons?key=aniko_admin_segredo_2026', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          code: newCouponCode,
+          code: codeToCreate,
           discount_fixed: newCouponDiscount
         }),
       });
@@ -130,6 +136,7 @@ export default function AdminDashboard() {
       if (data.success) {
         setNewCouponCode("");
         setNewCouponDiscount("");
+        setIsSingleUse(false);
         refreshCoupons();
       } else {
         alert("Erro ao criar cupom: " + data.error);
@@ -469,8 +476,16 @@ export default function AdminDashboard() {
                                 ? `Ajuste: ${req.original_title || 'Pedido'}`
                                 : `Especial para você: ${req.description?.slice(0, 20) || 'vídeo'}...`;
                               
+                              const text = req.description?.toLowerCase() || '';
+                              const autoTags = [];
+                              if (text.includes('banho') || text.includes('escovar') || text.includes('dente') || text.includes('higiene') || text.includes('mão') || text.includes('limpeza')) autoTags.push('Higiene');
+                              if (text.includes('escola') || text.includes('educação') || text.includes('aprender') || text.includes('aula') || text.includes('estudar') || text.includes('número') || text.includes('letra')) autoTags.push('Educação');
+                              if (text.includes('comer') || text.includes('alimento') || text.includes('fruta') || text.includes('comida') || text.includes('legume') || text.includes('alimentação') || text.includes('jantar') || text.includes('almoço')) autoTags.push('Alimentação');
+                              if (text.includes('brincar') || text.includes('amigo') || text.includes('social') || text.includes('compartilhar') || text.includes('sentimento') || text.includes('conversar') || text.includes('pessoas')) autoTags.push('Social');
+                              if (text.includes('pai') || text.includes('mãe') || text.includes('família') || text.includes('irmão') || text.includes('casa') || text.includes('avô') || text.includes('avó')) autoTags.push('Família');
+
                               setVideoTitle(defaultTitle);
-                              setVideoTags(req.tags || "");
+                              setVideoTags(req.tags || autoTags.join(', '));
                               setVideoCategory("Personalizado");
                               // Guardar o ID da solicitação para marcar como concluído depois
                               (window as any).currentRequestId = req.id;
@@ -728,11 +743,11 @@ export default function AdminDashboard() {
                   {selectedProfile?.phone && (
                     <a 
                       href={`https://wa.me/55${selectedProfile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá, ${selectedProfile.parent_name || 'família'}! 😊 
-Passando para avisar que o vídeo do(a) ${selectedProfile.child_name || 'pequeno(a)'} sobre ${videoTitle.toLowerCase().replace('especial para você: ', '').replace('...', '')} já está prontinho! 🐧💙
+Passando para avisar que o vídeo novo do(a) ${selectedProfile.child_name || 'pequeno(a)'} já está prontinho! 🐧💙
 
 Ficou lindo e foi feito pensando em cada detalhe que você nos contou. Esse é um passo importante na jornada do(a) ${selectedProfile.child_name || 'pequeno(a)'}!
 
-Quando puderem, assistam juntos no portal do Aniko. Qualquer dúvida ou feedback, estamos aqui! 🐧💙
+Quando puderem, assistam juntos no portal da Aniko. Qualquer dúvida ou feedback, é só me chamar neste WhatsApp: (81) 98842-0706! 🐧💙
 
 Acesse aqui: https://aniko.com.br`)}`}
                       target="_blank"
@@ -780,6 +795,18 @@ Acesse aqui: https://aniko.com.br`)}`}
                     required
                   />
                 </div>
+                <label className="flex items-center gap-3 cursor-pointer py-1 px-2 hover:bg-slate-800/50 rounded-xl transition-colors border border-transparent hover:border-slate-600/50">
+                  <input 
+                    type="checkbox" 
+                    checked={isSingleUse}
+                    onChange={(e) => setIsSingleUse(e.target.checked)}
+                    className="w-5 h-5 accent-brand-accent rounded cursor-pointer"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-slate-200">Uso Único Global</span>
+                    <span className="text-[10px] text-slate-400">Apenas 1 pessoa poderá usar</span>
+                  </div>
+                </label>
                 <button 
                   type="submit"
                   disabled={isCreatingCoupon}
