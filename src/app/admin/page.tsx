@@ -183,53 +183,79 @@ export default function AdminDashboard() {
         return;
       }
 
-      // Passo 2: Upload direto para Cloudinary com XHR (tem barra de progresso real)
-      setUploadDebug('Enviando vídeo para Cloudinary...');
+      // Passo 2: Upload direto para Cloudinary com XHR Fragmentado (Chunked Upload)
+      setUploadDebug('Iniciando upload fragmentado (mais estável)...');
 
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('api_key', sigData.api_key);
-      formData.append('timestamp', String(sigData.timestamp));
-      formData.append('signature', sigData.signature);
-      formData.append('folder', sigData.folder);
+      const CHUNK_SIZE = 6 * 1024 * 1024; // 6MB por pedaço
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      const uniqueUploadId = 'aniko_' + Math.random().toString(36).substring(2, 15);
+      let currentByte = 0;
 
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', `https://api.cloudinary.com/v1_1/${sigData.cloud_name}/video/upload`);
+      for (let i = 0; i < totalChunks; i++) {
+        const start = currentByte;
+        const end = Math.min(start + CHUNK_SIZE, file.size);
+        const chunk = file.slice(start, end);
+        const contentRange = `bytes ${start}-${end - 1}/${file.size}`;
 
-        xhr.upload.addEventListener('progress', (event) => {
-          if (event.lengthComputable) {
-            const pct = Math.round((event.loaded / event.total) * 100);
-            setUploadProgress(pct);
-            setUploadDebug(`Enviando... ${pct}%`);
-          }
-        });
+        setUploadDebug(`Enviando parte ${i + 1} de ${totalChunks}...`);
 
-        xhr.addEventListener('load', () => {
-          try {
-            const data = JSON.parse(xhr.responseText);
-            if (xhr.status === 200 && data.secure_url) {
-              setVideoUrl(data.secure_url);
-              setUploadProgress(100);
-              setUploadDebug(`✅ Upload completo! URL salva.`);
-              resolve();
-            } else {
-              setUploadDebug(`❌ Erro Cloudinary (${xhr.status}): ${data.error?.message || xhr.responseText.slice(0, 100)}`);
-              reject(new Error(data.error?.message));
+        const formData = new FormData();
+        formData.append('file', chunk);
+        formData.append('api_key', sigData.api_key);
+        formData.append('timestamp', String(sigData.timestamp));
+        formData.append('signature', sigData.signature);
+        formData.append('folder', sigData.folder);
+
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          // Usamos auto/upload para maior compatibilidade e suporte a arquivos grandes
+          xhr.open('POST', `https://api.cloudinary.com/v1_1/${sigData.cloud_name}/auto/upload`);
+          
+          // Headers cruciais para upload fragmentado
+          xhr.setRequestHeader('X-Unique-Upload-Id', uniqueUploadId);
+          xhr.setRequestHeader('Content-Range', contentRange);
+
+          xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+              const chunkPct = event.loaded / event.total;
+              const totalPct = Math.round(((start + (chunkPct * (end - start))) / file.size) * 100);
+              setUploadProgress(totalPct);
+              setUploadDebug(`Enviando... ${totalPct}% (Parte ${i + 1}/${totalChunks})`);
             }
-          } catch {
-            setUploadDebug(`❌ Resposta inválida do Cloudinary.`);
-            reject(new Error('Invalid response'));
-          }
+          });
+
+          xhr.addEventListener('load', () => {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              if (xhr.status === 200 || xhr.status === 201) {
+                // Se for o último pedaço, salvamos a URL final
+                if (i === totalChunks - 1 && data.secure_url) {
+                  setVideoUrl(data.secure_url);
+                  setUploadProgress(100);
+                  setUploadDebug(`✅ Upload completo! Vídeo processado.`);
+                }
+                resolve();
+              } else {
+                setUploadDebug(`❌ Erro na parte ${i + 1} (${xhr.status}): ${data.error?.message || 'Erro no Cloudinary'}`);
+                reject(new Error(data.error?.message || 'Erro no Cloudinary'));
+              }
+            } catch {
+              setUploadDebug(`❌ Resposta inválida do Cloudinary na parte ${i + 1}.`);
+              reject(new Error('Invalid response'));
+            }
+          });
+
+          xhr.addEventListener('error', () => {
+            setUploadDebug(`❌ Erro de rede na parte ${i + 1}. Tentando novamente...`);
+            reject(new Error('Network error'));
+          });
+
+          xhr.send(formData);
         });
 
-        xhr.addEventListener('error', () => {
-          setUploadDebug('❌ Erro de rede ao enviar para Cloudinary.');
-          reject(new Error('Network error'));
-        });
+        currentByte = end;
+      }
 
-        xhr.send(formData);
-      });
 
     } catch (err: any) {
       setUploadDebug(`❌ Erro: ${err.message}`);

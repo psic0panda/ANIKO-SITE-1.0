@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   const timestamp = Math.round(new Date().getTime() / 1000);
   const folder = 'aniko_videos';
 
-  // Gerar assinatura para upload direto do browser
+  // Gerar assinatura para upload direto do browser (auto permite arquivos grandes e qualquer formato)
   const signature = cloudinary.utils.api_sign_request(
     { timestamp, folder },
     process.env.CLOUDINARY_API_SECRET || '_yn0cw_Rt2yN0GWg6JvZQRMWFXg'

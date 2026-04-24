@@ -572,7 +572,7 @@ export default function Dashboard() {
       {/* Navigation */}
       <nav className="w-full bg-white border-b border-slate-100 px-6 py-4 md:px-12 sticky top-0 z-30 shadow-sm">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
              <Image src="/assets/logo.jpeg" alt="Logo" width={40} height={40} className="rounded-xl shadow-md border-2 border-brand-secondary/20" />
              <span className="text-xl font-bold tracking-tight text-brand-primary uppercase">ANIKO</span>
           </Link>

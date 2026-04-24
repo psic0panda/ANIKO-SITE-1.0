@@ -321,10 +321,19 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-5xl font-heading font-black leading-[1.1] tracking-tighter text-brand-primary md:text-7xl lg:text-9xl"
+            className="text-4xl font-heading font-black leading-[1.1] tracking-tighter text-brand-primary md:text-6xl lg:text-8xl"
           >
-            Animações <br /> que <span className="text-brand-accent italic">evoluem</span>.
+            Aniko, <br className="hidden md:block" /> tornando a tela <br className="hidden md:block" /> sua <span className="text-brand-accent italic">aliada</span>.
           </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="text-slate-500 font-bold text-xl md:text-2xl tracking-tight -mt-4 mb-2"
+          >
+            Animações que <span className="text-brand-accent italic">evoluem</span>.
+          </motion.p>
           
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
