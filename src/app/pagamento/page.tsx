@@ -186,6 +186,16 @@ function CheckoutContent() {
     setIsProcessing(true);
     setErrorMessage("");
 
+    // Validar CPF para boleto
+    if (paymentMethod === "boleto") {
+      const cpfDigits = cpf.replace(/\D/g, "");
+      if (cpfDigits.length !== 11) {
+        setErrorMessage("Por favor, informe seu CPF completo (11 dígitos) para gerar o boleto.");
+        setIsProcessing(false);
+        return;
+      }
+    }
+
     try {
       let userId = currentUser?.id;
 
@@ -196,6 +206,7 @@ function CheckoutContent() {
           setIsProcessing(false);
           return;
         }
+
 
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
@@ -590,16 +601,36 @@ function CheckoutContent() {
 
             {/* Conteúdo Boleto */}
             {paymentMethod === "boleto" && (
-              <div className="text-center py-6 space-y-4 bg-slate-50 rounded-2xl border border-slate-200 p-6">
-                <div className="h-16 w-16 bg-slate-200 text-slate-700 rounded-full flex items-center justify-center mx-auto">
-                  <FileText size={32} />
+              <div className="space-y-5 bg-slate-50 rounded-2xl border border-slate-200 p-6">
+                <div className="text-center space-y-3">
+                  <div className="h-14 w-14 bg-slate-200 text-slate-700 rounded-full flex items-center justify-center mx-auto">
+                    <FileText size={28} />
+                  </div>
+                  <h3 className="text-lg font-black text-slate-900">Boleto Bancário</h3>
+                  <p className="text-xs text-slate-500">Vencimento em 3 dias corridos. Créditos liberados em até 1 dia útil após o pagamento confirmado.</p>
                 </div>
-                <h3 className="text-lg font-black text-slate-900">Boleto Bancário (Vencimento em 3 dias)</h3>
-                <p className="text-xs text-slate-600 max-w-md mx-auto">
-                  O boleto pode ser pago em qualquer banco ou aplicativo. A liberação dos créditos ocorre em até 1 dia útil após o pagamento.
-                </p>
+
+                {/* CPF obrigatório para boleto */}
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                  <p className="text-xs font-bold text-amber-700 flex items-center gap-1.5">
+                    ⚠️ CPF obrigatório para emissão do boleto
+                  </p>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">CPF do Responsável *</label>
+                    <input
+                      type="text"
+                      value={cpf}
+                      onChange={handleCpfChange}
+                      placeholder="000.000.000-00"
+                      maxLength={14}
+                      className="w-full px-4 py-3 border-2 border-slate-200 focus:border-brand-primary rounded-xl text-sm font-mono outline-none transition-colors bg-white"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
             )}
+
           </div>
         </div>
 
