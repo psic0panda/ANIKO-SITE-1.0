@@ -1151,7 +1151,7 @@ export default function Dashboard() {
                                className="w-full py-3 bg-brand-primary/5 hover:bg-brand-primary/10 text-brand-primary border border-brand-primary/20 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2"
                              >
                                <FileText size={16} className="text-brand-accent" />
-                               <span>📄 Baixar Guia Pedagógico & Metas ABA (PDF)</span>
+                               <span>📘 Guia de Uso da Animação (PDF)</span>
                              </button>
 
                             {v.status === 'alteracao_solicitada' && (
