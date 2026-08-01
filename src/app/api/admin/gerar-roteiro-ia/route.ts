@@ -14,24 +14,46 @@ export async function POST(req: Request) {
       );
     }
 
-    const prompt = `Você é um roteirista especializado em animações pedagógicas infantis baseadas em Terapia ABA e Video Modeling para crianças no espectro autista (TEA).
+    const charName = character || 'O Personagem';
+    const name = childName || 'João';
 
-Crie um ROTEIRO COMPLETO E DETALHADO de animação curta adaptada com as seguintes informações da criança:
-- Nome da criança: ${childName || 'Criança'}
+    const prompt = `Você é um roteirista especializado em animações infantis adaptadas para crianças no espectro autista (TEA), utilizando Video Modeling e Terapia ABA.
+
+Sua tarefa é criar um ROTEIRO onde APENAS O PERSONAGEM FALA DIRETO COM A CRIANÇA em primeira pessoa, chamando-a sempre pelo nome (${name}).
+
+DADOS DO PEDIDO:
+- Nome da criança: ${name}
 - Idade: ${age ? `${age} anos` : 'Não informada'}
-- Personagem Favorito/Hiperfoco: ${character || 'Desenho Animado'}
-- Objetivo/Tema da Animação: ${topic || 'Previsibilidade e Autonomia'}
-- Observações Especiais/Sensibilidades: ${observation || 'Nenhuma registrada'}
+- Personagem Favorito/Hiperfoco: ${charName}
+- Objetivo/Tema do Vídeo: ${topic || 'Previsibilidade e Autonomia'}
+- Observações da Família/Sensibilidades: ${observation || 'Nenhuma registrada'}
 
-DIRETRIZES DE ROTEIRO ANIKO (ESTÍMULO ADAPTATIVO):
-1. Tom do personagem: Acolhedor, amigo, previsível e sem gritos ou agitação excessiva.
-2. Estrutura em 3 Cenas Claras:
-   - CENA 1: Apresentação e Empatia (O personagem conversa diretamente com a criança pelo nome).
-   - CENA 2: Exemplo Prático (O personagem demonstra a tarefa passo a passo de forma simples).
-   - CENA 3: Reforço Positivo e Encorajamento (Palavra de incentivo acolhedora).
-3. Instruções visuais e sonoras adaptadas (indique cores suaves, ritmo controlado).
+REGRAS DE FORMATAÇÃO E ESTILO (EXATAMENTE NESTE FORMATO):
 
-Formate a resposta em Markdown limpo e profissional pronto para o animador ler.`;
+Siga ESTRITAMENTE o exemplo de estrutura abaixo. Não coloque introduções ou notas de rodapé, comece direto na Cena 1:
+
+Cena 1: [Nome da Cena]
+
+"[Descrição curta da ação visual do personagem na tela em aspas]"
+
+${charName}
+"[Fala em primeira pessoa onde o personagem chama a criança pelo nome (${name}) com muita empatia, fala calma e encorajadora em aspas]"
+
+Cena 2: [Nome da Cena]
+
+"[Descrição curta da ação visual do personagem mostrando a tarefa/solução em aspas]"
+
+${charName}
+"[Fala do personagem em primeira pessoa continuando a explicação amigável para a criança em aspas]"
+
+Cena 3: [Nome da Cena]
+
+"[Descrição curta da ação visual de encerramento em aspas]"
+
+${charName}
+"[Mensagem final de incentivo e despedida calorosa chamando a criança pelo nome em aspas]"
+
+Gere o roteiro exatamente neste padrão.`;
 
     // 1. Tentar Groq primeiro
     if (groqKey) {
