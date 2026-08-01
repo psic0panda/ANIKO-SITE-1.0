@@ -62,11 +62,11 @@ export default function Navbar() {
           height={40}
           className="rounded-xl shadow-lg border-2 border-brand-secondary/20 transition-transform group-hover:scale-110"
         />
-        <span className="text-xl font-black tracking-tighter text-brand-primary uppercase">ANIKO</span>
+        <span className="text-xl font-black tracking-tighter text-brand-primary dark:text-white uppercase">ANIKO</span>
       </Link>
 
       {/* Desktop Navigation */}
-      <div className="hidden md:flex items-center gap-8 font-medium text-brand-primary/80">
+      <div className="hidden md:flex items-center gap-8 font-medium text-brand-primary/80 dark:text-slate-200">
         <div className="flex items-center gap-6">
           {navLinks.map((link) => (
             <Link 
@@ -98,16 +98,16 @@ export default function Navbar() {
 
             {/* Dropdown Menu do Usuário */}
             {isUserMenuOpen && (
-              <div className="absolute right-0 mt-3 w-60 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-50 animate-scale-up text-left">
-                <div className="p-3 border-b border-slate-100 bg-slate-50/50 rounded-xl mb-1">
-                  <p className="text-xs font-black text-brand-primary truncate">{userProfile?.child_name || 'Sua Conta'}</p>
+              <div className="absolute right-0 mt-3 w-60 bg-white dark:bg-[#0F1F35] rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 p-2 z-50 animate-scale-up text-left">
+                <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl mb-1">
+                  <p className="text-xs font-black text-brand-primary dark:text-white truncate">{userProfile?.child_name || 'Sua Conta'}</p>
                   <p className="text-[10px] text-brand-accent font-bold mt-0.5">{userProfile?.video_credits || 0} Créditos Restantes</p>
                 </div>
                 
                 <Link 
                   href="/dashboard" 
                   onClick={() => setIsUserMenuOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-brand-primary rounded-xl transition-all"
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-brand-primary rounded-xl transition-all"
                 >
                   <span className="text-base">📊</span>
                   <span>Meu Painel</span>
@@ -116,7 +116,7 @@ export default function Navbar() {
                 <Link 
                   href="/assinatura" 
                   onClick={() => setIsUserMenuOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-brand-primary rounded-xl transition-all"
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-brand-primary rounded-xl transition-all"
                 >
                   <span className="text-base">💳</span>
                   <span>Minha Assinatura</span>
@@ -125,7 +125,7 @@ export default function Navbar() {
                 <Link 
                   href="/dashboard#solicitar-video" 
                   onClick={() => setIsUserMenuOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-brand-accent rounded-xl transition-all"
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-brand-accent rounded-xl transition-all"
                 >
                   <span className="text-base">✨</span>
                   <span>Solicitar Animação</span>
@@ -136,17 +136,17 @@ export default function Navbar() {
                     await supabase.auth.signOut();
                     window.location.reload();
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 rounded-xl transition-all text-left mt-1 border-t border-slate-100"
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all text-left mt-1 border-t border-slate-100 dark:border-slate-800"
                 >
                   <span className="text-base">🚪</span>
                   <span>Sair da Conta</span>
                 </button>
 
                 {/* Dark Mode Toggle */}
-                <div className="mt-1 pt-1 border-t border-slate-100">
+                <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
                   <button
                     onClick={toggleDarkMode}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all group"
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all group"
                   >
                     <div className="flex items-center gap-2.5">
                       {isDarkMode ? (
@@ -154,7 +154,7 @@ export default function Navbar() {
                       ) : (
                         <Sun size={15} className="text-amber-400" />
                       )}
-                      <span className="text-xs font-bold text-slate-700">
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
                         {isDarkMode ? 'Modo Escuro' : 'Modo Claro'}
                       </span>
                     </div>

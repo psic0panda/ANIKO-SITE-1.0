@@ -52,42 +52,83 @@ html {
   scroll-behavior: auto !important;
 }
 
-/* Dark Mode */
-[data-theme="dark"] {
+/* Dark Mode System Overrides */
+html.dark, [data-theme="dark"] {
   --background-h: 220;
-  --background-s: 20%;
-  --background-l: 8%;
-  --background: hsl(var(--background-h), var(--background-s), var(--background-l));
+  --background-s: 30%;
+  --background-l: 9%;
+  --background: #0B1726;
 
   --primary-h: 205;
-  --primary-s: 80%;
-  --primary-l: 70%;
-  --foreground: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
-
-  --secondary-h: 197;
-  --secondary-s: 50%;
-  --secondary-l: 40%;
-
-  --accent-h: 153;
-  --accent-s: 60%;
-  --accent-l: 50%;
-
-  --warmth-h: 32;
-  --warmth-s: 90%;
-  --warmth-l: 58%;
+  --primary-s: 100%;
+  --primary-l: 90%;
+  --foreground: #F8FAFC;
 
   color-scheme: dark;
 }
 
+html.dark body, 
 [data-theme="dark"] body {
-  background: hsl(220, 20%, 8%);
-  color: hsl(210, 30%, 90%);
+  background-color: #0B1726 !important;
+  color: #F8FAFC !important;
 }
 
+/* Transição suave de mudança de tema */
+body, nav, section, div, header, footer {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Superfícies de Cards e Containers em Modo Escuro */
+html.dark .bg-white,
+html.dark .bg-slate-50,
+html.dark .bg-slate-100,
+html.dark .bg-cyan-50,
+html.dark .bg-blue-50,
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] .bg-slate-50,
+[data-theme="dark"] .bg-slate-100,
+[data-theme="dark"] .bg-cyan-50,
+[data-theme="dark"] .bg-blue-50 {
+  background-color: #0F1F35 !important;
+  color: #F8FAFC !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark .bg-gradient-to-r.from-blue-50,
+html.dark .bg-gradient-to-b.from-white,
+[data-theme="dark"] .bg-gradient-to-r.from-blue-50,
+[data-theme="dark"] .bg-gradient-to-b.from-white {
+  background: #0F1F35 !important;
+}
+
+/* Ajustes de Cores de Texto Principais */
+html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark h6,
+html.dark .text-slate-900, html.dark .text-slate-800, html.dark .text-slate-700,
+html.dark .text-brand-primary,
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, [data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6,
+[data-theme="dark"] .text-slate-900, [data-theme="dark"] .text-slate-800, [data-theme="dark"] .text-slate-700,
+[data-theme="dark"] .text-brand-primary {
+  color: #F8FAFC !important;
+}
+
+html.dark .text-slate-600, html.dark .text-slate-500, html.dark .text-slate-400,
+[data-theme="dark"] .text-slate-600, [data-theme="dark"] .text-slate-500, [data-theme="dark"] .text-slate-400 {
+  color: #CBD5E1 !important;
+}
+
+/* Ajuste de Bordas */
+html.dark .border-slate-100, html.dark .border-slate-200, html.dark .border-cyan-100,
+[data-theme="dark"] .border-slate-100, [data-theme="dark"] .border-slate-200, [data-theme="dark"] .border-cyan-100 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Glassmorphism modern no Dark Mode */
+html.dark .glass-modern,
 [data-theme="dark"] .glass-modern {
-  background: hsla(220, 20%, 12%, 0.85);
-  border: 1px solid hsla(210, 30%, 90%, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  background: rgba(15, 31, 53, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5) !important;
 }
 
 @theme {
