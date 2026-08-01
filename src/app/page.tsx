@@ -497,8 +497,8 @@ export default function Home() {
           onMouseLeave={() => setIsPenguinHovered(false)}
           onClick={handleMainCtaClick}
         >
-          <div className="relative p-2 md:p-4 rounded-full bg-white dark:bg-slate-900/80 border-8 border-white dark:border-brand-accent/30 shadow-2xl backdrop-blur-md aspect-square w-full max-w-[480px] flex items-center justify-center transition-transform group-hover/hero:scale-105 overflow-hidden">
-            <div className="relative w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#0F1F35] flex items-center justify-center shadow-sm border-4 border-white dark:border-slate-800">
+          <div className="relative p-2 md:p-4 rounded-full bg-white dark:bg-slate-900/80 border-4 border-white dark:border-brand-accent/30 shadow-2xl backdrop-blur-md aspect-square w-full max-w-[480px] flex items-center justify-center transition-transform group-hover/hero:scale-105">
+            <div className="relative w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#0F1F35] flex items-center justify-center p-3 border-4 border-white dark:border-slate-800 shadow-sm">
               <video 
                 ref={penguinVideoRef}
                 src="/assets/ANIKO ANIMAÇÃO HOME.mp4" 
@@ -507,7 +507,8 @@ export default function Home() {
                 loop
                 disablePictureInPicture
                 disableRemotePlayback
-                className="w-full h-full object-cover rounded-full scale-[1.18] mix-blend-multiply dark:mix-blend-lighten transition-transform group-hover/hero:scale-[1.22]"
+                style={{ clipPath: 'circle(43.5% at 50% 50%)' }}
+                className="w-full h-full object-contain rounded-full mix-blend-multiply dark:mix-blend-lighten transition-transform group-hover/hero:scale-105"
               />
             </div>
           </div>
