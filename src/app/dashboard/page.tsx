@@ -952,9 +952,9 @@ export default function Dashboard() {
                   const isLatest = i === 0;
 
                   return (
-                    <div key={v.id} className="relative group max-w-2xl mx-auto w-full my-6">
-                      {/* Card Principal Estilo Reels */}
-                      <div className="relative bg-[#070E1B] rounded-[2.5rem] overflow-hidden shadow-2xl border-2 border-slate-800 aspect-[4/5] sm:aspect-video flex items-center justify-center group/reels">
+                    <div key={v.id} className="relative group max-w-md mx-auto w-full my-6">
+                      {/* Card Principal Estilo Reels em Formato Vertical Imersivo */}
+                      <div className="relative bg-[#070E1B] rounded-[2.5rem] overflow-hidden shadow-2xl border-2 border-slate-800 aspect-[9/16] min-h-[540px] sm:min-h-[600px] flex items-center justify-center group/reels">
                         {/* Imagem de Capa do Vídeo */}
                         {thumb ? (
                           <img src={thumb} alt={v.title} className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover/reels:scale-105 transition-transform duration-700" />
@@ -963,7 +963,7 @@ export default function Dashboard() {
                         )}
 
                         {/* Sombras e Degradês do Reels */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/40 pointer-events-none" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/50 pointer-events-none" />
 
                         {/* Botão de Play Centralizado */}
                         <button 
@@ -976,7 +976,7 @@ export default function Dashboard() {
                         </button>
 
                         {/* Overlay de Informações (Canto Inferior Esquerdo) */}
-                        <div className="absolute bottom-5 left-5 right-20 z-20 space-y-2 text-left text-white pointer-events-none">
+                        <div className="absolute bottom-6 left-5 right-20 z-20 space-y-2 text-left text-white pointer-events-none">
                           <div className="flex flex-wrap gap-1.5 pointer-events-auto">
                             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-white shadow-md ${v.status === 'alteracao_solicitada' ? 'bg-amber-500' : 'bg-emerald-500'}`}>
                               {v.status === 'alteracao_solicitada' ? '⏳ Ajuste em Curso' : '✨ Entregue'}
@@ -994,15 +994,15 @@ export default function Dashboard() {
                           </p>
                         </div>
 
-                        {/* Barra de Ações Flutuantes Estilo Reels (Canto Direito) */}
-                        <div className="absolute right-4 bottom-6 z-20 flex flex-col items-center gap-4 text-white">
+                        {/* Barra de Ações Flutuantes Estilo Reels (Canto Direito com Espaçamento Vertical Perfeito) */}
+                        <div className="absolute right-3.5 top-6 bottom-6 z-20 flex flex-col items-center justify-between text-white">
                           {/* ⭐ Avaliação / Nota */}
                           <button 
                             onClick={() => { setActiveFeedbackId(activeFeedbackId === v.id ? null : v.id); setFeedbackText(v.feedback || ""); setFeedbackScore(v.response_score || 0); }}
                             className="group/action flex flex-col items-center gap-1 focus:outline-none"
                             title="Avaliar vídeo"
                           >
-                            <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-brand-accent transition-all">
+                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-brand-accent transition-all">
                               <Star className={`h-5 w-5 ${v.response_score ? 'text-amber-400 fill-amber-400' : 'text-white'}`} />
                             </div>
                             <span className="text-[10px] font-black tracking-wider drop-shadow-md">
@@ -1016,7 +1016,7 @@ export default function Dashboard() {
                             className="group/action flex flex-col items-center gap-1 focus:outline-none"
                             title="Deixar Comentário"
                           >
-                            <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-brand-secondary transition-all">
+                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-brand-secondary transition-all">
                               <MessageSquare className="h-5 w-5 text-white" />
                             </div>
                             <span className="text-[10px] font-black tracking-wider drop-shadow-md">
@@ -1030,7 +1030,7 @@ export default function Dashboard() {
                             className="group/action flex flex-col items-center gap-1 focus:outline-none"
                             title="Solicitar Ajuste"
                           >
-                            <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-amber-500 transition-all">
+                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-amber-500 transition-all">
                               <RefreshCcw className="h-5 w-5 text-white" />
                             </div>
                             <span className="text-[10px] font-black tracking-wider drop-shadow-md">Ajuste</span>
@@ -1047,7 +1047,7 @@ export default function Dashboard() {
                             className="group/action flex flex-col items-center gap-1 focus:outline-none"
                             title="Guia Pedagógico em PDF"
                           >
-                            <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-blue-500 transition-all">
+                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-blue-500 transition-all">
                               <FileText className="h-5 w-5 text-white" />
                             </div>
                             <span className="text-[10px] font-black tracking-wider drop-shadow-md">PDF</span>
@@ -1062,7 +1062,7 @@ export default function Dashboard() {
                             className="group/action flex flex-col items-center gap-1 focus:outline-none"
                             title="Copiar Link"
                           >
-                            <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-emerald-500 transition-all">
+                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-emerald-500 transition-all">
                               <Share2 className="h-5 w-5 text-white" />
                             </div>
                             <span className="text-[10px] font-black tracking-wider drop-shadow-md">Link</span>
