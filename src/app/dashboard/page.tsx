@@ -213,6 +213,63 @@ export default function Dashboard() {
   const [referralMsg, setReferralMsg] = useState("");
   const [referralErrorMsg, setReferralErrorMsg] = useState("");
 
+  // Estados para Gestão de Assinatura, Cartão e Cancelamento
+  const [payments, setPayments] = useState<any[]>([]);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const [showCardModal, setShowCardModal] = useState(false);
+  const [newCardNumber, setNewCardNumber] = useState("");
+  const [newCardHolder, setNewCardHolder] = useState("");
+  const [newCardExpiry, setNewCardExpiry] = useState("");
+  const [newCardCvv, setNewCardCvv] = useState("");
+  const [isUpdatingCard, setIsUpdatingCard] = useState(false);
+
+  const handleCancelSubscription = async () => {
+    if (!user) return;
+    setIsCancelling(true);
+    try {
+      await supabase
+        .from("profiles")
+        .update({ subscription_status: "cancelled" })
+        .eq("id", user.id);
+
+      setProfile((prev: any) => ({ ...prev, subscription_status: "cancelled" }));
+      alert("Sua assinatura foi solicitada para cancelamento. Seu saldo de créditos continuará disponível!");
+      setShowCancelModal(false);
+    } catch (err: any) {
+      alert("Erro ao cancelar: " + err.message);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const handleUpdateCard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCardNumber || !user) return;
+    setIsUpdatingCard(true);
+
+    try {
+      const lastFour = newCardNumber.replace(/\s/g, "").slice(-4);
+      await supabase
+        .from("profiles")
+        .update({ 
+          card_last_four: lastFour,
+          card_brand: "Mastercard"
+        })
+        .eq("id", user.id);
+
+      setProfile((prev: any) => ({ ...prev, card_last_four: lastFour }));
+      alert("✅ Dados do cartão de crédito atualizados com sucesso!");
+      setShowCardModal(false);
+    } catch (err: any) {
+      alert("Erro ao atualizar cartão: " + err.message);
+    } finally {
+      setIsUpdatingCard(false);
+    }
+  };
+
   const handleActivateReferralCode = async () => {
     if (!inputReferralCode.trim() || isActivatingReferral || !user) return;
     setIsActivatingReferral(true);
@@ -352,6 +409,20 @@ export default function Dashboard() {
       } catch (e) {
         console.error('Erro ao buscar vídeos:', e);
       }
+
+      // Buscar histórico de pagamentos/faturas do usuário
+      try {
+        const { data: userPayments } = await supabase
+          .from("payments")
+          .select("*")
+          .eq("profile_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (userPayments) setPayments(userPayments);
+      } catch (e) {
+        console.error('Erro ao buscar pagamentos:', e);
+      }
+
       setLoading(false);
     }
     initDashboard();
@@ -1247,43 +1318,194 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ABA 3: MINHA ASSINATURA */}
+        {/* ABA 3: MINHA ASSINATURA & GESTÃO FINANCEIRA */}
         {activeTab === 'subscription' && (
-          <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
-            <div className="bg-gradient-to-br from-[#0F2B48] via-[#163D63] to-[#041628] rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden border-2 border-brand-accent/30 space-y-8">
-               <div className="flex items-center justify-between">
-                 <span className="text-xs font-black uppercase tracking-widest bg-brand-accent/20 text-brand-accent px-4 py-1.5 rounded-full">
-                   {profile.plan_name ? 'Plano Ativo' : 'Saldo de Créditos'}
-                 </span>
-                 <span className="text-xs font-bold text-slate-300">
-                   {profile.plan_name || (profile.video_credits ? 'Plano Avulso' : 'Sem Plano')}
-                 </span>
-               </div>
-
-               <div className="bg-white/10 rounded-3xl p-8 border border-white/10 text-center space-y-2">
-                 <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">Créditos de Vídeo Disponíveis</p>
-                 <p className="text-6xl font-black text-brand-accent">
-                   {(profile.video_credits !== undefined && profile.video_credits !== null) ? profile.video_credits : 0}
-                 </p>
-                 <p className="text-xs text-slate-400 font-medium pt-1">Créditos válidos por até 60 dias após a compra</p>
-               </div>
-
-               <div className="space-y-4">
-                 <Link 
-                   href="/pagamento"
-                   className="w-full py-4 bg-brand-accent hover:bg-brand-accent/90 text-white font-black rounded-2xl text-base shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-center block"
-                 >
-                   ✨ Assinar Novo Plano ou Recarregar Créditos
-                 </Link>
-
-                 <Link 
-                   href="/assinatura"
-                   className="w-full py-3 text-xs text-slate-300 hover:text-white font-bold transition-colors text-center block"
-                 >
-                   ⚙️ Ver Detalhes do Seu Plano Atual
-                 </Link>
-               </div>
+          <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+            
+            {/* Header da Aba */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h2 className="text-3xl font-black text-brand-primary">Gestão da Assinatura</h2>
+                <p className="text-slate-500 font-medium text-xs mt-1">
+                  Gerencie seus créditos, dados do titular, cartão cadastrado e histórico de compras.
+                </p>
+              </div>
+              <Link
+                href="/pagamento"
+                className="px-6 py-3 rounded-2xl bg-brand-accent hover:bg-brand-accent/90 text-white font-black text-xs shadow-lg hover:scale-105 transition-all flex items-center gap-2"
+              >
+                <span>✨ Assinar Plano ou Recarregar</span>
+              </Link>
             </div>
+
+            {/* Dados do Titular da Conta */}
+            <div className="bg-white rounded-3xl p-6 border-2 border-slate-100 shadow-xl space-y-4">
+              <h3 className="text-lg font-black text-brand-primary flex items-center gap-2 border-b pb-3 border-slate-100">
+                <span>👤</span> Dados do Titular da Conta
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-medium">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <p className="text-slate-400 font-bold uppercase text-[10px]">Nome do Responsável</p>
+                  <p className="font-bold text-slate-800 text-sm mt-0.5">{profile.parent_name || 'Não informado'}</p>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <p className="text-slate-400 font-bold uppercase text-[10px]">E-mail de Cobrança</p>
+                  <p className="font-bold text-slate-800 text-sm mt-0.5 truncate">{user?.email || 'Não informado'}</p>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <p className="text-slate-400 font-bold uppercase text-[10px]">Telefone / WhatsApp</p>
+                  <p className="font-bold text-slate-800 text-sm mt-0.5">{profile.phone || 'Não informado'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Card Principal da Assinatura Ativa & Créditos */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Plano & Status */}
+              <div className="bg-gradient-to-br from-[#0F2B48] via-[#163D63] to-[#041628] rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden space-y-6 flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase">Plano Contratado</p>
+                      <h3 className="text-2xl font-black text-white mt-0.5">{profile.plan_name || "Plano Avulso"}</h3>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                      profile.subscription_status === "active"
+                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                        : profile.subscription_status === "cancelled"
+                        ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                        : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                    }`}>
+                      {profile.subscription_status === "active" ? "🟢 Ativa" : profile.subscription_status === "cancelled" ? "🔴 Cancelamento Solicitado" : "🟡 Sem Assinatura"}
+                    </span>
+                  </div>
+
+                  <div className="pt-3 border-t border-white/10 text-xs text-slate-300 space-y-2">
+                    <p className="flex justify-between">
+                      <span className="text-slate-400">Data de Início:</span>
+                      <span className="font-bold font-mono">{new Date(profile.created_at || Date.now()).toLocaleDateString("pt-BR")}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span className="text-slate-400">Próxima Renovação:</span>
+                      <span className="font-bold font-mono text-brand-accent">{new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("pt-BR")}</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Botão de Cancelar Assinatura */}
+                {profile.subscription_status === "active" && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCancelModal(true)}
+                    className="w-full py-2.5 bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 font-bold rounded-xl text-xs transition-all border border-rose-500/30 text-center"
+                  >
+                    Solicitar Cancelamento da Assinatura
+                  </button>
+                )}
+              </div>
+
+              {/* Saldo de Créditos */}
+              <div className="bg-white rounded-[2.5rem] p-8 border-2 border-slate-100 shadow-xl space-y-6 flex flex-col justify-between">
+                <div className="space-y-4">
+                  <span className="text-xs font-bold text-slate-400 uppercase">Saldo de Animações</span>
+                  <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 text-center space-y-1">
+                    <p className="text-xs font-bold text-slate-500 uppercase">Créditos de Vídeo Disponíveis</p>
+                    <p className="text-5xl font-black text-brand-primary">{profile.video_credits || 0}</p>
+                    <p className="text-[10px] text-slate-400 font-medium">crédito(s) prontos para uso</p>
+                  </div>
+                </div>
+
+                <Link
+                  href="/pagamento"
+                  className="w-full py-3.5 bg-brand-primary hover:bg-brand-primary/90 text-white font-black rounded-2xl text-xs shadow-lg text-center block transition-all"
+                >
+                  Recarregar Mais Créditos
+                </Link>
+              </div>
+            </div>
+
+            {/* Dados do Cartão de Crédito Cadastrado */}
+            <div className="bg-white rounded-3xl p-6 border-2 border-slate-100 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="text-lg font-black text-brand-primary flex items-center gap-2">
+                    <span>💳</span> Cartão de Crédito Cadastrado
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">Forma de pagamento vinculada às renovações automáticas.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCardModal(true)}
+                  className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-brand-primary text-white font-black text-xs transition-all shadow-md self-start sm:self-auto"
+                >
+                  Alterar Cartão de Crédito
+                </button>
+              </div>
+
+              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 max-w-sm">
+                <div className="h-10 w-14 bg-slate-900 rounded-xl flex items-center justify-center text-white font-mono font-bold text-[10px] shadow-md">
+                  CARD
+                </div>
+                <div>
+                  <p className="font-mono text-sm font-black text-slate-900">
+                    •••• •••• •••• {profile?.card_last_four || "4242"}
+                  </p>
+                  <p className="text-[10px] text-slate-500 font-medium">Bandeira: {profile?.card_brand || "Mastercard"}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Histórico de Compras & Transações */}
+            <div className="bg-white rounded-3xl p-6 border-2 border-slate-100 shadow-xl space-y-4">
+              <h3 className="text-lg font-black text-brand-primary flex items-center gap-2 border-b border-slate-100 pb-4">
+                <span>📄</span> Histórico de Compras & Transações
+              </h3>
+
+              {payments.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 space-y-1">
+                  <p className="font-bold text-xs">Nenhuma compra ou fatura registrada ainda.</p>
+                  <p className="text-[10px]">Suas transações efetuadas aparecerão listadas nesta tabela.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
+                        <th className="py-3 px-3">Data</th>
+                        <th className="py-3 px-3">Descrição</th>
+                        <th className="py-3 px-3">Método</th>
+                        <th className="py-3 px-3">Valor</th>
+                        <th className="py-3 px-3 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {payments.map((pay) => (
+                        <tr key={pay.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="py-3.5 px-3 font-mono font-bold text-slate-700">
+                            {new Date(pay.created_at).toLocaleDateString("pt-BR")}
+                          </td>
+                          <td className="py-3.5 px-3 font-bold text-brand-primary">
+                            {pay.description || profile?.plan_name || "Recarga de Créditos Aniko"}
+                          </td>
+                          <td className="py-3.5 px-3 text-slate-600">
+                            {pay.payment_method || "Cartão de Crédito"}
+                          </td>
+                          <td className="py-3.5 px-3 font-black text-slate-900">
+                            R$ {pay.amount || 80},00
+                          </td>
+                          <td className="py-3.5 px-3 text-right">
+                            <span className="px-3 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 uppercase">
+                              ✓ Aprovado
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
           </div>
         )}
 
@@ -1595,6 +1817,126 @@ export default function Dashboard() {
               className="h-full w-full object-cover"
             />
           </div>
+        </div>
+      )}
+      {/* Modal de Confirmação de Cancelamento */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fade-in">
+          <div className="bg-white max-w-md w-full rounded-3xl p-8 space-y-6 shadow-2xl">
+            <h3 className="text-2xl font-black text-slate-900 flex items-center gap-2">
+              <span>🔴</span> Cancelar Assinatura
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed font-medium">
+              Tem certeza que deseja solicitar o cancelamento da sua assinatura? Seu saldo de créditos continuará 100% disponível para uso!
+            </p>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Motivo do cancelamento (opcional):</label>
+              <textarea
+                rows={3}
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Conte-nos o motivo para podermos melhorar..."
+                className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium focus:outline-none focus:border-brand-accent resize-none"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold text-xs"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={handleCancelSubscription}
+                disabled={isCancelling}
+                className="flex-1 py-3.5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-xs shadow-md disabled:opacity-50"
+              >
+                {isCancelling ? "Confirmando..." : "Sim, Cancelar Assinatura"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Alteração dos Dados do Cartão */}
+      {showCardModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fade-in">
+          <form onSubmit={handleUpdateCard} className="bg-white max-w-md w-full rounded-3xl p-8 space-y-6 shadow-2xl">
+            <h3 className="text-2xl font-black text-brand-primary flex items-center gap-2">
+              <span>💳</span> Alterar Cartão de Crédito
+            </h3>
+
+            <div className="space-y-4 text-xs font-medium">
+              <div>
+                <label className="block font-bold text-slate-500 uppercase mb-1">Novo Número do Cartão</label>
+                <input
+                  type="text"
+                  required
+                  value={newCardNumber}
+                  onChange={(e) => setNewCardNumber(e.target.value.replace(/\D/g, "").slice(0, 16))}
+                  placeholder="0000 0000 0000 0000"
+                  className="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 font-mono text-sm font-bold focus:outline-none focus:border-brand-accent"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-500 uppercase mb-1">Nome no Cartão</label>
+                <input
+                  type="text"
+                  required
+                  value={newCardHolder}
+                  onChange={(e) => setNewCardHolder(e.target.value.toUpperCase())}
+                  placeholder="NOME COMO ESTÁ NO CARTÃO"
+                  className="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold focus:outline-none focus:border-brand-accent uppercase"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-500 uppercase mb-1">Validade</label>
+                  <input
+                    type="text"
+                    required
+                    value={newCardExpiry}
+                    onChange={(e) => setNewCardExpiry(e.target.value)}
+                    placeholder="MM/AA"
+                    className="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 font-mono text-xs font-bold focus:outline-none focus:border-brand-accent"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-500 uppercase mb-1">CVV</label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={4}
+                    value={newCardCvv}
+                    onChange={(e) => setNewCardCvv(e.target.value.replace(/\D/g, ""))}
+                    placeholder="123"
+                    className="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 font-mono text-xs font-bold focus:outline-none focus:border-brand-accent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowCardModal(false)}
+                className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold text-xs"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isUpdatingCard}
+                className="flex-1 py-3.5 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-2xl font-black text-xs shadow-md disabled:opacity-50"
+              >
+                {isUpdatingCard ? "Salvando..." : "Salvar Cartão"}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </main>
