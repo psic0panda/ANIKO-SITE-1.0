@@ -498,7 +498,7 @@ export default function Home() {
           onClick={handleMainCtaClick}
         >
           <div className="relative p-2 md:p-4 rounded-full bg-white dark:bg-slate-900/80 border-4 border-white dark:border-brand-accent/30 shadow-2xl backdrop-blur-md aspect-square w-full max-w-[480px] flex items-center justify-center transition-transform group-hover/hero:scale-105">
-            <div className="relative w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#0F1F35] flex items-center justify-center p-3 border-4 border-white dark:border-slate-800 shadow-sm">
+            <div className="relative w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#0F1F35] flex items-center justify-center border-4 border-white dark:border-slate-800 shadow-sm">
               <video 
                 ref={penguinVideoRef}
                 src="/assets/ANIKO ANIMAÇÃO HOME.mp4" 
@@ -507,9 +507,10 @@ export default function Home() {
                 loop
                 disablePictureInPicture
                 disableRemotePlayback
-                style={{ clipPath: 'circle(43.5% at 50% 50%)' }}
-                className="w-full h-full object-contain rounded-full mix-blend-multiply dark:mix-blend-lighten transition-transform group-hover/hero:scale-105"
+                className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-lighten transition-transform group-hover/hero:scale-105"
               />
+              {/* Moldura de sobreposição branca que cobre o anel escuro nativo do vídeo */}
+              <div className="absolute inset-0 rounded-full border-[22px] border-white dark:border-[#0F1F35] pointer-events-none z-10" />
             </div>
           </div>
           {/* Invisible overlay to block browser video controls on hover & handle click */}
