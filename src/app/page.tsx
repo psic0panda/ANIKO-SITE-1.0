@@ -497,8 +497,8 @@ export default function Home() {
           onClick={handleMainCtaClick}
         >
           <div
-            className="relative aspect-square w-full max-w-[480px] flex items-center justify-center transition-transform group-hover/hero:scale-105"
-            style={{ maskImage: 'radial-gradient(circle, black 78%, transparent 84%)', WebkitMaskImage: 'radial-gradient(circle, black 78%, transparent 84%)' }}
+            className="relative aspect-square w-full max-w-[480px] flex items-center justify-center transition-transform group-hover/hero:scale-105 rounded-full overflow-hidden bg-transparent dark:bg-[#0B1726]"
+            style={{ maskImage: 'radial-gradient(circle, black 84%, transparent 98%)', WebkitMaskImage: 'radial-gradient(circle, black 84%, transparent 98%)' }}
           >
             <video 
               ref={penguinVideoRef}
@@ -508,7 +508,7 @@ export default function Home() {
               loop
               disablePictureInPicture
               disableRemotePlayback
-              className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-lighten transition-transform group-hover/hero:scale-105"
+              className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal transition-transform group-hover/hero:scale-105"
             />
           </div>
           {/* Invisible overlay to block browser video controls on hover & handle click */}
