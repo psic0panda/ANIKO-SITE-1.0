@@ -496,10 +496,7 @@ export default function Home() {
           onMouseLeave={() => setIsPenguinHovered(false)}
           onClick={handleMainCtaClick}
         >
-          <div
-            className="relative aspect-square w-full max-w-[480px] flex items-center justify-center transition-transform group-hover/hero:scale-105 rounded-full overflow-hidden bg-transparent dark:bg-[#0B1726]"
-            style={{ maskImage: 'radial-gradient(circle, black 84%, transparent 98%)', WebkitMaskImage: 'radial-gradient(circle, black 84%, transparent 98%)' }}
-          >
+          <div className="relative aspect-square w-full max-w-[480px] flex items-center justify-center transition-transform group-hover/hero:scale-105 penguin-hero">
             <video 
               ref={penguinVideoRef}
               src="/assets/ANIKO ANIMAÇÃO HOME.mp4" 
