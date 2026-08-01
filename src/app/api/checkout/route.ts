@@ -18,6 +18,7 @@ export async function POST(request: Request) {
       user_name,
       cpf,
       coupon_code,
+      address,
     } = body;
 
     const plan = PLANS[plan_key] || PLANS.essencial;
@@ -141,6 +142,14 @@ export async function POST(request: Request) {
             identification: {
               type: 'CPF',
               number: (cpf || '').replace(/\D/g, '') || '00000000000',
+            },
+            address: {
+              zip_code: address?.zip_code || '',
+              street_name: address?.street_name || '',
+              street_number: address?.street_number || '',
+              neighborhood: address?.neighborhood || '',
+              city: address?.city || '',
+              federal_unit: address?.federal_unit || '',
             },
           },
         }),

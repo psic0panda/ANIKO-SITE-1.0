@@ -80,6 +80,15 @@ function CheckoutContent() {
   const [cpf, setCpf] = useState("");
   const [password, setPassword] = useState("");
 
+  // Endereço (obrigatório para boleto)
+  const [zipCode, setZipCode] = useState("");
+  const [streetName, setStreetName] = useState("");
+  const [streetNumber, setStreetNumber] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
+  const [city, setCity] = useState("");
+  const [federalUnit, setFederalUnit] = useState("");
+  const [isLoadingCep, setIsLoadingCep] = useState(false);
+
   // Cartão de Crédito
   const [cardNumber, setCardNumber] = useState("");
   const [cardHolder, setCardHolder] = useState("");
@@ -170,6 +179,27 @@ function CheckoutContent() {
     let val = e.target.value.replace(/\D/g, "").slice(0, 11);
     val = val.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
     setCpf(val);
+  };
+
+  const handleZipCodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, "").slice(0, 8);
+    if (val.length > 5) val = val.slice(0, 5) + "-" + val.slice(5);
+    setZipCode(val);
+    const digits = val.replace(/\D/g, "");
+    if (digits.length === 8) {
+      setIsLoadingCep(true);
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+        const data = await res.json();
+        if (!data.erro) {
+          setStreetName(data.logradouro || "");
+          setNeighborhood(data.bairro || "");
+          setCity(data.localidade || "");
+          setFederalUnit(data.uf || "");
+        }
+      } catch {}
+      setIsLoadingCep(false);
+    }
   };
 
   // Validar Cupom
@@ -273,6 +303,14 @@ function CheckoutContent() {
           user_name: parentName,
           cpf,
           coupon_code: appliedCoupon?.code || "",
+          address: {
+            zip_code: zipCode.replace(/\D/g, ""),
+            street_name: streetName,
+            street_number: streetNumber,
+            neighborhood,
+            city,
+            federal_unit: federalUnit,
+          },
         }),
       });
 
@@ -629,11 +667,12 @@ function CheckoutContent() {
                   <p className="text-xs text-slate-500">Vencimento em 3 dias corridos. Créditos liberados em até 1 dia útil após o pagamento confirmado.</p>
                 </div>
 
-                {/* CPF obrigatório para boleto */}
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                {/* CPF e Endereço obrigatórios para boleto */}
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-4">
                   <p className="text-xs font-bold text-amber-700 flex items-center gap-1.5">
-                    ⚠️ CPF obrigatório para emissão do boleto
+                    ⚠️ CPF e endereço obrigatórios para emissão do boleto
                   </p>
+
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">CPF do Responsável *</label>
                     <input
@@ -645,6 +684,87 @@ function CheckoutContent() {
                       className="w-full px-4 py-3 border-2 border-slate-200 focus:border-brand-primary rounded-xl text-sm font-mono outline-none transition-colors bg-white"
                       required
                     />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="col-span-2">
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">CEP *</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={zipCode}
+                          onChange={handleZipCodeChange}
+                          placeholder="00000-000"
+                          maxLength={9}
+                          className="w-full px-4 py-3 border-2 border-slate-200 focus:border-brand-primary rounded-xl text-sm font-mono outline-none transition-colors bg-white"
+                          required
+                        />
+                        {isLoadingCep && <span className="absolute right-3 top-3 text-xs text-slate-400">🔍</span>}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Número *</label>
+                      <input
+                        type="text"
+                        value={streetNumber}
+                        onChange={(e) => setStreetNumber(e.target.value)}
+                        placeholder="123"
+                        className="w-full px-4 py-3 border-2 border-slate-200 focus:border-brand-primary rounded-xl text-sm outline-none transition-colors bg-white"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Rua / Logradouro *</label>
+                    <input
+                      type="text"
+                      value={streetName}
+                      onChange={(e) => setStreetName(e.target.value)}
+                      placeholder="Rua das Flores"
+                      className="w-full px-4 py-3 border-2 border-slate-200 focus:border-brand-primary rounded-xl text-sm outline-none transition-colors bg-white"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Bairro *</label>
+                      <input
+                        type="text"
+                        value={neighborhood}
+                        onChange={(e) => setNeighborhood(e.target.value)}
+                        placeholder="Centro"
+                        className="w-full px-4 py-3 border-2 border-slate-200 focus:border-brand-primary rounded-xl text-sm outline-none transition-colors bg-white"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Cidade *</label>
+                      <input
+                        type="text"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder="São Paulo"
+                        className="w-full px-4 py-3 border-2 border-slate-200 focus:border-brand-primary rounded-xl text-sm outline-none transition-colors bg-white"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Estado (UF) *</label>
+                    <select
+                      value={federalUnit}
+                      onChange={(e) => setFederalUnit(e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-slate-200 focus:border-brand-primary rounded-xl text-sm outline-none transition-colors bg-white"
+                      required
+                    >
+                      <option value="">Selecione o Estado</option>
+                      {["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"].map(uf => (
+                        <option key={uf} value={uf}>{uf}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
