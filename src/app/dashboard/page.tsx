@@ -22,7 +22,7 @@ import {
 import { useSensory } from "@/context/SensoryContext";
 import BackgroundDecor from "@/components/BackgroundDecor";
 import PedagogicalPdfModal from "@/components/PedagogicalPdfModal";
-import { Share2, Copy, Gift, FileText } from "lucide-react";
+import { Share2, Copy, Gift, FileText, Download, MessageCircle, Camera, Mail } from "lucide-react";
 
 const AVATARS = [
   { id: 'lion', label: 'Leão' },
@@ -205,8 +205,10 @@ export default function Dashboard() {
   // Estado de Navegação por Abas no Dashboard
   const [activeTab, setActiveTab] = useState<'timeline' | 'profile' | 'subscription' | 'referral'>('timeline');
 
-  // Estado para Guia Pedagógico PDF e Link de Indicação
+  // Estado para Guia Pedagógico PDF, Compartilhamento e Link de Indicação
   const [pdfModalVideo, setPdfModalVideo] = useState<any>(null);
+  const [shareModalVideo, setShareModalVideo] = useState<any>(null);
+  const [copiedShareLink, setCopiedShareLink] = useState(false);
   const [copiedReferral, setCopiedReferral] = useState(false);
   const [inputReferralCode, setInputReferralCode] = useState("");
   const [isActivatingReferral, setIsActivatingReferral] = useState(false);
@@ -799,6 +801,18 @@ export default function Dashboard() {
               <span>💳</span>
               <span>Assinatura ({profile?.video_credits || 0})</span>
             </button>
+
+            <button
+              onClick={() => setActiveTab('referral')}
+              className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap flex-1 sm:flex-initial justify-center ${
+                activeTab === 'referral'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400'
+              }`}
+            >
+              <span>🎁</span>
+              <span>Indicação</span>
+            </button>
           </div>
 
           {/* Sair */}
@@ -952,9 +966,9 @@ export default function Dashboard() {
                   const isLatest = i === 0;
 
                   return (
-                    <div key={v.id} className="relative group max-w-md mx-auto w-full my-6">
-                      {/* Card Principal Estilo Reels em Formato Vertical Imersivo */}
-                      <div className="relative bg-[#070E1B] rounded-[2.5rem] overflow-hidden shadow-2xl border-2 border-slate-800 aspect-[9/16] min-h-[540px] sm:min-h-[600px] flex items-center justify-center group/reels">
+                    <div key={v.id} className="relative group max-w-md sm:max-w-4xl mx-auto w-full my-6">
+                      {/* Card Principal: Vertical Reels no Mobile / Horizontal no Web Desktop */}
+                      <div className="relative bg-[#070E1B] rounded-[2.5rem] overflow-hidden shadow-2xl border-2 border-slate-800 aspect-[9/16] sm:aspect-video min-h-[520px] sm:min-h-[460px] flex items-center justify-center group/reels">
                         {/* Imagem de Capa do Vídeo */}
                         {thumb ? (
                           <img src={thumb} alt={v.title} className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover/reels:scale-105 transition-transform duration-700" />
@@ -994,15 +1008,15 @@ export default function Dashboard() {
                           </p>
                         </div>
 
-                        {/* Barra de Ações Flutuantes Estilo Reels (Canto Direito com Espaçamento Vertical Perfeito) */}
-                        <div className="absolute right-3.5 top-6 bottom-6 z-20 flex flex-col items-center justify-between text-white">
-                          {/* ⭐ Avaliação / Nota */}
+                        {/* Barra de Ações Flutuantes Estilo Reels (Canto Direito Limpo sem Textos) */}
+                        <div className="absolute right-3.5 bottom-6 z-20 flex flex-col items-center gap-3.5 text-white">
+                          {/* ⭐ Avaliação / Nota (Mantém a pontuação num visual minimalista) */}
                           <button 
                             onClick={() => { setActiveFeedbackId(activeFeedbackId === v.id ? null : v.id); setFeedbackText(v.feedback || ""); setFeedbackScore(v.response_score || 0); }}
-                            className="group/action flex flex-col items-center gap-1 focus:outline-none"
+                            className="group/action flex flex-col items-center gap-0.5 focus:outline-none"
                             title="Avaliar vídeo"
                           >
-                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-brand-accent transition-all">
+                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/60 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-brand-accent transition-all">
                               <Star className={`h-5 w-5 ${v.response_score ? 'text-amber-400 fill-amber-400' : 'text-white'}`} />
                             </div>
                             <span className="text-[10px] font-black tracking-wider drop-shadow-md">
@@ -1013,27 +1027,23 @@ export default function Dashboard() {
                           {/* 💬 Comentário / Feedback */}
                           <button 
                             onClick={() => { setActiveFeedbackId(activeFeedbackId === v.id ? null : v.id); setFeedbackText(v.feedback || ""); setFeedbackScore(v.response_score || 0); }}
-                            className="group/action flex flex-col items-center gap-1 focus:outline-none"
+                            className="group/action focus:outline-none"
                             title="Deixar Comentário"
                           >
-                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-brand-secondary transition-all">
+                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/60 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-brand-secondary transition-all">
                               <MessageSquare className="h-5 w-5 text-white" />
                             </div>
-                            <span className="text-[10px] font-black tracking-wider drop-shadow-md">
-                              {v.feedback ? '1' : 'Opinar'}
-                            </span>
                           </button>
 
                           {/* 🔄 Solicitar Ajuste */}
                           <button 
                             onClick={() => { setActiveAlterationId(v.id); setAlterationText(v.requested_alteration || ""); }}
-                            className="group/action flex flex-col items-center gap-1 focus:outline-none"
+                            className="group/action focus:outline-none"
                             title="Solicitar Ajuste"
                           >
-                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-amber-500 transition-all">
+                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/60 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-amber-500 transition-all">
                               <RefreshCcw className="h-5 w-5 text-white" />
                             </div>
-                            <span className="text-[10px] font-black tracking-wider drop-shadow-md">Ajuste</span>
                           </button>
 
                           {/* 📘 Guia Pedagógico PDF */}
@@ -1044,28 +1054,23 @@ export default function Dashboard() {
                               child_name: profile?.child_name,
                               created_at: v.created_at
                             })}
-                            className="group/action flex flex-col items-center gap-1 focus:outline-none"
+                            className="group/action focus:outline-none"
                             title="Guia Pedagógico em PDF"
                           >
-                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-blue-500 transition-all">
+                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/60 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-blue-500 transition-all">
                               <FileText className="h-5 w-5 text-white" />
                             </div>
-                            <span className="text-[10px] font-black tracking-wider drop-shadow-md">PDF</span>
                           </button>
 
-                          {/* 📤 Compartilhar Link */}
+                          {/* 📤 Compartilhar / Opções do Vídeo */}
                           <button 
-                            onClick={() => {
-                              navigator.clipboard.writeText(v.video_url || window.location.href);
-                              alert('Link do vídeo copiado!');
-                            }}
-                            className="group/action flex flex-col items-center gap-1 focus:outline-none"
-                            title="Copiar Link"
+                            onClick={() => setShareModalVideo(v)}
+                            className="group/action focus:outline-none"
+                            title="Compartilhar / Baixar Vídeo"
                           >
-                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/50 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-emerald-500 transition-all">
+                            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-black/60 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-emerald-500 transition-all">
                               <Share2 className="h-5 w-5 text-white" />
                             </div>
-                            <span className="text-[10px] font-black tracking-wider drop-shadow-md">Link</span>
                           </button>
                         </div>
                       </div>
@@ -2005,6 +2010,106 @@ export default function Dashboard() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+      {/* Modal de Compartilhamento / Opções do Vídeo (Reels Link Modal) */}
+      {shareModalVideo && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fade-in">
+          <div className="bg-white dark:bg-[#0F1F35] w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl space-y-5 animate-scale-up border border-slate-100 dark:border-slate-800 text-slate-800 dark:text-white">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="font-black text-lg flex items-center gap-2">
+                <Share2 className="text-emerald-500" size={20} />
+                <span>Opções da Animação</span>
+              </h3>
+              <button onClick={() => setShareModalVideo(null)} className="h-8 w-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-white">✕</button>
+            </div>
+
+            <p className="text-xs font-bold text-slate-400">Opções para o vídeo <strong>&quot;{shareModalVideo.title}&quot;</strong>:</p>
+
+            <div className="grid grid-cols-1 gap-2.5">
+              {/* Baixar Vídeo */}
+              <a 
+                href={shareModalVideo.video_url || '#'} 
+                download={`${shareModalVideo.title}.mp4`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-3.5 bg-slate-50 dark:bg-slate-900 hover:bg-emerald-500/10 hover:border-emerald-500/30 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 transition-all text-xs font-black"
+              >
+                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+                  <Download size={20} />
+                </div>
+                <div className="text-left flex-1">
+                  <span className="block text-slate-800 dark:text-white">Baixar Vídeo (MP4)</span>
+                  <span className="text-[10px] text-slate-400 font-bold">Salvar arquivo no dispositivo</span>
+                </div>
+              </a>
+
+              {/* Copiar Link */}
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(shareModalVideo.video_url || window.location.href);
+                  setCopiedShareLink(true);
+                  setTimeout(() => setCopiedShareLink(false), 2000);
+                }}
+                className="p-3.5 bg-slate-50 dark:bg-slate-900 hover:bg-brand-secondary/10 hover:border-brand-secondary/30 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 transition-all text-xs font-black text-left w-full"
+              >
+                <div className="h-10 w-10 rounded-xl bg-brand-secondary/10 text-brand-secondary flex items-center justify-center shrink-0">
+                  <Copy size={20} />
+                </div>
+                <div className="flex-1">
+                  <span className="block text-slate-800 dark:text-white">{copiedShareLink ? '✅ Link Copiado!' : 'Copiar Link Direto'}</span>
+                  <span className="text-[10px] text-slate-400 font-bold">Copiar URL pública do vídeo</span>
+                </div>
+              </button>
+
+              {/* WhatsApp */}
+              <a 
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Assista à animação adaptativa de ${shareModalVideo.title}: ${shareModalVideo.video_url || window.location.href}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-3.5 bg-slate-50 dark:bg-slate-900 hover:bg-green-500/10 hover:border-green-500/30 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 transition-all text-xs font-black"
+              >
+                <div className="h-10 w-10 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center shrink-0">
+                  <MessageCircle size={20} />
+                </div>
+                <div className="text-left flex-1">
+                  <span className="block text-slate-800 dark:text-white">Compartilhar no WhatsApp</span>
+                  <span className="text-[10px] text-slate-400 font-bold">Enviar para família ou terapeuta</span>
+                </div>
+              </a>
+
+              {/* Instagram */}
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(`Confira a animação adaptativa de ${shareModalVideo.title}! Criado com carinho na ANIKO ❤️✨ ${shareModalVideo.video_url || window.location.href}`);
+                  alert('Texto e link copiados! Agora abra o Instagram e cole nos seus Stories ou Direct.');
+                }}
+                className="p-3.5 bg-slate-50 dark:bg-slate-900 hover:bg-pink-500/10 hover:border-pink-500/30 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 transition-all text-xs font-black text-left w-full"
+              >
+                <div className="h-10 w-10 rounded-xl bg-pink-500/10 text-pink-500 flex items-center justify-center shrink-0">
+                  <Camera size={20} />
+                </div>
+                <div className="flex-1">
+                  <span className="block text-slate-800 dark:text-white">Compartilhar no Instagram</span>
+                  <span className="text-[10px] text-slate-400 font-bold">Copia mensagem pronta para Stories</span>
+                </div>
+              </button>
+
+              {/* E-mail */}
+              <a 
+                href={`mailto:?subject=${encodeURIComponent(`Animação Adaptativa: ${shareModalVideo.title}`)}&body=${encodeURIComponent(`Confira o vídeo de ${shareModalVideo.title}: ${shareModalVideo.video_url || window.location.href}`)}`}
+                className="p-3.5 bg-slate-50 dark:bg-slate-900 hover:bg-blue-500/10 hover:border-blue-500/30 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center gap-3.5 transition-all text-xs font-black"
+              >
+                <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+                  <Mail size={20} />
+                </div>
+                <div className="text-left flex-1">
+                  <span className="block text-slate-800 dark:text-white">Enviar por E-mail</span>
+                  <span className="text-[10px] text-slate-400 font-bold">Enviar por correio eletrônico</span>
+                </div>
+              </a>
+            </div>
+          </div>
         </div>
       )}
     </main>

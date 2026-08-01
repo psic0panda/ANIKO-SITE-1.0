@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { X, Printer, Sparkles, CheckCircle2, HeartHandshake, Shield, Star, BookOpen } from "lucide-react";
+import { X, Printer, Sparkles, CheckCircle2, HeartHandshake, Shield, Star, BookOpen, ArrowLeft } from "lucide-react";
 
 interface PedagogicalPdfModalProps {
   isOpen: boolean;
@@ -27,26 +27,38 @@ export default function PedagogicalPdfModal({ isOpen, onClose, video }: Pedagogi
   const dateStr = video.created_at ? new Date(video.created_at).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR");
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 overflow-y-auto print:p-0 print:bg-white">
-      {/* Botões de Ação Superiores (Escondidos ao Imprimir) */}
-      <div className="fixed top-6 right-6 flex items-center gap-3 z-[110] print:hidden">
-        <button
-          onClick={handlePrint}
-          className="px-5 py-2.5 bg-brand-accent hover:bg-brand-accent/90 text-white font-black rounded-2xl shadow-xl flex items-center gap-2 text-sm transition-all"
-        >
-          <Printer size={16} />
-          <span>Imprimir / Salvar Guia (PDF)</span>
-        </button>
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-start bg-black/80 backdrop-blur-md p-2 sm:p-4 overflow-y-auto print:p-0 print:bg-white">
+      {/* Barra de Navegação Superior Fixa (Mobile/Desktop) */}
+      <div className="sticky top-0 left-0 right-0 w-full max-w-3xl z-[120] bg-slate-900/95 backdrop-blur-xl p-3 rounded-2xl border border-slate-800 shadow-2xl flex items-center justify-between mb-4 print:hidden">
         <button
           onClick={onClose}
-          className="p-2.5 bg-white/20 hover:bg-white/30 text-white rounded-2xl backdrop-blur-md transition-all"
+          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-black rounded-xl text-xs flex items-center gap-2 transition-all active:scale-95"
         >
-          <X size={20} />
+          <ArrowLeft size={16} />
+          <span>Voltar ao Dashboard</span>
         </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handlePrint}
+            className="px-4 py-2 bg-brand-accent hover:bg-brand-accent/90 text-white font-black rounded-xl shadow-lg flex items-center gap-1.5 text-xs transition-all"
+          >
+            <Printer size={15} />
+            <span className="hidden sm:inline">Imprimir / PDF</span>
+            <span className="sm:hidden">PDF</span>
+          </button>
+          <button
+            onClick={onClose}
+            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all"
+            title="Fechar Modal"
+          >
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Conteúdo do Documento Impresso */}
-      <div id="printable-pdf-guide" className="bg-white w-full max-w-3xl rounded-3xl p-8 md:p-12 shadow-2xl space-y-8 my-8 print:shadow-none print:m-0 print:p-0 print:rounded-none text-slate-800 border border-slate-100">
+      <div id="printable-pdf-guide" className="bg-white w-full max-w-3xl rounded-3xl p-6 md:p-12 shadow-2xl space-y-8 my-2 sm:my-6 print:shadow-none print:m-0 print:p-0 print:rounded-none text-slate-800 border border-slate-100">
         
         {/* Cabeçalho do Documento */}
         <div className="flex justify-between items-start border-b-2 border-slate-100 pb-6">
@@ -158,6 +170,17 @@ export default function PedagogicalPdfModal({ isOpen, onClose, video }: Pedagogi
         <div className="pt-4 border-t border-slate-100 text-center text-[10px] text-slate-400 font-medium">
           <p>© 2026 ANIKO - Tecnologia e Animações Adaptativas | www.aniko.com.br</p>
         </div>
+      </div>
+
+      {/* Botão de Fechar no Fim do Scroll (Mobile friendly) */}
+      <div className="my-6 print:hidden">
+        <button
+          onClick={onClose}
+          className="px-8 py-3 bg-brand-primary text-white font-black rounded-2xl shadow-xl hover:scale-105 transition-all text-xs flex items-center gap-2"
+        >
+          <ArrowLeft size={16} />
+          <span>Voltar ao Dashboard</span>
+        </button>
       </div>
     </div>
   );
