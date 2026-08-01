@@ -849,8 +849,8 @@ export default function Dashboard() {
 
               {/* CARDS DE SOLICITAÇÕES EM PRODUÇÃO (STEPPER DE 4 ETAPAS) */}
               {activeRequests.length > 0 && activeRequests.map((req) => {
-                const stage = req.current_stage || 'roteiro';
-                const stageNum = stage === 'concluido' ? 4 : stage === 'edicao' ? 3 : stage === 'voz' ? 2 : 1;
+                const stage = (req.current_stage || req.status || 'roteiro').toLowerCase();
+                const stageNum = (stage === 'concluido' || stage === '4') ? 4 : (stage === 'edicao' || stage === '3') ? 3 : (stage === 'voz' || stage === '2') ? 2 : 1;
 
                 return (
                   <div key={req.id} className="relative group animate-fade-in">

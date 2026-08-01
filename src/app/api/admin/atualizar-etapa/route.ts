@@ -36,24 +36,20 @@ export async function POST(request: Request) {
 
     // Ação 2: Atualizar Etapa de Produção (Roteiro -> Voz -> Edição -> Concluído)
     if (action === 'update_stage') {
-      const updateData: any = { current_stage: currentStage };
-      if (currentStage === 'concluido') {
-        updateData.status = 'concluido';
-      } else {
-        updateData.status = 'em_producao';
-      }
-
-      // Tenta atualizar current_stage + status
+      // Tenta atualizar ambas as colunas (current_stage e status)
       const { error: updateErr } = await supabase
         .from(tableName)
-        .update(updateData)
+        .update({ 
+          current_stage: currentStage,
+          status: currentStage 
+        })
         .eq('id', requestId);
 
       if (updateErr) {
-        // Se a coluna current_stage ainda não existir em video_requests, atualiza só o status
+        // Se a coluna current_stage não existir na tabela, atualiza o status diretamente
         const { error: fallbackErr } = await supabase
           .from(tableName)
-          .update({ status: currentStage === 'concluido' ? 'concluido' : 'em_producao' })
+          .update({ status: currentStage })
           .eq('id', requestId);
 
         if (fallbackErr) {
