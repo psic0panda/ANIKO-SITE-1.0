@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { useSensory } from "@/context/SensoryContext";
 import BackgroundDecor from "@/components/BackgroundDecor";
+import PedagogicalPdfModal from "@/components/PedagogicalPdfModal";
+import { Share2, Copy, Gift, FileText } from "lucide-react";
 
 const AVATARS = [
   { id: 'lion', label: 'Leão' },
@@ -199,6 +201,10 @@ export default function Dashboard() {
   const [alterationText, setAlterationText] = useState("");
   const [isSubmittingAlteration, setIsSubmittingAlteration] = useState(false);
   const [alterationSuccess, setAlterationSuccess] = useState<number | null>(null);
+
+  // Estado para Guia Pedagógico PDF e Link de Indicação
+  const [pdfModalVideo, setPdfModalVideo] = useState<any>(null);
+  const [copiedReferral, setCopiedReferral] = useState(false);
 
   const router = useRouter();
 
@@ -836,6 +842,42 @@ export default function Dashboard() {
                                 )}
                               </div>
                             </div>
+                            {/* Timeline de Progresso Visual da Animação */}
+                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
+                               <div className="flex justify-between items-center text-xs font-bold text-slate-500 uppercase">
+                                 <span>Status da Animação</span>
+                                 <span className="text-brand-accent font-black">
+                                   {v.status === 'concluido' ? '100% Concluído' : v.status === 'alteracao_solicitada' ? 'Ajustes Sensoriais' : 'Processando (50%)'}
+                                 </span>
+                               </div>
+                               {/* Barra de Progresso */}
+                               <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                                 <div 
+                                   className="h-full bg-gradient-to-r from-brand-primary to-brand-accent transition-all duration-500" 
+                                   style={{ width: v.status === 'concluido' ? '100%' : v.status === 'alteracao_solicitada' ? '75%' : '50%' }}
+                                 />
+                               </div>
+                               <div className="grid grid-cols-4 gap-1 text-[9px] font-bold text-center text-slate-400 uppercase pt-1">
+                                 <span className="text-brand-accent">1. Roteiro</span>
+                                 <span className={v.status !== 'pendente' ? "text-brand-accent" : ""}>2. Voz</span>
+                                 <span className={v.status === 'concluido' || v.status === 'alteracao_solicitada' ? "text-brand-accent" : ""}>3. Edição</span>
+                                 <span className={v.status === 'concluido' ? "text-brand-accent font-black" : ""}>4. Pronto</span>
+                               </div>
+                             </div>
+
+                             {/* Botão de Download do Guia Pedagógico PDF */}
+                             <button
+                               onClick={() => setPdfModalVideo({
+                                 title: v.title,
+                                 description: v.description,
+                                 child_name: profile?.child_name,
+                                 created_at: v.created_at
+                               })}
+                               className="w-full py-3 bg-brand-primary/5 hover:bg-brand-primary/10 text-brand-primary border border-brand-primary/20 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2"
+                             >
+                               <FileText size={16} className="text-brand-accent" />
+                               <span>📄 Baixar Guia Pedagógico & Metas ABA (PDF)</span>
+                             </button>
 
                             {v.status === 'alteracao_solicitada' && (
                               <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex items-start gap-3">
@@ -1168,8 +1210,53 @@ export default function Dashboard() {
                    </button>
                  </div>
                )}
-            </div>
-         </aside>
+             </div>
+
+             {/* Card Indique e Ganhe 1 Crédito */}
+             <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-[3rem] p-8 text-white shadow-2xl space-y-4">
+               <div className="flex items-center gap-3">
+                 <div className="h-10 w-10 bg-white/20 rounded-2xl flex items-center justify-center text-xl">
+                   🎁
+                 </div>
+                 <div>
+                   <h4 className="font-black text-lg">Indique e Ganhe</h4>
+                   <p className="text-xs text-emerald-100 font-medium">Ganhe +1 Crédito por cada indicação!</p>
+                 </div>
+               </div>
+               <p className="text-xs text-emerald-100 leading-relaxed font-medium">
+                 Compartilhe o Aniko com outros pais ou grupos de apoio e ganhe 1 crédito adicional no seu saldo assim que fizerem o cadastro.
+               </p>
+               <div className="flex gap-2">
+                 <button
+                   onClick={() => {
+                     const url = `https://www.aniko.com.br/cadastro?ref=${user?.id || 'aniko'}`;
+                     navigator.clipboard.writeText(url);
+                     setCopiedReferral(true);
+                     setTimeout(() => setCopiedReferral(false), 3000);
+                   }}
+                   className="flex-1 py-3 bg-white text-emerald-800 font-black rounded-2xl text-xs transition-all flex items-center justify-center gap-2 hover:bg-emerald-50 active:scale-95 shadow-md"
+                 >
+                   <Copy size={14} />
+                   <span>{copiedReferral ? "Link Copiado!" : "Copiar Link"}</span>
+                 </button>
+                 <a
+                   href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Conheça o Aniko! Animações adaptativas personalizadas para crianças com TEA. Cadastre-se pelo link: https://www.aniko.com.br/cadastro?ref=${user?.id || 'aniko'}`)}`}
+                   target="_blank"
+                   rel="noreferrer"
+                   className="py-3 px-4 bg-emerald-900/40 hover:bg-emerald-900/60 text-white font-bold rounded-2xl text-xs transition-all flex items-center justify-center"
+                 >
+                   <Share2 size={14} />
+                 </a>
+               </div>
+             </div>
+          </aside>
+
+          {/* Modal Guia Pedagógico PDF */}
+          <PedagogicalPdfModal 
+            isOpen={!!pdfModalVideo} 
+            onClose={() => setPdfModalVideo(null)} 
+            video={pdfModalVideo} 
+          />
 
       </div>
 
