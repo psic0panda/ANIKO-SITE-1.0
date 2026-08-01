@@ -213,6 +213,9 @@ export default function Dashboard() {
   const [referralMsg, setReferralMsg] = useState("");
   const [referralErrorMsg, setReferralErrorMsg] = useState("");
 
+  // Estado para Solicitações em Produção (Progresso das 4 Etapas)
+  const [activeRequests, setActiveRequests] = useState<any[]>([]);
+
   // Estados para Gestão de Assinatura, Cartão e Cancelamento
   const [payments, setPayments] = useState<any[]>([]);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -408,6 +411,20 @@ export default function Dashboard() {
         if (videosData.videos) setVideos(videosData.videos);
       } catch (e) {
         console.error('Erro ao buscar vídeos:', e);
+      }
+
+      // Buscar solicitações em andamento/produção do usuário
+      try {
+        const { data: userReqs } = await supabase
+          .from('video_requests')
+          .select('*')
+          .eq('profile_id', user.id)
+          .neq('status', 'concluido')
+          .order('created_at', { ascending: false });
+
+        if (userReqs) setActiveRequests(userReqs);
+      } catch (e) {
+        console.error('Erro ao buscar solicitações em andamento:', e);
       }
 
       // Buscar histórico de pagamentos/faturas do usuário
@@ -829,6 +846,101 @@ export default function Dashboard() {
             <div className="relative space-y-16 pl-4 md:pl-8">
               {/* Vertical Timeline Line */}
               <div className="absolute left-[21px] md:left-[37px] top-4 bottom-4 w-1 bg-gradient-to-b from-brand-accent/40 via-brand-secondary/20 to-transparent rounded-full" />
+
+              {/* CARDS DE SOLICITAÇÕES EM PRODUÇÃO (STEPPER DE 4 ETAPAS) */}
+              {activeRequests.length > 0 && activeRequests.map((req) => {
+                const stage = req.current_stage || 'roteiro';
+                const stageNum = stage === 'concluido' ? 4 : stage === 'edicao' ? 3 : stage === 'voz' ? 2 : 1;
+
+                return (
+                  <div key={req.id} className="relative group animate-fade-in">
+                    <div className="absolute left-[-24px] md:left-[-40px] top-6 h-10 w-10 rounded-full border-4 border-slate-50 flex items-center justify-center z-10 bg-brand-accent animate-pulse shadow-lg">
+                      <Sparkles className="h-5 w-5 text-white" />
+                    </div>
+
+                    <div className="bg-gradient-to-br from-[#0F2B48] via-[#163D63] to-[#041628] rounded-[3rem] p-8 md:p-10 shadow-2xl border-2 border-brand-accent/40 text-white space-y-6">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                          <span className="px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-brand-accent/20 text-brand-accent border border-brand-accent/30 inline-flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-brand-accent animate-pulse" />
+                            Animação em Produção
+                          </span>
+                          <h3 className="text-xl md:text-2xl font-black mt-2 text-white">
+                            &quot;{req.description}&quot;
+                          </h3>
+                        </div>
+                        <span className="text-xs text-slate-300 font-bold bg-white/10 px-4 py-2 rounded-2xl border border-white/10">
+                          Solicitado em {new Date(req.created_at).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+
+                      {/* STEPPER VISUAL DAS 4 ETAPAS */}
+                      <div className="pt-4 border-t border-white/10 space-y-4">
+                        <p className="text-xs font-black uppercase tracking-wider text-slate-300">
+                          Progresso de Criação da Animação:
+                        </p>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {/* Etapa 1: Roteiro */}
+                          <div className={`p-4 rounded-2xl border transition-all text-center space-y-1 ${
+                            stageNum >= 1
+                              ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 shadow-md'
+                              : 'bg-white/5 border-white/10 text-slate-400 opacity-50'
+                          }`}>
+                            <span className="text-xl block">📝</span>
+                            <p className="font-black text-xs">1. Roteiro</p>
+                            <p className="text-[10px] text-slate-300">Análise pedagógica</p>
+                          </div>
+
+                          {/* Etapa 2: Voz */}
+                          <div className={`p-4 rounded-2xl border transition-all text-center space-y-1 ${
+                            stageNum >= 2
+                              ? 'bg-blue-500/20 border-blue-500/50 text-blue-300 shadow-md'
+                              : 'bg-white/5 border-white/10 text-slate-400 opacity-50'
+                          }`}>
+                            <span className="text-xl block">🎙️</span>
+                            <p className="font-black text-xs">2. Voz (TTS)</p>
+                            <p className="text-[10px] text-slate-300">Narração adaptada</p>
+                          </div>
+
+                          {/* Etapa 3: Edição */}
+                          <div className={`p-4 rounded-2xl border transition-all text-center space-y-1 ${
+                            stageNum >= 3
+                              ? 'bg-purple-500/20 border-purple-500/50 text-purple-300 shadow-md'
+                              : 'bg-white/5 border-white/10 text-slate-400 opacity-50'
+                          }`}>
+                            <span className="text-xl block">🎨</span>
+                            <p className="font-black text-xs">3. Edição</p>
+                            <p className="text-[10px] text-slate-300">Animação sensorial</p>
+                          </div>
+
+                          {/* Etapa 4: Concluído */}
+                          <div className={`p-4 rounded-2xl border transition-all text-center space-y-1 ${
+                            stageNum >= 4
+                              ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-md'
+                              : 'bg-white/5 border-white/10 text-slate-400 opacity-50'
+                          }`}>
+                            <span className="text-xl block">🎉</span>
+                            <p className="font-black text-xs">4. Concluído</p>
+                            <p className="text-[10px] text-slate-300">Pronto para assistir</p>
+                          </div>
+                        </div>
+
+                        {/* Mensagem Explicativa Dinâmica do Status Atual */}
+                        <div className="bg-white/10 p-4 rounded-2xl border border-white/10 text-xs text-slate-200 flex items-center gap-3">
+                          <span className="text-lg">💡</span>
+                          <span>
+                            {stageNum === 1 && "Nossa equipe pedagógica está estruturando o roteiro e a rotina sensorial para esta animação."}
+                            {stageNum === 2 && "A narração com tom de voz adaptado está sendo gravada e modulada."}
+                            {stageNum === 3 && "A animação visual e os efeitos visuais de baixo estímulo estão em edição final."}
+                            {stageNum === 4 && "Animação concluída! O vídeo aparecerá na linha do tempo abaixo."}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
 
               {loading ? (
                 <div className="py-20 text-center text-slate-400 font-bold animate-pulse">Carregando sua linha do tempo...</div>
