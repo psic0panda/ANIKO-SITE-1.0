@@ -8,9 +8,12 @@ import AiChat from "@/components/AiChat";
 import BackgroundDecor from "@/components/BackgroundDecor";
 import { supabase } from "@/lib/supabase";
 import { useSensory } from "@/context/SensoryContext";
+import { useTheme } from "@/context/ThemeContext";
+import { Moon, Sun } from "lucide-react";
 
 export default function Home() {
   const { isSensoryFriendly, toggleSensoryFriendly } = useSensory();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [showVideo, setShowVideo] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -305,6 +308,15 @@ export default function Home() {
                     <span className="text-base">📊</span>
                     <span>Meu Painel</span>
                   </Link>
+
+                  <Link 
+                    href="/assinatura" 
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-brand-primary rounded-xl transition-all"
+                  >
+                    <span className="text-base">💳</span>
+                    <span>Minha Assinatura</span>
+                  </Link>
                   
                   <Link 
                     href="/dashboard#solicitar-video" 
@@ -325,6 +337,33 @@ export default function Home() {
                     <span className="text-base">🚪</span>
                     <span>Sair da Conta</span>
                   </button>
+
+                  {/* Dark Mode Toggle */}
+                  <div className="mt-1 pt-1 border-t border-slate-100">
+                    <button
+                      onClick={toggleDarkMode}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        {isDarkMode ? (
+                          <Moon size={15} className="text-indigo-400" />
+                        ) : (
+                          <Sun size={15} className="text-amber-400" />
+                        )}
+                        <span className="text-xs font-bold text-slate-700">
+                          {isDarkMode ? 'Modo Escuro' : 'Modo Claro'}
+                        </span>
+                      </div>
+                      {/* Switch pill */}
+                      <div className={`relative w-9 h-5 rounded-full transition-colors duration-300 ${
+                        isDarkMode ? 'bg-indigo-500' : 'bg-slate-200'
+                      }`}>
+                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300 ${
+                          isDarkMode ? 'translate-x-4' : 'translate-x-0.5'
+                        }`} />
+                      </div>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
