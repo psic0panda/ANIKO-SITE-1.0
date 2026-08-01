@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AiChat from "@/components/AiChat";
@@ -13,6 +14,7 @@ import { Moon, Sun } from "lucide-react";
 import SensoryPreviewPlayer from "@/components/SensoryPreviewPlayer";
 
 export default function Home() {
+  const router = useRouter();
   const { isSensoryFriendly, toggleSensoryFriendly } = useSensory();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const [showVideo, setShowVideo] = useState(false);
@@ -23,6 +25,14 @@ export default function Home() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleMainCtaClick = () => {
+    if (currentUser) {
+      router.push('/dashboard');
+    } else {
+      router.push('/login');
+    }
+  };
 
   // Verificar se usuário está logado
   useEffect(() => {
@@ -466,10 +476,10 @@ export default function Home() {
             className="flex flex-col gap-4 sm:flex-row justify-center md:justify-start"
           >
             <button 
-              onClick={() => setShowWelcome(true)}
+              onClick={handleMainCtaClick}
               className="rounded-2xl bg-brand-warmth px-10 py-5 text-xl font-black text-white shadow-[0_20px_50px_rgba(255,166,70,0.3)] hover:scale-105 active:scale-95 transition-all text-glow-warmth"
             >
-              Conheça o Aniko (com a Bluey! 🐧)
+              {currentUser ? "Acessar Meu Painel 🚀" : "Conheça o Aniko (com a Bluey! 🐧)"}
             </button>
             <button onClick={() => setShowVideo(true)} className="rounded-2xl glass-modern px-10 py-5 text-xl font-black flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all text-brand-primary">
               Ver Demo
@@ -485,9 +495,10 @@ export default function Home() {
           className="penguin-area relative flex flex-1 items-center justify-center cursor-pointer group/hero z-10"
           onMouseEnter={() => setIsPenguinHovered(true)}
           onMouseLeave={() => setIsPenguinHovered(false)}
+          onClick={handleMainCtaClick}
         >
-          <div className="relative p-3 md:p-6 rounded-full bg-white dark:bg-slate-900/80 border-4 border-white dark:border-brand-accent/30 shadow-2xl backdrop-blur-md aspect-square w-full max-w-[480px] flex items-center justify-center transition-transform group-hover/hero:scale-105">
-            <div className="relative w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#0F1F35] flex items-center justify-center p-2 md:p-4 shadow-sm border border-slate-100 dark:border-white/10">
+          <div className="relative p-2 md:p-4 rounded-full bg-white dark:bg-slate-900/80 border-8 border-white dark:border-brand-accent/30 shadow-2xl backdrop-blur-md aspect-square w-full max-w-[480px] flex items-center justify-center transition-transform group-hover/hero:scale-105 overflow-hidden">
+            <div className="relative w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#0F1F35] flex items-center justify-center shadow-sm border-4 border-white dark:border-slate-800">
               <video 
                 ref={penguinVideoRef}
                 src="/assets/ANIKO ANIMAÇÃO HOME.mp4" 
@@ -496,12 +507,12 @@ export default function Home() {
                 loop
                 disablePictureInPicture
                 disableRemotePlayback
-                className="w-full h-full object-cover rounded-full mix-blend-multiply dark:mix-blend-lighten transition-transform group-hover/hero:scale-105"
+                className="w-full h-full object-cover rounded-full scale-[1.18] mix-blend-multiply dark:mix-blend-lighten transition-transform group-hover/hero:scale-[1.22]"
               />
             </div>
           </div>
-          {/* Invisible overlay to block browser video controls on hover */}
-          <div className="absolute inset-0 z-10" />
+          {/* Invisible overlay to block browser video controls on hover & handle click */}
+          <div className="absolute inset-0 z-10 cursor-pointer" onClick={handleMainCtaClick} />
         </motion.div>
       </section>
 
