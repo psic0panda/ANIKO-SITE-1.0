@@ -118,26 +118,12 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [isHovering, isDragging]);
 
-  // Controlar vídeo do pinguim no hover
+  // Controlar vídeo do pinguim (AutoPlay no mobile e hover no desktop)
   useEffect(() => {
     const video = penguinVideoRef.current;
     if (!video) return;
-
-    const handleEnded = () => {
-      video.pause();
-    };
-
-    if (isPenguinHovered) {
-      video.play();
-      video.addEventListener('ended', handleEnded);
-    } else {
-      video.addEventListener('ended', handleEnded);
-    }
-
-    return () => {
-      video.removeEventListener('ended', handleEnded);
-    };
-  }, [isPenguinHovered]);
+    video.play().catch(() => {});
+  }, []);
 
   const drawings = [
     { src: 'daniel.jpg', name: 'Daniel Tigre', videoIndex: 4 },
@@ -397,7 +383,7 @@ export default function Home() {
 
         {/* Mobile Menu Overlay */}
         {isMenuOpen && (
-          <div className="fixed inset-0 z-[100] bg-white dark:bg-[#070E1B] md:hidden animate-fade-in flex flex-col p-6 overflow-y-auto shadow-2xl">
+          <div className="fixed inset-0 z-[100] backdrop-blur-2xl bg-white/90 dark:bg-[#070E1B]/95 md:hidden animate-fade-in flex flex-col p-6 overflow-y-auto shadow-2xl border border-white/20 dark:border-slate-800/80">
             {/* Header do Menu Mobile */}
             <div className="flex justify-between items-center pb-6 border-b border-slate-100 dark:border-slate-800 mb-6">
               <div className="flex items-center gap-3">
@@ -604,6 +590,7 @@ export default function Home() {
             <video 
               ref={penguinVideoRef}
               src="/assets/ANIKO ANIMAÇÃO HOME.mp4" 
+              autoPlay
               muted 
               playsInline
               loop
