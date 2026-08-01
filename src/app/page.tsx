@@ -496,7 +496,7 @@ export default function Home() {
           onMouseLeave={() => setIsPenguinHovered(false)}
           onClick={handleMainCtaClick}
         >
-          <div className="relative rounded-full overflow-hidden aspect-square w-full max-w-[480px] flex items-center justify-center transition-transform group-hover/hero:scale-105 bg-white dark:bg-[#0F1F35]">
+          <div className="relative aspect-square w-full max-w-[480px] flex items-center justify-center transition-transform group-hover/hero:scale-105">
             <video 
               ref={penguinVideoRef}
               src="/assets/ANIKO ANIMAÇÃO HOME.mp4" 
@@ -505,7 +505,7 @@ export default function Home() {
               loop
               disablePictureInPicture
               disableRemotePlayback
-              className="w-full h-full object-cover scale-[1.05] mix-blend-multiply dark:mix-blend-lighten transition-transform group-hover/hero:scale-[1.08]"
+              className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-lighten transition-transform group-hover/hero:scale-105"
             />
           </div>
           {/* Invisible overlay to block browser video controls on hover & handle click */}
