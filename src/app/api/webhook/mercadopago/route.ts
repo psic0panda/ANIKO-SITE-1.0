@@ -14,8 +14,14 @@ export async function POST(request: Request) {
     const type = searchParams.get('type');
     const dataId = searchParams.get('data.id');
 
-    // Mercado Pago envia o ID do recurso na query string ou no body
-    const body = await request.json();
+    // Protege contra body inválido (pings do MP sem JSON)
+    let body: any = {};
+    try {
+      body = await request.json();
+    } catch {
+      // Body vazio ou inválido — pode ser um ping de verificação
+      return NextResponse.json({ received: true });
+    }
     const id = dataId || body.data?.id;
 
     if (type === 'payment' && id) {
