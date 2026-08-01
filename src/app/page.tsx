@@ -395,42 +395,146 @@ export default function Home() {
           )}
         </button>
 
+        {/* Mobile Menu Overlay */}
         {isMenuOpen && (
-          <div className="fixed inset-0 z-50 bg-white md:hidden animate-fade-in flex flex-col p-8">
-            <div className="flex justify-between items-center mb-16">
+          <div className="fixed inset-0 z-[100] bg-white dark:bg-[#070E1B] md:hidden animate-fade-in flex flex-col p-6 overflow-y-auto shadow-2xl">
+            {/* Header do Menu Mobile */}
+            <div className="flex justify-between items-center pb-6 border-b border-slate-100 dark:border-slate-800 mb-6">
               <div className="flex items-center gap-3">
-                <Image src="/assets/logo.jpeg" alt="Logo" width={40} height={40} className="rounded-lg shadow-sm" />
-                <span className="text-xl font-bold text-brand-primary">ANIKO</span>
+                <Image src="/assets/logo.jpeg" alt="Logo" width={36} height={36} className="rounded-lg shadow-sm" />
+                <span className="text-xl font-black tracking-tighter text-brand-primary dark:text-white uppercase">ANIKO</span>
               </div>
-              <button onClick={() => setIsMenuOpen(false)} className="p-2 bg-slate-100 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              <button 
+                onClick={() => setIsMenuOpen(false)} 
+                className="p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-full hover:bg-slate-200 transition-colors"
+                aria-label="Fechar menu"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>
-            <div className="flex flex-col gap-8 text-3xl font-black text-brand-primary uppercase tracking-tighter">
-              <Link href="/abordagem" onClick={() => setIsMenuOpen(false)}>Abordagem</Link>
-              <Link href="/tecnologia" onClick={() => setIsMenuOpen(false)}>Tecnologia</Link>
-              <Link href="/valores" onClick={() => setIsMenuOpen(false)}>Valores</Link>
-              <Link href="/duvidas" onClick={() => setIsMenuOpen(false)}>Dúvidas</Link>
-              <Link href="/contato" onClick={() => setIsMenuOpen(false)}>Contato</Link>
-              <Link 
-                href="/login" 
-                onClick={() => setIsMenuOpen(false)}
-                className="mt-4 rounded-full bg-brand-primary px-8 py-5 text-xl text-white text-center shadow-2xl hover:bg-brand-primary/90 transition-all active:scale-95"
+
+            {/* Seção do Usuário Logado (Mobile) */}
+            {currentUser && (
+              <div className="mb-6 p-4 rounded-2xl bg-slate-50 dark:bg-[#0F1F35] border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-brand-primary/20 flex items-center justify-center overflow-hidden border border-brand-accent/40">
+                    {userProfile?.avatar_url ? (
+                      <img src={`/assets/avatars/avatar_${userProfile.avatar_url}.png`} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-base">🧒</span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-brand-primary dark:text-white truncate">{userProfile?.child_name || userProfile?.parent_name || 'Minha Conta'}</p>
+                    <p className="text-xs text-brand-accent font-bold">{userProfile?.video_credits || 0} Créditos Restantes</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <Link 
+                    href="/dashboard" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800"
+                  >
+                    <span>📊</span>
+                    <span>Meu Painel</span>
+                  </Link>
+                  <Link 
+                    href="/assinatura" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800"
+                  >
+                    <span>💳</span>
+                    <span>Assinatura</span>
+                  </Link>
+                </div>
+
+                <Link 
+                  href="/dashboard#solicitar-video" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-brand-accent text-white text-xs font-black shadow-md"
+                >
+                  <span>✨</span>
+                  <span>Solicitar Animação</span>
+                </Link>
+              </div>
+            )}
+
+            {/* Alternadores de Tema & Modo Sensorial no Mobile */}
+            <div className="space-y-2 mb-6">
+              <button
+                onClick={toggleDarkMode}
+                className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-[#0F1F35] border border-slate-200 dark:border-slate-800"
               >
-                Começar Agora
-              </Link>
+                <div className="flex items-center gap-3">
+                  {isDarkMode ? <Moon size={18} className="text-indigo-400" /> : <Sun size={18} className="text-amber-500" />}
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                    {isDarkMode ? 'Modo Escuro Ativo' : 'Modo Claro Ativo'}
+                  </span>
+                </div>
+                <div className={`relative w-10 h-5 rounded-full transition-colors ${isDarkMode ? 'bg-indigo-500' : 'bg-slate-300'}`}>
+                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${isDarkMode ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                </div>
+              </button>
+
+              <button
+                onClick={toggleSensoryFriendly}
+                className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
+                  isSensoryFriendly 
+                    ? 'bg-brand-accent/20 border-brand-accent text-brand-accent font-black' 
+                    : 'bg-slate-50 dark:bg-[#0F1F35] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold'
+                }`}
+              >
+                <span className="text-xs">
+                  {isSensoryFriendly ? '✨ Modo Sensorial: Ativado' : '🍃 Modo Sensorial: Desativado'}
+                </span>
+                <span className="text-xs font-bold underline">Alternar</span>
+              </button>
+            </div>
+
+            {/* Links de Navegação */}
+            <div className="flex flex-col gap-4 text-lg font-black text-brand-primary dark:text-white uppercase tracking-tight mb-8">
+              <Link href="/abordagem" onClick={() => setIsMenuOpen(false)} className="hover:text-brand-accent py-1 border-b border-slate-100 dark:border-slate-800/60">Abordagem</Link>
+              <Link href="/tecnologia" onClick={() => setIsMenuOpen(false)} className="hover:text-brand-accent py-1 border-b border-slate-100 dark:border-slate-800/60">Tecnologia</Link>
+              <Link href="/valores" onClick={() => setIsMenuOpen(false)} className="hover:text-brand-accent py-1 border-b border-slate-100 dark:border-slate-800/60">Valores</Link>
+              <Link href="/duvidas" onClick={() => setIsMenuOpen(false)} className="hover:text-brand-accent py-1 border-b border-slate-100 dark:border-slate-800/60">Dúvidas</Link>
+              <Link href="/contato" onClick={() => setIsMenuOpen(false)} className="hover:text-brand-accent py-1">Contato</Link>
+            </div>
+
+            {/* Botão de Ação / Sair no Rodapé */}
+            <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
+              {currentUser ? (
+                <button
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    window.location.reload();
+                  }}
+                  className="w-full py-4 bg-red-500/10 text-red-500 font-black rounded-2xl border border-red-500/20 text-sm flex items-center justify-center gap-2"
+                >
+                  <span>🚪</span>
+                  <span>Sair da Conta</span>
+                </button>
+              ) : (
+                <Link 
+                  href="/login" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="w-full block rounded-2xl bg-brand-primary px-8 py-4 text-base text-white text-center font-black shadow-xl hover:bg-brand-primary/90 transition-all active:scale-95"
+                >
+                  Começar Agora
+                </Link>
+              )}
             </div>
           </div>
         )}
       </nav>
 
       {/* Hero Section */}
-      <section id="abordagem" className="relative flex w-full max-w-7xl flex-col items-center gap-16 px-6 py-32 md:flex-row md:px-12 lg:py-48 scroll-mt-20 mx-auto">
+      <section id="abordagem" className="relative flex w-full max-w-7xl flex-col items-center gap-12 px-6 pt-28 pb-16 md:flex-row md:px-12 md:py-48 scroll-mt-20 mx-auto overflow-hidden">
         <motion.div 
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="hero-text-area flex flex-1 flex-col gap-8 text-center md:text-left z-10"
+          className="hero-text-area flex flex-1 flex-col gap-6 text-center md:text-left z-10 w-full"
         >
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
@@ -445,7 +549,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-4xl font-heading font-black leading-[1.1] tracking-tighter text-brand-primary md:text-6xl lg:text-8xl"
+            className="text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-heading font-black leading-[1.1] tracking-tighter text-brand-primary break-words"
           >
             Aniko, <br className="hidden md:block" /> tornando a tela <br className="hidden md:block" /> sua <span className="text-brand-accent italic">aliada</span>.
           </motion.h1>
@@ -454,7 +558,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
-            className="text-slate-500 font-bold text-xl md:text-2xl tracking-tight -mt-4 mb-2"
+            className="text-slate-500 font-bold text-lg sm:text-xl md:text-2xl tracking-tight -mt-2 mb-1"
           >
             Animações que <span className="text-brand-accent italic">evoluem</span>.
           </motion.p>
