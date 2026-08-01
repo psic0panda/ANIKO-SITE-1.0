@@ -959,211 +959,180 @@ export default function Dashboard() {
                   const isLatest = i === 0;
 
                   return (
-                    <div key={v.id} className="relative group">
-                      {/* Timeline Dot */}
-                      <div className={`absolute left-[-24px] md:left-[-40px] top-6 h-10 w-10 rounded-full border-4 border-slate-50 flex items-center justify-center z-10 transition-transform group-hover:scale-110 shadow-lg ${isLatest ? 'bg-brand-accent animate-pulse' : 'bg-white'}`}>
-                        {isLatest ? <Sparkles className="h-5 w-5 text-white" /> : <CheckCircle2 className="h-5 w-5 text-brand-secondary" />}
-                      </div>
+                    <div key={v.id} className="relative group max-w-2xl mx-auto w-full my-6">
+                      {/* Card Principal Estilo Reels */}
+                      <div className="relative bg-[#070E1B] rounded-[2.5rem] overflow-hidden shadow-2xl border-2 border-slate-800 aspect-[4/5] sm:aspect-video flex items-center justify-center group/reels">
+                        {/* Imagem de Capa do Vídeo */}
+                        {thumb ? (
+                          <img src={thumb} alt={v.title} className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover/reels:scale-105 transition-transform duration-700" />
+                        ) : (
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#0F2B48] via-[#163D63] to-[#070E1B]" />
+                        )}
 
-                      <div className="bg-white dark:bg-[#0F1F35] rounded-3xl sm:rounded-[3rem] p-4 sm:p-8 md:p-10 shadow-xl border border-white dark:border-slate-800 hover:shadow-2xl transition-all relative overflow-hidden group/item">
-                        {/* Header Status & Tags */}
-                        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                          <span className={`inline-flex px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-white shadow-sm ${v.status === 'alteracao_solicitada' ? 'bg-amber-500' : 'bg-brand-secondary'}`}>
-                            {v.status === 'alteracao_solicitada' ? 'Ajuste em Curso' : 'Entregue'}
-                          </span>
+                        {/* Sombras e Degradês do Reels */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/40 pointer-events-none" />
 
-                          <div className="flex gap-2">
-                            <button 
-                              onClick={() => { setActiveAlterationId(v.id); setAlterationText(v.requested_alteration || ""); }}
-                              className="p-2.5 bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-brand-accent rounded-xl transition-all"
-                              title="Solicitar Ajuste"
-                            >
-                              <RefreshCcw className="h-4 w-4" />
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteVideo(v.id)}
-                              className="p-2.5 bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-red-500 rounded-xl transition-all"
-                              title="Excluir"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                            </button>
+                        {/* Botão de Play Centralizado */}
+                        <button 
+                          onClick={() => handleOpenVideo(v.video_url)}
+                          className="relative z-10 h-20 w-20 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all group/play"
+                        >
+                          <div className="h-14 w-14 rounded-full bg-white flex items-center justify-center shadow-xl group-hover/play:bg-brand-accent transition-colors duration-300">
+                            <Play className="h-7 w-7 text-brand-accent group-hover/play:text-white fill-current ml-1 transition-colors" />
                           </div>
+                        </button>
+
+                        {/* Overlay de Informações (Canto Inferior Esquerdo) */}
+                        <div className="absolute bottom-5 left-5 right-20 z-20 space-y-2 text-left text-white pointer-events-none">
+                          <div className="flex flex-wrap gap-1.5 pointer-events-auto">
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-white shadow-md ${v.status === 'alteracao_solicitada' ? 'bg-amber-500' : 'bg-emerald-500'}`}>
+                              {v.status === 'alteracao_solicitada' ? '⏳ Ajuste em Curso' : '✨ Entregue'}
+                            </span>
+                            {v.category && (
+                              <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white rounded-full text-[10px] font-black uppercase tracking-wider border border-white/30">
+                                {v.category}
+                              </span>
+                            )}
+                          </div>
+
+                          <h3 className="text-xl sm:text-2xl font-black drop-shadow-md leading-tight text-white">{v.title}</h3>
+                          <p className="text-xs font-bold text-slate-300 drop-shadow-sm">
+                            {new Date(v.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                          </p>
                         </div>
 
-                        <div className="grid lg:grid-cols-[1fr_350px] gap-8">
-                          {/* Video Section */}
-                          <div className="space-y-4">
-                            <div>
-                              <div className="flex flex-wrap gap-1.5 mb-2">
-                                {v.category && (
-                                  <span className="px-2.5 py-0.5 bg-brand-secondary/10 text-brand-secondary rounded-lg text-[10px] font-black uppercase tracking-wider border border-brand-secondary/20">
-                                    {v.category}
-                                  </span>
-                                )}
-                                {v.tags && v.tags.split(',').map((tag: string, idx: number) => {
-                                  const t = tag.trim().toLowerCase();
-                                  let colorClass = "bg-slate-50 text-slate-500 border-slate-200";
-                                  
-                                  if (t.includes('educação')) colorClass = "bg-blue-50 text-blue-500 border-blue-100";
-                                  else if (t.includes('alimentação')) colorClass = "bg-orange-50 text-orange-500 border-orange-100";
-                                  else if (t.includes('família')) colorClass = "bg-purple-50 text-purple-500 border-purple-100";
-                                  else if (t.includes('higiene')) colorClass = "bg-teal-50 text-teal-500 border-teal-100";
-                                  else if (t.includes('social')) colorClass = "bg-emerald-50 text-emerald-500 border-emerald-100";
-
-                                  return (
-                                    <span key={idx} className={`px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-lg border ${colorClass}`}>
-                                      {tag.trim()}
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                              <h3 className="text-xl sm:text-2xl font-black text-brand-primary dark:text-white leading-snug">{v.title}</h3>
-                              <p className="text-slate-400 font-bold text-xs mt-0.5">{new Date(v.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                        {/* Barra de Ações Flutuantes Estilo Reels (Canto Direito) */}
+                        <div className="absolute right-4 bottom-6 z-20 flex flex-col items-center gap-4 text-white">
+                          {/* ⭐ Avaliação / Nota */}
+                          <button 
+                            onClick={() => { setActiveFeedbackId(activeFeedbackId === v.id ? null : v.id); setFeedbackText(v.feedback || ""); setFeedbackScore(v.response_score || 0); }}
+                            className="group/action flex flex-col items-center gap-1 focus:outline-none"
+                            title="Avaliar vídeo"
+                          >
+                            <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-brand-accent transition-all">
+                              <Star className={`h-5 w-5 ${v.response_score ? 'text-amber-400 fill-amber-400' : 'text-white'}`} />
                             </div>
-                            
-                            {!v.response_score && (
-                              <div className="bg-brand-accent/10 border border-brand-accent/20 px-4 py-3 rounded-2xl flex items-center gap-3 animate-pulse">
-                                <span className="text-xl">⭐</span>
-                                <div>
-                                  <p className="text-[10px] font-black text-brand-accent uppercase tracking-[0.2em] leading-none mb-1">Feedback Pendente</p>
-                                  <p className="text-xs font-bold text-brand-primary dark:text-white">Sua avaliação é muito importante para nós!</p>
-                                </div>
-                              </div>
-                            )}
- 
-                            <div className="group/video relative aspect-video rounded-2xl sm:rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-slate-50 dark:border-slate-800">
-                              {thumb ? (
-                                <img src={thumb} alt={v.title} className="absolute inset-0 w-full h-full object-cover transition-transform group-hover/video:scale-105" />
-                              ) : (
-                                <div className="absolute inset-0 bg-gradient-to-br from-brand-primary to-brand-secondary" />
-                              )}
-                              <div className="absolute inset-0 bg-black/20 group-hover/video:bg-black/40 transition-colors flex items-center justify-center">
-                                <button 
-                                  onClick={() => handleOpenVideo(v.video_url)}
-                                  className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-white/20 backdrop-blur-md border-2 border-white/50 flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all group/play"
+                            <span className="text-[10px] font-black tracking-wider drop-shadow-md">
+                              {v.response_score ? `${v.response_score}/10` : 'Nota'}
+                            </span>
+                          </button>
+
+                          {/* 💬 Comentário / Feedback */}
+                          <button 
+                            onClick={() => { setActiveFeedbackId(activeFeedbackId === v.id ? null : v.id); setFeedbackText(v.feedback || ""); setFeedbackScore(v.response_score || 0); }}
+                            className="group/action flex flex-col items-center gap-1 focus:outline-none"
+                            title="Deixar Comentário"
+                          >
+                            <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-brand-secondary transition-all">
+                              <MessageSquare className="h-5 w-5 text-white" />
+                            </div>
+                            <span className="text-[10px] font-black tracking-wider drop-shadow-md">
+                              {v.feedback ? '1' : 'Opinar'}
+                            </span>
+                          </button>
+
+                          {/* 🔄 Solicitar Ajuste */}
+                          <button 
+                            onClick={() => { setActiveAlterationId(v.id); setAlterationText(v.requested_alteration || ""); }}
+                            className="group/action flex flex-col items-center gap-1 focus:outline-none"
+                            title="Solicitar Ajuste"
+                          >
+                            <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-amber-500 transition-all">
+                              <RefreshCcw className="h-5 w-5 text-white" />
+                            </div>
+                            <span className="text-[10px] font-black tracking-wider drop-shadow-md">Ajuste</span>
+                          </button>
+
+                          {/* 📘 Guia Pedagógico PDF */}
+                          <button 
+                            onClick={() => setPdfModalVideo({
+                              title: v.title,
+                              description: v.description,
+                              child_name: profile?.child_name,
+                              created_at: v.created_at
+                            })}
+                            className="group/action flex flex-col items-center gap-1 focus:outline-none"
+                            title="Guia Pedagógico em PDF"
+                          >
+                            <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-blue-500 transition-all">
+                              <FileText className="h-5 w-5 text-white" />
+                            </div>
+                            <span className="text-[10px] font-black tracking-wider drop-shadow-md">PDF</span>
+                          </button>
+
+                          {/* 📤 Compartilhar Link */}
+                          <button 
+                            onClick={() => {
+                              navigator.clipboard.writeText(v.video_url || window.location.href);
+                              alert('Link do vídeo copiado!');
+                            }}
+                            className="group/action flex flex-col items-center gap-1 focus:outline-none"
+                            title="Copiar Link"
+                          >
+                            <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover/action:scale-110 group-hover/action:bg-emerald-500 transition-all">
+                              <Share2 className="h-5 w-5 text-white" />
+                            </div>
+                            <span className="text-[10px] font-black tracking-wider drop-shadow-md">Link</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Gaveta de Avaliação & Comentários (Acionada pelos botões do Reels) */}
+                      {activeFeedbackId === v.id && (
+                        <div className="mt-4 p-6 bg-white dark:bg-[#0F1F35] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 animate-scale-up text-left">
+                          <div className="flex justify-between items-center">
+                            <h4 className="font-black text-brand-primary dark:text-white text-base flex items-center gap-2">
+                              <Star className="text-amber-400 fill-amber-400" size={18} />
+                              <span>Avaliação & Comentário do Responsável</span>
+                            </h4>
+                            <button onClick={() => setActiveFeedbackId(null)} className="text-slate-400 hover:text-white font-bold p-1">✕</button>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sua nota de 1 a 10:</label>
+                            <div className="grid grid-cols-10 gap-1 w-full">
+                              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
+                                <button
+                                  key={star}
+                                  onClick={() => setFeedbackScore(star)}
+                                  className={`h-8 rounded-lg font-bold text-xs transition-all ${
+                                    feedbackScore === star
+                                      ? 'bg-brand-accent text-white shadow-lg scale-110'
+                                      : star <= feedbackScore
+                                      ? 'bg-brand-accent/40 text-white'
+                                      : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-slate-200'
+                                  }`}
                                 >
-                                  <div className="h-11 w-11 sm:h-14 sm:w-14 rounded-full bg-white flex items-center justify-center shadow-xl group-hover/play:bg-brand-accent transition-all duration-500">
-                                    <Play className="h-5 w-5 sm:h-7 sm:w-7 text-brand-accent group-hover/play:text-white fill-current ml-1 transition-colors" />
-                                  </div>
+                                  {star}
                                 </button>
-                              </div>
+                              ))}
                             </div>
                           </div>
 
-                          {/* Feedback & Interaction Section */}
-                          <div className="flex flex-col justify-between space-y-6 bg-slate-50/70 dark:bg-slate-900/50 p-4 sm:p-8 rounded-2xl sm:rounded-[2.5rem] border border-slate-100 dark:border-slate-800">
-                            <div className="space-y-5">
-                              <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                  <h4 className="font-black text-brand-primary dark:text-white text-sm flex items-center gap-1.5">
-                                    <Star className="h-4 w-4 text-brand-accent fill-brand-accent" />
-                                    Avaliação
-                                  </h4>
-                                  <span className={`text-lg font-black ${v.response_score >= 8 ? 'text-green-500' : v.response_score >= 5 ? 'text-amber-500' : 'text-slate-400'}`}>
-                                    {v.response_score || 0}/10
-                                  </span>
-                                </div>
-                                <div className="grid grid-cols-10 gap-1 w-full">
-                                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
-                                    <button
-                                      key={star}
-                                      onClick={() => { setFeedbackScore(star); handleRate(v.id, star, v.feedback || ""); }}
-                                      className={`h-7 min-w-0 rounded-md sm:rounded-lg transition-all ${star <= (v.response_score || 0) ? 'bg-brand-accent shadow-glow-accent' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-accent/30'}`}
-                                    />
-                                  ))}
-                                </div>
-                              </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Seu Comentário / Relato dos Pais:</label>
+                            <textarea
+                              value={feedbackText}
+                              onChange={(e) => setFeedbackText(e.target.value)}
+                              placeholder="Conte para a nossa equipe como a criança reagiu ao vídeo..."
+                              className="w-full h-24 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-brand-primary dark:text-white outline-none focus:border-brand-accent resize-none font-medium"
+                            />
+                          </div>
 
-                              <div className="space-y-3">
-                                <h4 className="font-black text-brand-primary flex items-center gap-2">
-                                  <MessageSquare className="h-5 w-5 text-brand-secondary" />
-                                  Comentários
-                                </h4>
-                                {activeFeedbackId === v.id ? (
-                                  <div className="space-y-3 animate-fade-in">
-                                    <textarea 
-                                      value={feedbackText}
-                                      onChange={(e) => setFeedbackText(e.target.value)}
-                                      placeholder="O que o(a) pequeno(a) achou?"
-                                      className="w-full h-24 p-4 rounded-2xl bg-white border border-slate-200 text-sm outline-none focus:border-brand-accent resize-none shadow-inner"
-                                    />
-                                    <div className="flex gap-2">
-                                      <button onClick={() => setActiveFeedbackId(null)} className="flex-1 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-all">Cancelar</button>
-                                      <button 
-                                        onClick={() => handleRate(v.id, feedbackScore, feedbackText)}
-                                        disabled={isSubmittingFeedback}
-                                        className="flex-2 px-6 py-2 bg-brand-primary text-white text-xs font-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg"
-                                      >
-                                        {isSubmittingFeedback ? 'Salvando...' : 'Salvar'}
-                                      </button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div 
-                                    onClick={() => { setActiveFeedbackId(v.id); setFeedbackText(v.feedback || ""); setFeedbackScore(v.response_score || 0); }}
-                                    className="p-4 bg-white rounded-2xl border border-slate-100 cursor-pointer hover:border-brand-accent/30 transition-all min-h-[100px] flex flex-col"
-                                  >
-                                    {v.feedback ? (
-                                      <p className="text-sm text-slate-600 leading-relaxed">{v.feedback}</p>
-                                    ) : (
-                                      <p className="text-sm text-slate-300 italic flex-1 flex items-center justify-center">Clique para deixar um comentário...</p>
-                                    )}
-                                    {v.feedback && <span className="text-[10px] font-black text-brand-accent uppercase mt-3 self-end">Editar</span>}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            {/* Timeline de Progresso Visual da Animação */}
-                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
-                               <div className="flex justify-between items-center text-xs font-bold text-slate-500 uppercase">
-                                 <span>Status da Animação</span>
-                                 <span className="text-brand-accent font-black">
-                                   {v.status === 'concluido' ? '100% Concluído' : v.status === 'alteracao_solicitada' ? 'Ajustes Sensoriais' : 'Processando (50%)'}
-                                 </span>
-                               </div>
-                               {/* Barra de Progresso */}
-                               <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
-                                 <div 
-                                   className="h-full bg-gradient-to-r from-brand-primary to-brand-accent transition-all duration-500" 
-                                   style={{ width: v.status === 'concluido' ? '100%' : v.status === 'alteracao_solicitada' ? '75%' : '50%' }}
-                                 />
-                               </div>
-                               <div className="grid grid-cols-4 gap-1 text-[9px] font-bold text-center text-slate-400 uppercase pt-1">
-                                 <span className="text-brand-accent">1. Roteiro</span>
-                                 <span className={v.status !== 'pendente' ? "text-brand-accent" : ""}>2. Voz</span>
-                                 <span className={v.status === 'concluido' || v.status === 'alteracao_solicitada' ? "text-brand-accent" : ""}>3. Edição</span>
-                                 <span className={v.status === 'concluido' ? "text-brand-accent font-black" : ""}>4. Pronto</span>
-                               </div>
-                             </div>
-
-                             {/* Botão de Download do Guia Pedagógico PDF */}
-                             <button
-                               onClick={() => setPdfModalVideo({
-                                 title: v.title,
-                                 description: v.description,
-                                 child_name: profile?.child_name,
-                                 created_at: v.created_at
-                               })}
-                               className="w-full py-3 bg-brand-primary/5 hover:bg-brand-primary/10 text-brand-primary border border-brand-primary/20 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-2"
-                             >
-                               <FileText size={16} className="text-brand-accent" />
-                               <span>📘 Guia de Uso da Animação (PDF)</span>
-                             </button>
-
-                            {v.status === 'alteracao_solicitada' && (
-                              <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex items-start gap-3">
-                                <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
-                                  <RefreshCcw className="h-4 w-4 animate-spin-slow" />
-                                </div>
-                                <div>
-                                  <p className="text-xs font-black text-amber-700 uppercase tracking-wider">Ajuste Solicitado</p>
-                                  <p className="text-[10px] text-amber-600 font-medium line-clamp-2 mt-0.5">{v.requested_alteration}</p>
-                                </div>
-                              </div>
-                            )}
+                          <div className="flex justify-end gap-3 pt-2">
+                            <button onClick={() => setActiveFeedbackId(null)} className="px-4 py-2 text-xs font-bold text-slate-400">Cancelar</button>
+                            <button
+                              onClick={() => handleRate(v.id, feedbackScore, feedbackText)}
+                              disabled={isSubmittingFeedback}
+                              className="px-6 py-2.5 bg-brand-accent text-white font-black rounded-xl shadow-lg hover:scale-105 transition-all text-xs disabled:opacity-50"
+                            >
+                              {isSubmittingFeedback ? 'Salvando...' : 'Salvar Avaliação'}
+                            </button>
                           </div>
                         </div>
-                      </div>
+                      )}
+                    </div>
+                  );
 
                       {/* Modal de Solicitação de Alteração (Inside Timeline for better context) */}
                       {activeAlterationId === v.id && (
