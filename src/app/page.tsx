@@ -11,7 +11,6 @@ import { supabase } from "@/lib/supabase";
 import { useSensory } from "@/context/SensoryContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Moon, Sun } from "lucide-react";
-import SensoryPreviewPlayer from "@/components/SensoryPreviewPlayer";
 
 export default function Home() {
   const router = useRouter();
@@ -567,8 +566,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Demonstração Interativa do Estímulo Adaptativo */}
-      <SensoryPreviewPlayer />
 
       {/* Footer */}
       <footer className="w-full border-t border-slate-50 py-16">
