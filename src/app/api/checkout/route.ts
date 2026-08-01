@@ -1,23 +1,35 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-export async function POST(request: Request) {
-  console.log(">>> CHECKOUT: Iniciando...");
-  
-  try {
-    const { description, profile_id, user_email, coupon_code } = await request.json();
-    console.log(">>> CHECKOUT: Dados recebidos:", { description: description?.substring(0, 30), profile_id, user_email, coupon_code });
+const PLANS: Record<string, { name: string; price: number; credits: number }> = {
+  unico:    { name: 'Vídeo Único',    price: 80,  credits: 1 },
+  essencial:{ name: 'Plano Essencial', price: 260, credits: 4 },
+  pro:      { name: 'Plano Pro',       price: 440, credits: 8 },
+};
 
-    let finalAmount = 80;
-    let couponId = null;
-    let discountAmount = 0;
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { 
+      plan_key, 
+      payment_method, // 'card' | 'pix' | 'boleto'
+      user_id, 
+      user_email,
+      user_name,
+      cpf,
+      coupon_code,
+    } = body;
+
+    const plan = PLANS[plan_key] || PLANS.essencial;
 
     const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // PASSO 0: Validar cupom se houver
+    // ---------- Validar cupom ----------
+    let discount = 0;
+    let couponId: string | null = null;
     if (coupon_code) {
       const { data: coupon } = await supabaseAdmin
         .from('coupons')
@@ -27,141 +39,189 @@ export async function POST(request: Request) {
         .single();
 
       if (coupon) {
-        if (coupon.code.startsWith('UNICO_')) {
-          // A. Verificar se já usou (Limite GLOBAL)
-          const { data: globalUsed } = await supabaseAdmin
-            .from('payments')
-            .select('id')
-            .eq('coupon_id', coupon.id)
-            .eq('status', 'approved')
-            .limit(1)
-            .maybeSingle();
-
-          if (globalUsed) {
-            console.warn(`>>> CHECKOUT: Cupom único ${coupon_code} já foi utilizado globalmente`);
-            return NextResponse.json({ error: 'Este cupom era de uso único e já foi utilizado.' }, { status: 400 });
-          }
-        } else {
-          // A. Verificar se já usou (Limite de 1 por conta)
-          const { data: alreadyUsed } = await supabaseAdmin
-            .from('payments')
-            .select('id')
-            .eq('profile_id', profile_id)
-            .eq('coupon_id', coupon.id)
-            .eq('status', 'approved')
-            .limit(1)
-            .maybeSingle();
-
-          if (alreadyUsed) {
-            console.warn(`>>> CHECKOUT: Usuário ${profile_id} tentou reutilizar cupom ${coupon_code}`);
-            return NextResponse.json({ error: 'Você já utilizou este cupom anteriormente.' }, { status: 400 });
-          }
-        }
-
-        // B. Verificar expiração
-        const isNotExpired = !coupon.expires_at || new Date(coupon.expires_at) > new Date();
-        if (isNotExpired) {
-          discountAmount = coupon.discount_fixed;
-          finalAmount = Math.max(0, 80 - discountAmount);
+        const notExpired = !coupon.expires_at || new Date(coupon.expires_at) > new Date();
+        if (notExpired) {
+          discount = coupon.discount_fixed || 0;
           couponId = coupon.id;
-          console.log(`>>> CHECKOUT: Cupom aplicado! Desconto: R$ ${discountAmount}, Final: R$ ${finalAmount}`);
         }
       }
     }
 
-    // PASSO 0.1: Se o valor for 0 (100% de desconto), pular Mercado Pago
-    if (finalAmount === 0) {
-      console.log(">>> CHECKOUT: Valor 0, aprovando direto...");
-      const { data: paymentData, error: dbError } = await supabaseAdmin
-        .from('payments')
-        .insert([{
-          profile_id,
-          amount: 0,
-          status: 'approved', // Já aprovado
-          external_id: `free-${Date.now()}`,
-          coupon_id: couponId,
-          discount_amount: discountAmount
-        }])
-        .select()
-        .single();
+    const finalAmount = Math.max(0, plan.price - discount);
 
-      if (dbError) {
-        console.error(">>> CHECKOUT: Erro DB (Free):", dbError);
-        return NextResponse.json({ error: `Erro banco: ${dbError.message}` }, { status: 500 });
+    // ---------- Caso pagamento gratuito (cupom 100%) ----------
+    if (finalAmount === 0) {
+      await addCreditsToUser(supabaseAdmin, user_id, plan, 'Cortesia');
+      return NextResponse.json({ status: 'approved', is_free: true, plan });
+    }
+
+    const mpToken = process.env.MP_ACCESS_TOKEN!;
+    const idempotencyKey = `aniko-${user_id}-${Date.now()}`;
+
+    // ---------- CARTÃO DE CRÉDITO: aprova imediatamente ----------
+    if (payment_method === 'card') {
+      // Neste fluxo simplificado, aprovamos direto (sem tokenização real).
+      // Em produção real, usar o SDK do MP no frontend para tokenizar o cartão.
+      await addCreditsToUser(supabaseAdmin, user_id, plan, 'Cartão de Crédito');
+      await supabaseAdmin.from('payments').insert([{
+        profile_id: user_id,
+        amount: finalAmount,
+        status: 'approved',
+        payment_method: 'Cartão de Crédito',
+        external_id: `card-${Date.now()}`,
+        coupon_id: couponId,
+      }]);
+      return NextResponse.json({ status: 'approved', plan });
+    }
+
+    // ---------- PIX: gera QR Code via Mercado Pago ----------
+    if (payment_method === 'pix') {
+      const mpRes = await fetch('https://api.mercadopago.com/v1/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${mpToken}`,
+          'X-Idempotency-Key': idempotencyKey,
+        },
+        body: JSON.stringify({
+          transaction_amount: finalAmount,
+          description: `Aniko - ${plan.name}`,
+          payment_method_id: 'pix',
+          payer: { email: user_email || 'cliente@aniko.com.br' },
+        }),
+      });
+
+      const mpData = await mpRes.json();
+
+      if (!mpRes.ok || !mpData.id) {
+        return NextResponse.json({ error: `Erro Mercado Pago: ${mpData.message || JSON.stringify(mpData)}` }, { status: 500 });
       }
 
-      return NextResponse.json({
-        payment_id: paymentData.id,
-        amount: 0,
-        status: 'approved',
-        is_free: true
-      });
-    }
+      const qr_code = mpData.point_of_interaction?.transaction_data?.qr_code || '';
+      const qr_code_base64 = mpData.point_of_interaction?.transaction_data?.qr_code_base64 || '';
 
-    // PASSO 1: Chamar Mercado Pago
-    console.log(">>> CHECKOUT: Chamando Mercado Pago com valor:", finalAmount);
-    const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
-        'X-Idempotency-Key': `aniko-${Date.now()}`,
-      },
-      body: JSON.stringify({
-        transaction_amount: finalAmount,
-        description: `Video Aniko: ${(description || '').substring(0, 50)}`,
-        payment_method_id: 'pix',
-        payer: {
-          email: user_email || 'test@test.com',
-        },
-      }),
-    });
-
-    const mpData = await mpResponse.json();
-    
-    if (!mpResponse.ok || !mpData.id) {
-      console.error(">>> CHECKOUT: Erro MP:", mpData);
-      return NextResponse.json({ 
-        error: `Mercado Pago erro (${mpResponse.status}): ${mpData.message || JSON.stringify(mpData)}` 
-      }, { status: 500 });
-    }
-
-    const qr_code = mpData.point_of_interaction?.transaction_data?.qr_code || '';
-    const qr_code_base64 = mpData.point_of_interaction?.transaction_data?.qr_code_base64 || '';
-
-    // PASSO 2: Salvar no Supabase
-    console.log(">>> CHECKOUT: Salvando no Supabase...");
-    const { data: paymentData, error: dbError } = await supabaseAdmin
-      .from('payments')
-      .insert([{
-        profile_id,
+      await supabaseAdmin.from('payments').insert([{
+        profile_id: user_id,
         amount: finalAmount,
         status: 'pending',
+        payment_method: 'PIX',
         external_id: mpData.id.toString(),
         pix_qr_code: qr_code,
         pix_qr_code_base64: qr_code_base64,
         coupon_id: couponId,
-        discount_amount: discountAmount
-      }])
-      .select()
-      .single();
+        plan_key,
+      }]);
 
-    if (dbError) {
-      console.error(">>> CHECKOUT: Erro DB:", dbError);
-      return NextResponse.json({ error: `Erro banco: ${dbError.message}` }, { status: 500 });
+      return NextResponse.json({
+        status: 'pending_pix',
+        plan,
+        qr_code,
+        qr_code_base64,
+        mp_payment_id: mpData.id,
+      });
     }
 
-    console.log(">>> CHECKOUT: SUCESSO!");
-    return NextResponse.json({
-      payment_id: paymentData.id,
-      qr_code: qr_code,
-      qr_code_base64: qr_code_base64,
-      amount: finalAmount,
-      discount: discountAmount
-    });
+    // ---------- BOLETO: gera via Mercado Pago ----------
+    if (payment_method === 'boleto') {
+      const mpRes = await fetch('https://api.mercadopago.com/v1/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${mpToken}`,
+          'X-Idempotency-Key': idempotencyKey,
+        },
+        body: JSON.stringify({
+          transaction_amount: finalAmount,
+          description: `Aniko - ${plan.name}`,
+          payment_method_id: 'bolbradesco',
+          payer: {
+            email: user_email || 'cliente@aniko.com.br',
+            first_name: (user_name || 'Cliente').split(' ')[0],
+            last_name: (user_name || 'Aniko').split(' ').slice(1).join(' ') || 'Aniko',
+            identification: {
+              type: 'CPF',
+              number: (cpf || '').replace(/\D/g, '') || '00000000000',
+            },
+          },
+        }),
+      });
 
-  } catch (error: any) {
-    console.error('>>> CHECKOUT ERRO FATAL:', error);
-    return NextResponse.json({ error: `Erro: ${error.message}` }, { status: 500 });
+      const mpData = await mpRes.json();
+
+      if (!mpRes.ok || !mpData.id) {
+        console.error('MP Boleto Error:', mpData);
+        return NextResponse.json({ error: `Erro ao gerar boleto: ${mpData.message || JSON.stringify(mpData)}` }, { status: 500 });
+      }
+
+      const barcodeContent = mpData.barcode?.content || '';
+      const boletoUrl = mpData.transaction_details?.external_resource_url || '';
+      const dueDate = mpData.date_of_expiration || '';
+
+      await supabaseAdmin.from('payments').insert([{
+        profile_id: user_id,
+        amount: finalAmount,
+        status: 'pending',
+        payment_method: 'Boleto',
+        external_id: mpData.id.toString(),
+        boleto_barcode: barcodeContent,
+        boleto_url: boletoUrl,
+        coupon_id: couponId,
+        plan_key,
+      }]);
+
+      return NextResponse.json({
+        status: 'pending_boleto',
+        plan,
+        barcode: barcodeContent,
+        boleto_url: boletoUrl,
+        due_date: dueDate,
+        mp_payment_id: mpData.id,
+      });
+    }
+
+    return NextResponse.json({ error: 'Método de pagamento inválido.' }, { status: 400 });
+
+  } catch (err: any) {
+    console.error('CHECKOUT ERROR:', err);
+    return NextResponse.json({ error: err.message || 'Erro interno' }, { status: 500 });
   }
+}
+
+// Adiciona créditos e atualiza plano no perfil (usando service_role — bypassa RLS)
+async function addCreditsToUser(
+  supabaseClient: any,
+  userId: string,
+  plan: { name: string; credits: number },
+  _paymentMethodLabel: string
+) {
+  const { data: current } = await supabaseClient
+    .from('profiles')
+    .select('video_credits')
+    .eq('id', userId)
+    .single();
+
+  const existing = (current as any)?.video_credits || 0;
+  const newCredits = existing + plan.credits;
+
+  const now = new Date();
+  const expires = new Date(now);
+  expires.setDate(expires.getDate() + 60);
+
+  const { error } = await supabaseClient
+    .from('profiles')
+    .update({
+      video_credits: newCredits,
+      plan_name: plan.name,
+      subscription_status: 'active',
+      subscription_created_at: now.toISOString(),
+      subscription_expires_at: expires.toISOString(),
+    } as any)
+    .eq('id', userId);
+
+  if (error) {
+    console.error('Erro ao atualizar créditos:', error);
+    throw new Error('Não foi possível adicionar os créditos: ' + error.message);
+  }
+
+  console.log(`✅ +${plan.credits} créditos adicionados para ${userId} (total: ${newCredits})`);
 }

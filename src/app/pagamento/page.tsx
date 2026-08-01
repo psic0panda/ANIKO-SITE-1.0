@@ -99,6 +99,16 @@ function CheckoutContent() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Resultado do pagamento
+  const [pixQrCode, setPixQrCode] = useState("");
+  const [pixQrBase64, setPixQrBase64] = useState("");
+  const [boletoBarcode, setBoletoBarcode] = useState("");
+  const [boletoUrl, setBoletoUrl] = useState("");
+  const [boletoDueDate, setBoletoDueDate] = useState("");
+  const [paymentResult, setPaymentResult] = useState<"" | "approved" | "pending_pix" | "pending_boleto">("");
+  const [copiedPix, setCopiedPix] = useState(false);
+  const [copiedBarcode, setCopiedBarcode] = useState(false);
+
   useEffect(() => {
     async function loadUser() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -179,7 +189,7 @@ function CheckoutContent() {
     try {
       let userId = currentUser?.id;
 
-      // Se o usuário não estiver logado, cria a conta ou autentica
+      // Se não estiver logado, criar/autenticar conta
       if (!userId) {
         if (!email || !parentName || !password) {
           setErrorMessage("Por favor, preencha Nome, E-mail e Senha para criar sua conta.");
@@ -190,17 +200,14 @@ function CheckoutContent() {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            data: { parent_name: parentName, child_name: childName, phone }
-          }
+          options: { data: { parent_name: parentName, child_name: childName, phone } }
         });
 
         if (authError) {
-          // Se o e-mail já existir, tentar login
           if (authError.message.includes("already registered")) {
             const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
             if (signInError) {
-              setErrorMessage("Este e-mail já possui conta. Digite sua senha correta para prosseguir.");
+              setErrorMessage("Este e-mail já possui conta. Digite sua senha correta.");
               setIsProcessing(false);
               return;
             }
@@ -212,13 +219,8 @@ function CheckoutContent() {
           }
         } else if (authData.user) {
           userId = authData.user.id;
-          // Criar perfil
           await supabase.from("profiles").upsert([{
-            id: userId,
-            parent_name: parentName,
-            child_name: childName,
-            phone: phone,
-            email: email
+            id: userId, parent_name: parentName, child_name: childName, phone, email
           }]);
         }
       }
@@ -229,49 +231,65 @@ function CheckoutContent() {
         return;
       }
 
-      // 2. Atualizar perfil com novos créditos e plano no Supabase
-      const { data: currentProfile } = await supabase
-        .from("profiles")
-        .select("video_credits")
-        .eq("id", userId)
-        .single();
+      // Chamar a API de checkout (server-side, usa service_role_key)
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan_key: selectedPlanKey,
+          payment_method: paymentMethod,
+          user_id: userId,
+          user_email: email,
+          user_name: parentName,
+          cpf,
+          coupon_code: appliedCoupon?.code || "",
+        }),
+      });
 
-      const existingCredits = currentProfile?.video_credits || 0;
-      const newCredits = existingCredits + plan.credits;
+      const data = await res.json();
 
-      await supabase
-        .from("profiles")
-        .upsert([{
-          id: userId,
-          video_credits: newCredits,
-          plan_name: plan.name,
-          subscription_status: "active",
-          card_last_four: cardNumber ? cardNumber.replace(/\s/g, "").slice(-4) : "4242",
-          card_brand: "Mastercard",
-          subscription_created_at: new Date().toISOString()
-        }]);
+      if (!res.ok || data.error) {
+        setErrorMessage(data.error || "Erro ao processar pagamento.");
+        setIsProcessing(false);
+        return;
+      }
 
-      // 3. Registrar o pagamento na tabela 'payments'
-      await supabase.from("payments").insert([{
-        profile_id: userId,
-        amount: finalPrice,
-        status: "approved",
-        payment_method: paymentMethod === "card" ? "Cartão de Crédito" : paymentMethod === "pix" ? "PIX" : "Boleto",
-        external_id: `pay-${Date.now()}`
-      }]);
+      // Tratar resposta conforme método de pagamento
+      if (data.status === "approved" || data.is_free) {
+        setPaymentResult("approved");
+        setIsSuccess(true);
+        setTimeout(() => router.push("/assinatura"), 2800);
 
-      setIsProcessing(false);
-      setIsSuccess(true);
+      } else if (data.status === "pending_pix") {
+        setPixQrCode(data.qr_code || "");
+        setPixQrBase64(data.qr_code_base64 || "");
+        setPaymentResult("pending_pix");
 
-      setTimeout(() => {
-        router.push("/assinatura");
-      }, 2500);
+      } else if (data.status === "pending_boleto") {
+        setBoletoBarcode(data.barcode || "");
+        setBoletoUrl(data.boleto_url || "");
+        setBoletoDueDate(data.due_date || "");
+        setPaymentResult("pending_boleto");
+      }
 
     } catch (err: any) {
       console.error("Erro no checkout:", err);
-      setErrorMessage("Erro ao processar pagamento: " + (err.message || "Tente novamente"));
+      setErrorMessage("Erro ao processar: " + (err.message || "Tente novamente"));
+    } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleCopyPix = () => {
+    navigator.clipboard.writeText(pixQrCode);
+    setCopiedPix(true);
+    setTimeout(() => setCopiedPix(false), 3000);
+  };
+
+  const handleCopyBarcode = () => {
+    navigator.clipboard.writeText(boletoBarcode);
+    setCopiedBarcode(true);
+    setTimeout(() => setCopiedBarcode(false), 3000);
   };
 
   return (
@@ -687,18 +705,101 @@ function CheckoutContent() {
         </div>
       </div>
 
-      {/* Modal de Sucesso */}
-      {isSuccess && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="bg-white max-w-md w-full rounded-3xl p-8 text-center space-y-6 shadow-2xl">
+      {/* Modal: Cartão Aprovado */}
+      {paymentResult === "approved" && isSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="bg-white max-w-md w-full rounded-3xl p-8 text-center space-y-5 shadow-2xl">
             <div className="h-20 w-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto animate-bounce">
               <CheckCircle2 size={48} />
             </div>
             <h3 className="text-3xl font-black text-brand-primary">Pagamento Aprovado! 🎉</h3>
             <p className="text-sm text-slate-600">
-              Sua assinatura do <strong>{plan.name}</strong> foi confirmada e <strong>{plan.credits} créditos</strong> já foram adicionados à sua conta.
+              Sua assinatura do <strong>{plan.name}</strong> foi confirmada e <strong>{plan.credits} crédito{plan.credits > 1 ? "s" : ""}</strong> já foram adicionados à sua conta.
             </p>
-            <p className="text-xs text-slate-400 font-bold">Redirecionando para o seu Painel do Assinante...</p>
+            <p className="text-xs text-brand-accent font-bold animate-pulse">Redirecionando para o Painel do Assinante...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: QR Code PIX */}
+      {paymentResult === "pending_pix" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="bg-white max-w-sm w-full rounded-3xl p-8 text-center space-y-5 shadow-2xl">
+            <div className="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+              <QrCode size={36} />
+            </div>
+            <h3 className="text-2xl font-black text-brand-primary">Pague via PIX</h3>
+            <p className="text-xs text-slate-500">Escaneie o QR Code ou copie o código abaixo. Seus créditos são liberados em até 1 minuto após confirmação.</p>
+
+            {pixQrBase64 ? (
+              <img
+                src={`data:image/png;base64,${pixQrBase64}`}
+                alt="QR Code PIX"
+                className="w-48 h-48 mx-auto rounded-xl border border-slate-200 p-2"
+              />
+            ) : (
+              <div className="w-48 h-48 mx-auto bg-slate-100 rounded-xl flex items-center justify-center text-xs text-slate-400">Gerando QR Code...</div>
+            )}
+
+            {pixQrCode && (
+              <div className="space-y-2">
+                <p className="text-[10px] text-slate-400 font-mono break-all bg-slate-50 p-3 rounded-xl border">{pixQrCode.substring(0, 80)}...</p>
+                <button
+                  onClick={handleCopyPix}
+                  className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl text-sm transition-all"
+                >
+                  {copiedPix ? "✓ Código Copiado!" : "📋 Copiar Código PIX"}
+                </button>
+              </div>
+            )}
+
+            <p className="text-xs text-slate-400">Valor: <strong className="text-brand-primary">R$ {finalPrice},00</strong></p>
+            <button onClick={() => setPaymentResult("")} className="text-xs text-slate-400 hover:text-slate-600 underline">Cancelar e voltar</button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Boleto Bancário */}
+      {paymentResult === "pending_boleto" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="bg-white max-w-md w-full rounded-3xl p-8 text-center space-y-5 shadow-2xl">
+            <div className="h-16 w-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto">
+              <FileText size={36} />
+            </div>
+            <h3 className="text-2xl font-black text-brand-primary">Boleto Gerado! 📄</h3>
+            <p className="text-xs text-slate-500">Pague o boleto em qualquer banco, lotérica ou pelo app do seu banco. Seus créditos são liberados em até 1 dia útil após a confirmação do pagamento.</p>
+
+            {boletoDueDate && (
+              <p className="text-xs font-bold text-orange-600 bg-orange-50 py-2 px-4 rounded-xl">
+                ⏰ Vencimento: {new Date(boletoDueDate).toLocaleDateString("pt-BR")}
+              </p>
+            )}
+
+            {boletoBarcode && (
+              <div className="space-y-2">
+                <p className="text-[11px] font-mono break-all bg-slate-50 p-3 rounded-xl border text-slate-600 select-all">{boletoBarcode}</p>
+                <button
+                  onClick={handleCopyBarcode}
+                  className="w-full py-3 bg-brand-primary hover:bg-brand-primary/90 text-white font-black rounded-2xl text-sm transition-all"
+                >
+                  {copiedBarcode ? "✓ Código Copiado!" : "📋 Copiar Código de Barras"}
+                </button>
+              </div>
+            )}
+
+            {boletoUrl && (
+              <a
+                href={boletoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full py-3 border-2 border-brand-primary text-brand-primary font-black rounded-2xl text-sm hover:bg-brand-primary/5 transition-all"
+              >
+                🖨️ Abrir / Imprimir Boleto
+              </a>
+            )}
+
+            <p className="text-xs text-slate-400">Valor: <strong className="text-brand-primary">R$ {finalPrice},00</strong></p>
+            <button onClick={() => setPaymentResult("")} className="text-xs text-slate-400 hover:text-slate-600 underline">Cancelar e voltar</button>
           </div>
         </div>
       )}

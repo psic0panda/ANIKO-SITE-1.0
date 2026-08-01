@@ -319,7 +319,6 @@ export default function Dashboard() {
       const shuffled = [...ALL_PREFERENCES].sort(() => 0.5 - Math.random());
       const selected = shuffled.slice(0, 12);
       
-      // Garante que as já selecionadas continuem aparecendo para poder desmarcar
       const finalOptions = Array.from(new Set([...editFormData.preferences, ...selected]));
       setAvailablePreferences(finalOptions.sort());
     }
@@ -329,7 +328,44 @@ export default function Dashboard() {
   // 2. Iniciar Fluxo de Pagamento (Interceptor de Solicitação)
   const handleRequest = async () => {
     if (!requestText || !user) return;
-    
+
+    // ✅ SE TEM CRÉDITOS: usar um crédito diretamente, sem pagamento
+    const userCredits = profile?.video_credits || 0;
+    if (userCredits > 0) {
+      setPaymentLoading(true);
+      try {
+        // Descontar 1 crédito do perfil via API segura
+        const creditRes = await fetch('/api/admin/perfil/' + user.id + '/editar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'aniko_admin_segredo_2026' },
+          body: JSON.stringify({ video_credits: userCredits - 1 }),
+        });
+
+        // Inserir a solicitação diretamente
+        const { error: reqError } = await supabase
+          .from('video_requests')
+          .insert([{
+            description: requestText,
+            status: 'pendente',
+            profile_id: user.id,
+          }]);
+
+        if (reqError) throw new Error(reqError.message);
+
+        // Atualizar créditos localmente na tela
+        setProfile((prev: any) => ({ ...prev, video_credits: userCredits - 1 }));
+        setSuccess(true);
+        setRequestText('');
+        setTimeout(() => setSuccess(false), 4000);
+      } catch (err: any) {
+        alert('Erro ao usar crédito: ' + err.message);
+      } finally {
+        setPaymentLoading(false);
+      }
+      return;
+    }
+
+    // SEM CRÉDITOS: vai para o fluxo de pagamento
     setPaymentLoading(true);
 
     try {
@@ -373,7 +409,7 @@ export default function Dashboard() {
         }
 
         setSuccess(true);
-        setRequestText("");
+        setRequestText('');
         setAppliedCoupon(null);
         setTimeout(() => {
           setSuccess(false);
@@ -384,7 +420,7 @@ export default function Dashboard() {
         setIsPaymentModalOpen(true);
       }
     } catch (err: any) {
-      alert("Erro ao gerar pagamento: " + err.message);
+      alert('Erro ao gerar pagamento: ' + err.message);
     } finally {
       setPaymentLoading(false);
     }
@@ -932,7 +968,12 @@ export default function Dashboard() {
                   disabled={!requestText || paymentLoading}
                   className="disabled:opacity-50 flex-1 px-10 py-5 bg-brand-accent text-white font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all text-lg"
                >
-                  {paymentLoading ? "Gerando PIX..." : `Enviar Solicitação ${appliedCoupon ? `(R$ ${80 - appliedCoupon.discount})` : '(R$ 80)'}`}
+               {paymentLoading 
+                 ? (profile?.video_credits > 0 ? 'Enviando...' : 'Gerando PIX...')
+                 : profile?.video_credits > 0
+                   ? `✨ Enviar Solicitação (usar 1 crédito)`
+                   : `Enviar Solicitação ${appliedCoupon ? `(R$ ${80 - appliedCoupon.discount})` : '(R$ 80)'}`
+               }
                </button>
                {videos.length > 0 && (
                   <button 
