@@ -202,34 +202,65 @@ export default function AdminDashboard() {
     setIsUpdatingStage(true);
 
     try {
-      const { error } = await supabase
-        .from('requests')
-        .update({ current_stage: newStage })
-        .eq('id', selectedDemandModal.id);
+      const res = await fetch('/api/admin/atualizar-etapa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: 'aniko_admin_segredo_2026',
+          requestId: selectedDemandModal.id,
+          isAlteration: !!selectedDemandModal.is_alteration,
+          currentStage: newStage,
+          action: 'update_stage'
+        })
+      });
 
-      if (!error) {
+      const data = await res.json();
+
+      if (data.success) {
         setCurrentStage(newStage);
         setRequests(prev => prev.map(r => r.id === selectedDemandModal.id ? { ...r, current_stage: newStage } : r));
         setSelectedDemandModal((prev: any) => ({ ...prev, current_stage: newStage }));
       } else {
-        alert("Erro ao atualizar etapa: " + error.message);
+        alert("Erro ao atualizar etapa: " + (data.error || "Erro desconhecido"));
       }
     } catch (e) {
-      alert("Erro ao atualizar etapa de produção.");
+      alert("Erro de conexão ao atualizar etapa.");
     } finally {
       setIsUpdatingStage(false);
     }
   };
 
   // Excluir solicitação
-  const handleDeleteRequest = async (requestId: number) => {
+  const handleDeleteRequest = async (reqToDelete: any) => {
+    const requestId = typeof reqToDelete === 'object' ? reqToDelete.id : reqToDelete;
+    const isAlteration = typeof reqToDelete === 'object' ? reqToDelete.is_alteration : (selectedDemandModal?.id === requestId ? selectedDemandModal.is_alteration : false);
+
     if (!confirm("Tem certeza que deseja apagar esta solicitação permanentemente?")) return;
-    const { error } = await supabase.from('requests').delete().eq('id', requestId);
-    if (!error) {
-      setRequests(prev => prev.filter(r => r.id !== requestId));
-      setSelectedDemandModal(null);
-    } else {
-      alert("Erro ao apagar solicitação: " + error.message);
+
+    try {
+      const res = await fetch('/api/admin/atualizar-etapa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          key: 'aniko_admin_segredo_2026',
+          requestId: requestId,
+          isAlteration: !!isAlteration,
+          action: 'delete'
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setRequests(prev => prev.filter(r => r.id !== requestId));
+        if (selectedDemandModal?.id === requestId) {
+          setSelectedDemandModal(null);
+        }
+      } else {
+        alert("Erro ao apagar solicitação: " + (data.error || "Erro desconhecido"));
+      }
+    } catch (e) {
+      alert("Erro de conexão ao apagar solicitação.");
     }
   };
 
