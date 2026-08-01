@@ -889,7 +889,7 @@ export default function Dashboard() {
                           }`}>
                             <span className="text-xl block">📝</span>
                             <p className="font-black text-xs">1. Roteiro</p>
-                            <p className="text-[10px] text-slate-300">Análise pedagógica</p>
+                            <p className="text-[10px] text-slate-300">Criação da história</p>
                           </div>
 
                           {/* Etapa 2: Voz */}
@@ -911,7 +911,7 @@ export default function Dashboard() {
                           }`}>
                             <span className="text-xl block">🎨</span>
                             <p className="font-black text-xs">3. Edição</p>
-                            <p className="text-[10px] text-slate-300">Animação sensorial</p>
+                            <p className="text-[10px] text-slate-300">Edição da animação</p>
                           </div>
 
                           {/* Etapa 4: Concluído */}
@@ -930,9 +930,9 @@ export default function Dashboard() {
                         <div className="bg-white/10 p-4 rounded-2xl border border-white/10 text-xs text-slate-200 flex items-center gap-3">
                           <span className="text-lg">💡</span>
                           <span>
-                            {stageNum === 1 && "Nossa equipe pedagógica está estruturando o roteiro e a rotina sensorial para esta animação."}
-                            {stageNum === 2 && "A narração com tom de voz adaptado está sendo gravada e modulada."}
-                            {stageNum === 3 && "A animação visual e os efeitos visuais de baixo estímulo estão em edição final."}
+                            {stageNum === 1 && "O roteiro e a história da animação estão sendo criados e adaptados para o pedido."}
+                            {stageNum === 2 && "A narração com tom de voz adaptado está sendo gravada."}
+                            {stageNum === 3 && "A animação e os efeitos visuais estão em processo de edição."}
                             {stageNum === 4 && "Animação concluída! O vídeo aparecerá na linha do tempo abaixo."}
                           </span>
                         </div>
