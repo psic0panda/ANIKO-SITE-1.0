@@ -46,7 +46,7 @@ export default function PedagogicalPdfModal({ isOpen, onClose, video }: Pedagogi
       </div>
 
       {/* Conteúdo do Documento Impresso */}
-      <div className="bg-white w-full max-w-3xl rounded-3xl p-8 md:p-12 shadow-2xl space-y-8 my-8 print:shadow-none print:m-0 print:p-0 print:rounded-none text-slate-800 border border-slate-100">
+      <div id="printable-pdf-guide" className="bg-white w-full max-w-3xl rounded-3xl p-8 md:p-12 shadow-2xl space-y-8 my-8 print:shadow-none print:m-0 print:p-0 print:rounded-none text-slate-800 border border-slate-100">
         
         {/* Cabeçalho do Documento */}
         <div className="flex justify-between items-start border-b-2 border-slate-100 pb-6">

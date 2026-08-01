@@ -244,3 +244,42 @@ h1, h2, h3, h4, h5, h6 {
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Print Rules - Single A4 Page Output */
+@media print {
+  body > * {
+    display: none !important;
+  }
+  
+  #printable-pdf-guide, #printable-pdf-guide * {
+    visibility: visible !important;
+  }
+
+  #printable-pdf-guide {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    z-index: 99999 !important;
+  }
+
+  #printable-pdf-guide .grid {
+    display: grid !important;
+  }
+
+  #printable-pdf-guide .flex {
+    display: flex !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 6mm;
+  }
+}

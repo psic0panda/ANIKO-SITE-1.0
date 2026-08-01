@@ -486,8 +486,8 @@ export default function Home() {
           onMouseEnter={() => setIsPenguinHovered(true)}
           onMouseLeave={() => setIsPenguinHovered(false)}
         >
-          <div className="relative p-3 md:p-6 rounded-full bg-gradient-to-b from-brand-accent/25 via-brand-secondary/10 to-transparent border-4 border-brand-accent/40 shadow-[0_20px_60px_rgba(52,211,153,0.25)] dark:shadow-[0_20px_60px_rgba(52,211,153,0.35)] backdrop-blur-md aspect-square w-full max-w-[480px] flex items-center justify-center transition-transform group-hover/hero:scale-105">
-            <div className="relative w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#0F1F35] flex items-center justify-center p-2 md:p-4 shadow-inner border border-white/20">
+          <div className="relative p-3 md:p-6 rounded-full bg-white dark:bg-slate-900/80 border-4 border-white dark:border-brand-accent/30 shadow-2xl backdrop-blur-md aspect-square w-full max-w-[480px] flex items-center justify-center transition-transform group-hover/hero:scale-105">
+            <div className="relative w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#0F1F35] flex items-center justify-center p-2 md:p-4 shadow-sm border border-slate-100 dark:border-white/10">
               <video 
                 ref={penguinVideoRef}
                 src="/assets/ANIKO ANIMAÇÃO HOME.mp4" 
