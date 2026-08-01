@@ -262,6 +262,37 @@ h1, h2, h3, h4, h5, h6 {
   animation: float-slow 12s ease-in-out infinite;
 }
 
+/* Drawer Open and Close Animations */
+@keyframes drawer-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes drawer-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.98);
+  }
+}
+
+.animate-drawer-in {
+  animation: drawer-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-drawer-out {
+  animation: drawer-out 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
 /* Glassmorphism 2.0 */
 .glass-modern {
   background: hsla(var(--background-h), var(--background-s), 100%, 0.4);

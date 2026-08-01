@@ -38,6 +38,24 @@ export default function Navbar() {
     checkUser();
   }, []);
 
+  const [isMenuClosing, setIsMenuClosing] = useState(false);
+
+  const closeMenu = () => {
+    setIsMenuClosing(true);
+    setTimeout(() => {
+      setIsMenuOpen(false);
+      setIsMenuClosing(false);
+    }, 250);
+  };
+
+  const toggleMenu = () => {
+    if (isMenuOpen) {
+      closeMenu();
+    } else {
+      setIsMenuOpen(true);
+    }
+  };
+
   useEffect(() => {
     if (isMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -69,114 +87,93 @@ export default function Navbar() {
         <Image
           src="/assets/logo.jpeg"
           alt="Aniko Logo"
-          width={40}
-          height={40}
-          className="rounded-xl shadow-lg border-2 border-brand-secondary/20 transition-transform group-hover:scale-110"
+          width={44}
+          height={44}
+          className="rounded-xl shadow-md group-hover:scale-105 transition-transform"
         />
-        <span className="text-xl font-black tracking-tighter text-brand-primary dark:text-white uppercase">ANIKO</span>
+        <span className="text-2xl font-black tracking-tighter text-brand-primary dark:text-white uppercase">ANIKO</span>
       </Link>
 
-      {/* Desktop Navigation */}
-      <div className="hidden md:flex items-center gap-8 font-medium text-brand-primary/80 dark:text-slate-200">
-        <div className="flex items-center gap-6">
-          {navLinks.map((link) => (
-            <Link 
-              key={link.href} 
-              href={link.href} 
-              className={`hover:text-brand-accent transition-colors ${pathname === link.href ? 'text-brand-accent font-bold' : ''}`}
-            >
-              {link.name}
-            </Link>
-          ))}
-        </div>
+      {/* Desktop Links */}
+      <div className="hidden md:flex items-center gap-8">
+        {navLinks.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={`text-sm font-bold transition-all hover:text-brand-accent ${
+              pathname === link.href ? 'text-brand-accent font-black' : 'text-slate-600 dark:text-slate-300'
+            }`}
+          >
+            {link.name}
+          </Link>
+        ))}
+      </div>
+
+      {/* Right Side Actions */}
+      <div className="hidden md:flex items-center gap-4">
+        {/* Dark Mode Toggle */}
+        <button
+          onClick={toggleDarkMode}
+          className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:scale-110 active:scale-95 transition-all shadow-sm"
+          title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
+        >
+          {isDarkMode ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} className="text-indigo-600" />}
+        </button>
 
         {currentUser ? (
           <div className="relative">
-            <button 
+            <button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-brand-primary text-white shadow-xl hover:bg-brand-primary/90 transition-all border border-brand-accent/30 hover:scale-105 active:scale-95"
+              className="flex items-center gap-3 p-1.5 pr-4 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:scale-105 active:scale-95 transition-all shadow-sm"
             >
-              <div className="h-7 w-7 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border border-white/40">
+              <div className="h-9 w-9 rounded-full bg-brand-primary/20 flex items-center justify-center overflow-hidden border border-brand-accent/40">
                 {userProfile?.avatar_url ? (
                   <img src={`/assets/avatars/avatar_${userProfile.avatar_url}.png`} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-sm">🧒</span>
                 )}
               </div>
-              <span className="text-xs font-black max-w-[120px] truncate">{userProfile?.child_name || userProfile?.parent_name || 'Minha Conta'}</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-300 ${isUserMenuOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
+              <span className="text-xs font-black text-slate-800 dark:text-white max-w-[100px] truncate">
+                {userProfile?.child_name || userProfile?.parent_name || 'Minha Conta'}
+              </span>
             </button>
 
-            {/* Dropdown Menu do Usuário */}
+            {/* Dropdown de Usuário */}
             {isUserMenuOpen && (
-              <div className="absolute right-0 mt-3 w-60 bg-white dark:bg-[#0F1F35] rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 p-2 z-50 animate-scale-up text-left">
-                <div className="p-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl mb-1">
-                  <p className="text-xs font-black text-brand-primary dark:text-white truncate">{userProfile?.child_name || 'Sua Conta'}</p>
-                  <p className="text-[10px] text-brand-accent font-bold mt-0.5">{userProfile?.video_credits || 0} Créditos Restantes</p>
+              <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#0F1F35] rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 p-2 space-y-1 z-50 animate-scale-up">
+                <div className="p-3 border-b border-slate-100 dark:border-slate-800">
+                  <p className="text-xs font-bold text-slate-400">Logado como</p>
+                  <p className="text-xs font-black text-brand-primary dark:text-white truncate">{currentUser.email}</p>
                 </div>
-                
-                <Link 
-                  href="/dashboard" 
+
+                <Link
+                  href="/dashboard"
                   onClick={() => setIsUserMenuOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-brand-primary rounded-xl transition-all"
+                  className="flex items-center gap-2 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors"
                 >
-                  <span className="text-base">📊</span>
-                  <span>Meu Painel</span>
+                  <span>📊</span>
+                  <span>Meu Painel / Vídeos</span>
                 </Link>
 
-                <Link 
-                  href="/assinatura" 
+                <Link
+                  href="/assinatura"
                   onClick={() => setIsUserMenuOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-brand-primary rounded-xl transition-all"
+                  className="flex items-center gap-2 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors"
                 >
-                  <span className="text-base">💳</span>
+                  <span>💳</span>
                   <span>Minha Assinatura</span>
                 </Link>
-                
-                <Link 
-                  href="/dashboard#solicitar-video" 
-                  onClick={() => setIsUserMenuOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-brand-accent rounded-xl transition-all"
-                >
-                  <span className="text-base">✨</span>
-                  <span>Solicitar Animação</span>
-                </Link>
 
-                <button 
-                  onClick={async () => {
-                    await supabase.auth.signOut();
-                    window.location.reload();
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all text-left mt-1 border-t border-slate-100 dark:border-slate-800"
-                >
-                  <span className="text-base">🚪</span>
-                  <span>Sair da Conta</span>
-                </button>
-
-                {/* Dark Mode Toggle */}
-                <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
+                <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
                   <button
-                    onClick={toggleDarkMode}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all group"
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      window.location.reload();
+                    }}
+                    className="w-full flex items-center gap-2 p-2.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/30 text-xs font-bold text-red-500 transition-colors text-left"
                   >
-                    <div className="flex items-center gap-2.5">
-                      {isDarkMode ? (
-                        <Moon size={15} className="text-indigo-400" />
-                      ) : (
-                        <Sun size={15} className="text-amber-400" />
-                      )}
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                        {isDarkMode ? 'Modo Escuro' : 'Modo Claro'}
-                      </span>
-                    </div>
-                    {/* Switch pill */}
-                    <div className={`relative w-9 h-5 rounded-full transition-colors duration-300 ${
-                      isDarkMode ? 'bg-indigo-500' : 'bg-slate-200'
-                    }`}>
-                      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300 ${
-                        isDarkMode ? 'translate-x-4' : 'translate-x-0.5'
-                      }`} />
-                    </div>
+                    <span>🚪</span>
+                    <span>Sair da Conta</span>
                   </button>
                 </div>
               </div>
@@ -194,8 +191,8 @@ export default function Navbar() {
 
       {/* Mobile Menu Toggle */}
       <button 
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="md:hidden p-2 text-brand-primary hover:bg-slate-100 rounded-xl transition-all"
+        onClick={toggleMenu}
+        className="md:hidden p-2 text-brand-primary dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
         aria-label="Toggle menu"
       >
         {isMenuOpen ? <X size={32} /> : <Menu size={32} />}
@@ -203,15 +200,15 @@ export default function Navbar() {
 
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[100] h-dvh max-h-dvh backdrop-blur-2xl bg-white/75 dark:bg-[#070E1B]/80 md:hidden animate-fade-in flex flex-col p-6 overflow-y-auto overscroll-contain touch-pan-y shadow-2xl border-l border-white/30 dark:border-slate-800/80">
+        <div className={`fixed inset-0 z-[100] h-dvh max-h-dvh backdrop-blur-2xl bg-white/75 dark:bg-[#070E1B]/80 md:hidden flex flex-col p-6 overflow-y-auto overscroll-contain touch-pan-y shadow-2xl border-l border-white/30 dark:border-slate-800/80 ${isMenuClosing ? 'animate-drawer-out' : 'animate-drawer-in'}`}>
           {/* Header */}
           <div className="flex justify-between items-center pb-6 border-b border-slate-100 dark:border-slate-800 mb-6">
-            <Link href="/" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3">
+            <Link href="/" onClick={closeMenu} className="flex items-center gap-3">
               <Image src="/assets/logo.jpeg" alt="Logo" width={36} height={36} className="rounded-lg shadow-sm" />
               <span className="text-xl font-black tracking-tighter text-brand-primary dark:text-white uppercase">ANIKO</span>
             </Link>
             <button 
-              onClick={() => setIsMenuOpen(false)} 
+              onClick={closeMenu} 
               className="p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-full"
               aria-label="Fechar menu"
             >
@@ -239,7 +236,7 @@ export default function Navbar() {
               <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <Link 
                   href="/dashboard" 
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={closeMenu}
                   className="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800"
                 >
                   <span>📊</span>
@@ -247,7 +244,7 @@ export default function Navbar() {
                 </Link>
                 <Link 
                   href="/assinatura" 
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={closeMenu}
                   className="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800"
                 >
                   <span>💳</span>
@@ -257,7 +254,7 @@ export default function Navbar() {
 
               <Link 
                 href="/dashboard#solicitar-video" 
-                onClick={() => setIsMenuOpen(false)}
+                onClick={closeMenu}
                 className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-brand-accent text-white text-xs font-black shadow-md"
               >
                 <span>✨</span>
@@ -290,7 +287,7 @@ export default function Navbar() {
               <Link 
                 key={link.href} 
                 href={link.href} 
-                onClick={() => setIsMenuOpen(false)}
+                onClick={closeMenu}
                 className={`py-1 border-b border-slate-100 dark:border-slate-800/60 hover:text-brand-accent ${pathname === link.href ? 'text-brand-accent' : ''}`}
               >
                 {link.name}

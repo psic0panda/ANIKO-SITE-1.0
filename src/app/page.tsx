@@ -55,6 +55,24 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const [isMenuClosing, setIsMenuClosing] = useState(false);
+
+  const closeMenu = () => {
+    setIsMenuClosing(true);
+    setTimeout(() => {
+      setIsMenuOpen(false);
+      setIsMenuClosing(false);
+    }, 250);
+  };
+
+  const toggleMenu = () => {
+    if (isMenuOpen) {
+      closeMenu();
+    } else {
+      setIsMenuOpen(true);
+    }
+  };
+
   // Bloquear scroll da página quando o menu mobile está aberto
   useEffect(() => {
     if (isMenuOpen) {
@@ -383,8 +401,8 @@ export default function Home() {
         </div>
 
         <button 
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="md:hidden p-2 text-brand-primary hover:bg-slate-100 rounded-xl transition-all"
+          onClick={toggleMenu}
+          className="md:hidden p-2 text-brand-primary dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
         >
           {isMenuOpen ? (
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -393,9 +411,9 @@ export default function Home() {
           )}
         </button>
 
-        {/* Mobile Menu Overlay */}
+        {/* Mobile Menu Overlay com Animação Suave de Entrada e Saída */}
         {isMenuOpen && (
-          <div className="fixed inset-0 z-[100] h-dvh max-h-dvh backdrop-blur-2xl bg-white/75 dark:bg-[#070E1B]/80 md:hidden animate-fade-in flex flex-col p-6 overflow-y-auto overscroll-contain touch-pan-y shadow-2xl border-l border-white/30 dark:border-slate-800/80">
+          <div className={`fixed inset-0 z-[100] h-dvh max-h-dvh backdrop-blur-2xl bg-white/75 dark:bg-[#070E1B]/80 md:hidden flex flex-col p-6 overflow-y-auto overscroll-contain touch-pan-y shadow-2xl border-l border-white/30 dark:border-slate-800/80 ${isMenuClosing ? 'animate-drawer-out' : 'animate-drawer-in'}`}>
             {/* Header do Menu Mobile */}
             <div className="flex justify-between items-center pb-6 border-b border-slate-100 dark:border-slate-800 mb-6">
               <div className="flex items-center gap-3">
@@ -403,7 +421,7 @@ export default function Home() {
                 <span className="text-xl font-black tracking-tighter text-brand-primary dark:text-white uppercase">ANIKO</span>
               </div>
               <button 
-                onClick={() => setIsMenuOpen(false)} 
+                onClick={closeMenu} 
                 className="p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-full hover:bg-slate-200 transition-colors"
                 aria-label="Fechar menu"
               >
@@ -431,7 +449,7 @@ export default function Home() {
                 <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                   <Link 
                     href="/dashboard" 
-                    onClick={() => setIsMenuOpen(false)}
+                    onClick={closeMenu}
                     className="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800"
                   >
                     <span>📊</span>
@@ -439,7 +457,7 @@ export default function Home() {
                   </Link>
                   <Link 
                     href="/assinatura" 
-                    onClick={() => setIsMenuOpen(false)}
+                    onClick={closeMenu}
                     className="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800"
                   >
                     <span>💳</span>
@@ -449,7 +467,7 @@ export default function Home() {
 
                 <Link 
                   href="/dashboard#solicitar-video" 
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={closeMenu}
                   className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl bg-brand-accent text-white text-xs font-black shadow-md"
                 >
                   <span>✨</span>
