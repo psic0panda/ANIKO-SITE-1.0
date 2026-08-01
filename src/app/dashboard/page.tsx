@@ -1002,39 +1002,52 @@ export default function Dashboard() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase tracking-widest bg-brand-accent/20 text-brand-accent px-3 py-1 rounded-full">
-                    Painel do Assinante
+                    {profile.plan_name ? 'Painel do Assinante' : 'Saldo de Créditos'}
                   </span>
                   <span className="text-xs font-bold text-slate-300">
-                    {profile.plan_name || 'Plano Essencial'}
+                    {profile.plan_name || (profile.video_credits ? 'Plano Avulso' : 'Sem Plano')}
                   </span>
                 </div>
 
                 <div className="bg-white/5 rounded-2xl p-6 border border-white/10 text-center space-y-1">
                   <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">Créditos de Vídeo</p>
-                  <p className="text-5xl font-black text-brand-accent">{profile.video_credits !== undefined ? profile.video_credits : 4}</p>
+                  <p className="text-5xl font-black text-brand-accent">
+                    {(profile.video_credits !== undefined && profile.video_credits !== null) ? profile.video_credits : 0}
+                  </p>
                   <p className="text-[10px] text-slate-400 font-medium">acumuláveis por até 60 dias</p>
                 </div>
 
                 <div className="space-y-3">
-                  <button 
-                    onClick={() => {
-                      document.getElementById('solicitar-video')?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="w-full py-3.5 bg-brand-accent text-white font-black rounded-2xl text-sm shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-center block"
-                  >
-                    Usar 1 Crédito
-                  </button>
+                  {(profile.video_credits && profile.video_credits > 0) ? (
+                    <button 
+                      onClick={() => {
+                        document.getElementById('solicitar-video')?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="w-full py-3.5 bg-brand-accent text-white font-black rounded-2xl text-sm shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-center block"
+                    >
+                      Usar 1 Crédito
+                    </button>
+                  ) : (
+                    <Link 
+                      href="/valores"
+                      className="w-full py-3.5 bg-brand-accent text-white font-black rounded-2xl text-sm shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-center block"
+                    >
+                      Assinar Plano ou Recarregar
+                    </Link>
+                  )}
 
-                  <button 
-                    onClick={() => {
-                      if (confirm("Deseja mesmo solicitar o cancelamento da sua assinatura? Seu saldo de créditos atual continuará disponível até o fim do ciclo.")) {
-                        alert("Sua solicitação de cancelamento foi enviada! Nosso suporte entrará em contato para confirmar.");
-                      }
-                    }}
-                    className="w-full py-2.5 text-xs text-slate-400 hover:text-red-400 font-bold transition-colors text-center block"
-                  >
-                    Cancelar Assinatura
-                  </button>
+                  {profile.plan_name && (
+                    <button 
+                      onClick={() => {
+                        if (confirm("Deseja mesmo solicitar o cancelamento da sua assinatura? Seu saldo de créditos atual continuará disponível até o fim do ciclo.")) {
+                          alert("Sua solicitação de cancelamento foi enviada! Nosso suporte entrará em contato para confirmar.");
+                        }
+                      }}
+                      className="w-full py-2.5 text-xs text-slate-400 hover:text-red-400 font-bold transition-colors text-center block"
+                    >
+                      Cancelar Assinatura
+                    </button>
+                  )}
                 </div>
               </div>
            </div>
