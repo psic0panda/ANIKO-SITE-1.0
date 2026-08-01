@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import SensoryHub from "./SensoryHub";
 import { Sparkles, X, Menu, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -13,7 +12,6 @@ import { supabase } from "@/lib/supabase";
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isSensoryOpen, setIsSensoryOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -70,26 +68,7 @@ export default function Navbar() {
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center gap-8 font-medium text-brand-primary/80">
         <div className="flex items-center gap-6">
-          <Link 
-            href="/abordagem" 
-            className={`hover:text-brand-accent transition-colors ${pathname === '/abordagem' ? 'text-brand-accent font-bold' : ''}`}
-          >
-            Abordagem
-          </Link>
-
-          {/* Sensory Trigger */}
-          <div className="relative">
-            <button 
-              onClick={() => setIsSensoryOpen(!isSensoryOpen)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${isSensoryOpen ? 'bg-brand-accent/20 text-brand-primary font-bold shadow-inner' : 'hover:bg-brand-primary/5 hover:text-brand-accent'}`}
-            >
-              <Sparkles size={16} className={isSensoryOpen ? 'text-brand-accent' : ''} />
-              Modo Sensorial
-            </button>
-            <SensoryHub isOpen={isSensoryOpen} onClose={() => setIsSensoryOpen(false)} />
-          </div>
-
-          {navLinks.slice(1).map((link) => (
+          {navLinks.map((link) => (
             <Link 
               key={link.href} 
               href={link.href} 
@@ -224,22 +203,7 @@ export default function Navbar() {
             </button>
           </div>
           <div className="flex flex-col gap-8 text-3xl font-black text-brand-primary uppercase tracking-tighter">
-            <Link href="/abordagem" onClick={() => setIsMenuOpen(false)}>Abordagem</Link>
-            
-            <button 
-              onClick={() => setIsSensoryOpen(!isSensoryOpen)}
-              className="flex items-center gap-4 text-left border-l-4 border-brand-accent pl-4 text-brand-accent"
-            >
-              <Sparkles size={28} />
-              Modo Sensorial
-            </button>
-            {isSensoryOpen && (
-              <div className="ml-4 mb-4">
-                 <SensoryHub isOpen={isSensoryOpen} onClose={() => setIsSensoryOpen(false)} />
-              </div>
-            )}
-
-            {navLinks.slice(1).map((link) => (
+            {navLinks.map((link) => (
               <Link 
                 key={link.href} 
                 href={link.href} 
