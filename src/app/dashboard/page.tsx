@@ -202,6 +202,9 @@ export default function Dashboard() {
   const [isSubmittingAlteration, setIsSubmittingAlteration] = useState(false);
   const [alterationSuccess, setAlterationSuccess] = useState<number | null>(null);
 
+  // Estado de Navegação por Abas no Dashboard
+  const [activeTab, setActiveTab] = useState<'timeline' | 'profile' | 'subscription' | 'referral'>('timeline');
+
   // Estado para Guia Pedagógico PDF e Link de Indicação
   const [pdfModalVideo, setPdfModalVideo] = useState<any>(null);
   const [copiedReferral, setCopiedReferral] = useState(false);
@@ -647,56 +650,110 @@ export default function Dashboard() {
     <main className="min-h-screen bg-slate-50 text-brand-primary pb-20 relative">
       <BackgroundDecor />
       {/* Navigation */}
-      <nav className="w-full bg-white border-b border-slate-100 px-6 py-4 md:px-12 sticky top-0 z-30 shadow-sm">
-        <div className="mx-auto max-w-7xl flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-             <Image src="/assets/logo.jpeg" alt="Logo" width={40} height={40} className="rounded-xl shadow-md border-2 border-brand-secondary/20" />
-             <span className="text-xl font-bold tracking-tight text-brand-primary uppercase">ANIKO</span>
-          </Link>
-          <div className="flex items-center gap-4">
-             <button 
-               onClick={() => {
-                 document.getElementById('solicitar-video')?.scrollIntoView({ behavior: 'smooth' });
-               }}
-               className="flex items-center gap-2 px-4 md:px-6 py-2 bg-brand-accent text-white font-black rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all text-[10px] md:text-sm"
-             >
-               <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4" />
-               <span>Solicitar Vídeo</span>
-             </button>
-             <button 
-               onClick={toggleSensoryFriendly}
-               className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-xs font-bold ${isSensoryFriendly ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-slate-50 border-slate-200 text-slate-400 hover:border-brand-secondary'}`}
-             >
-               {isSensoryFriendly ? <Sparkles className="h-3.5 w-3.5" /> : <Wind className="h-3.5 w-3.5" />}
-               <span className="hidden sm:inline">{isSensoryFriendly ? 'Modo Sensorial On' : 'Ativar Modo Sensorial'}</span>
-             </button>
-             <Link href="/valores" className="hidden md:block text-slate-400 font-bold hover:text-brand-accent transition-colors text-sm">Valores</Link>
-             <Link href="/duvidas" className="hidden md:block text-slate-400 font-bold hover:text-brand-accent transition-colors text-sm">Dúvidas?</Link>
+      <nav className="w-full bg-white border-b border-slate-100 px-4 md:px-8 py-3 sticky top-0 z-30 shadow-sm">
+        <div className="mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-4">
+          
+          {/* Logo e Botão Principal */}
+          <div className="flex items-center justify-between w-full md:w-auto gap-4">
+            <Link href="/" className="flex items-center gap-3">
+               <Image src="/assets/logo.jpeg" alt="Logo" width={36} height={36} className="rounded-xl shadow-md border-2 border-brand-secondary/20" />
+               <span className="text-lg font-black tracking-tight text-brand-primary uppercase">ANIKO</span>
+            </Link>
+
+            <button 
+              onClick={() => {
+                setActiveTab('timeline');
+                setTimeout(() => {
+                  document.getElementById('solicitar-video')?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-brand-accent text-white font-black rounded-xl shadow-md hover:scale-105 active:scale-95 transition-all text-xs"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Solicitar Vídeo</span>
+            </button>
+          </div>
+
+          {/* Abas de Navegação no Topo */}
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl w-full md:w-auto overflow-x-auto no-scrollbar">
+            <button
+              onClick={() => setActiveTab('timeline')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'timeline'
+                  ? 'bg-white text-brand-primary shadow-sm'
+                  : 'text-slate-500 hover:text-brand-primary'
+              }`}
+            >
+              <span>🎬</span>
+              <span>Animações</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'profile'
+                  ? 'bg-white text-brand-primary shadow-sm'
+                  : 'text-slate-500 hover:text-brand-primary'
+              }`}
+            >
+              <span>🧒</span>
+              <span>Perfil</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('subscription')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'subscription'
+                  ? 'bg-white text-brand-primary shadow-sm'
+                  : 'text-slate-500 hover:text-brand-primary'
+              }`}
+            >
+              <span>💳</span>
+              <span>Assinatura ({profile.video_credits || 0})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('referral')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'referral'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-500 hover:text-emerald-700'
+              }`}
+            >
+              <span>🎁</span>
+              <span>Indicação</span>
+            </button>
+          </div>
+
+          {/* Sair */}
+          <div className="hidden md:flex items-center gap-3">
              <button 
                onClick={() => { supabase.auth.signOut(); window.location.href = "/"; }}
-               className="px-6 py-2 bg-slate-100 text-brand-primary font-bold rounded-xl hover:bg-slate-200 transition-all text-sm"
+               className="px-4 py-2 bg-slate-100 text-brand-primary font-bold rounded-xl hover:bg-slate-200 transition-all text-xs"
              >
-               Sair
+               Sair da Conta
              </button>
           </div>
         </div>
       </nav>
 
-      <div className="mx-auto max-w-7xl px-6 py-12 md:px-12 grid gap-12 lg:grid-cols-[1fr_350px]">
-        {/* Main Content */}
-        <div className="space-y-12">
-          {/* Video Gallery - Timeline UX */}
-          <section className="space-y-12 animate-fade-up">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl font-black">Sua Jornada Aniko</h1>
-                <p className="text-slate-400 font-medium mt-1">Acompanhe as animações criadas para {profile.child_name || "seu filho"}</p>
+      <div className="mx-auto max-w-7xl px-4 md:px-8 py-10">
+        
+        {/* ABA 1: LINHA DO TEMPO & SOLICITAÇÕES */}
+        {activeTab === 'timeline' && (
+          <div className="space-y-12 animate-fade-in">
+            {/* Video Gallery - Timeline UX */}
+            <section className="space-y-12">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-black">Sua Jornada Aniko</h1>
+                  <p className="text-slate-400 font-medium mt-1">Acompanhe as animações criadas para {profile.child_name || "seu filho"}</p>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-2xl shadow-sm border border-slate-100">
+                  <div className="h-2 w-2 rounded-full bg-brand-accent animate-pulse" />
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{videos.length} Vídeos</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-2xl shadow-sm border border-slate-100">
-                <div className="h-2 w-2 rounded-full bg-brand-accent animate-pulse" />
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{videos.length} Vídeos</span>
-              </div>
-            </div>
             
             <div className="relative space-y-16 pl-4 md:pl-8">
               {/* Vertical Timeline Line */}
@@ -1091,113 +1148,66 @@ export default function Dashboard() {
               </div>
              
               {videos.length > 0 && (
-                <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
-                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Média de Resposta</p>
-                      <p className="text-xl font-black text-brand-primary">
-                         {(() => {
-                           const videosComNota = videos.filter(v => v.response_score !== null && v.response_score !== undefined);
-                           if (videosComNota.length === 0) return '-';
-                           const media = videosComNota.reduce((acc, v) => acc + v.response_score, 0) / videosComNota.length;
-                           return `${media.toFixed(1)}/10`;
-                         })()}
-                      </p>
-                   </div>
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                     <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Total de Vídeos</p>
-                     <p className="text-xl font-black text-brand-primary">{videos.length}</p>
-                  </div>
-               </div>
-             )}
-          </section>
-        </div>
-
-        {/* Sidebar */}
-        <aside className="space-y-8 animate-fade-in delay-300">
-           {/* Painel do Assinante / Créditos */}
-           <div className="bg-gradient-to-br from-[#0F2B48] to-[#041628] rounded-[3rem] p-8 text-white shadow-2xl relative overflow-hidden border-2 border-brand-accent/30">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/10 rounded-full blur-2xl pointer-events-none" />
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase tracking-widest bg-brand-accent/20 text-brand-accent px-3 py-1 rounded-full">
-                    {profile.plan_name ? 'Painel do Assinante' : 'Saldo de Créditos'}
-                  </span>
-                  <span className="text-xs font-bold text-slate-300">
-                    {profile.plan_name || (profile.video_credits ? 'Plano Avulso' : 'Sem Plano')}
-                  </span>
-                </div>
-
-                <div className="bg-white/5 rounded-2xl p-6 border border-white/10 text-center space-y-1">
-                  <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">Créditos de Vídeo</p>
-                  <p className="text-5xl font-black text-brand-accent">
-                    {(profile.video_credits !== undefined && profile.video_credits !== null) ? profile.video_credits : 0}
-                  </p>
-                  <p className="text-[10px] text-slate-400 font-medium">acumuláveis por até 60 dias</p>
-                </div>
-
-                <div className="space-y-3">
-                  {(profile.video_credits && profile.video_credits > 0) ? (
-                    <button 
-                      onClick={() => {
-                        document.getElementById('solicitar-video')?.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                      className="w-full py-3.5 bg-brand-accent text-white font-black rounded-2xl text-sm shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-center block"
-                    >
-                      Usar 1 Crédito
-                    </button>
-                  ) : (
-                    <Link 
-                      href="/pagamento"
-                      className="w-full py-3.5 bg-brand-accent text-white font-black rounded-2xl text-sm shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-center block"
-                    >
-                      Assinar Plano ou Recarregar
-                    </Link>
-                  )}
-
-                  <Link 
-                    href="/assinatura"
-                    className="w-full py-2.5 text-xs text-slate-300 hover:text-brand-accent font-bold transition-colors text-center block"
-                  >
-                    ⚙️ Gerenciar Assinatura Completa
-                  </Link>
-                </div>
-              </div>
-           </div>
-
-           {/* Child Profile Card */}
-           <div className="bg-brand-primary rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden">
-              <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-              <div className="flex flex-col items-center text-center">
-                 <div className="h-32 w-32 rounded-full border-4 border-white/20 p-2 mb-6 shadow-2xl">
-                    <div className="h-full w-full rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
-                       {profile.avatar_url ? (
-                         <img src={`/assets/avatars/avatar_${profile.avatar_url}.png`} alt="Avatar" className="w-full h-full object-cover" />
-                       ) : (
-                         <span className="text-4xl">🧒</span>
-                       )}
+                 <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                       <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Média de Resposta</p>
+                       <p className="text-xl font-black text-brand-primary">
+                          {(() => {
+                            const videosComNota = videos.filter(v => v.response_score !== null && v.response_score !== undefined);
+                            if (videosComNota.length === 0) return '-';
+                            const media = videosComNota.reduce((acc, v) => acc + v.response_score, 0) / videosComNota.length;
+                            return `${media.toFixed(1)}/10`;
+                          })()}
+                       </p>
                     </div>
-                 </div>
-                 <h2 className="text-2xl font-black mb-6">{profile.child_name || "Seu Filho"}</h2>
-                 <button 
-                  onClick={() => setIsEditModalOpen(true)}
-                  className="w-full py-3 bg-white/10 hover:bg-white text-white hover:text-brand-primary rounded-2xl font-bold transition-all border border-white/10 text-sm"
-                 >
-                   Editar Perfil
-                 </button>
-              </div>
-           </div>
+                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Total de Vídeos</p>
+                      <p className="text-xl font-black text-brand-primary">{videos.length}</p>
+                   </div>
+                </div>
+              )}
+           </section>
+          </div>
+        )}
 
-            {/* Active Tasks/Interests */}
-            <div className="bg-white rounded-[3rem] p-10 shadow-xl border border-white">
-               <h3 className="text-lg font-black mb-6">Preferências Ativas</h3>
-               <div className="flex flex-wrap gap-2">
+        {/* ABA 2: PERFIL DA CRIANÇA */}
+        {activeTab === 'profile' && (
+          <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
+            <div className="bg-brand-primary rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden">
+               <div className="absolute top-[-10%] right-[-10%] w-48 h-48 bg-white/10 rounded-full blur-3xl" />
+               <div className="flex flex-col items-center text-center">
+                  <div className="h-36 w-36 rounded-full border-4 border-white/20 p-2 mb-6 shadow-2xl">
+                     <div className="h-full w-full rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
+                        {profile.avatar_url ? (
+                          <img src={`/assets/avatars/avatar_${profile.avatar_url}.png`} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-5xl">🧒</span>
+                        )}
+                     </div>
+                  </div>
+                  <h2 className="text-3xl font-black mb-6">{profile.child_name || "Seu Filho"}</h2>
+                  <button 
+                   onClick={() => setIsEditModalOpen(true)}
+                   className="px-8 py-3 bg-white hover:bg-slate-100 text-brand-primary rounded-2xl font-black transition-all text-sm shadow-lg"
+                  >
+                    ✏️ Editar Perfil & Foto
+                  </button>
+               </div>
+            </div>
+
+            {/* Preferências Ativas */}
+            <div className="bg-white rounded-[3rem] p-10 shadow-xl border border-slate-100">
+               <h3 className="text-xl font-black mb-6 flex items-center gap-2">
+                 <span>⭐</span> Preferências Ativas
+               </h3>
+               <div className="flex flex-wrap gap-2.5">
                   {profile.preferences.length > 0 ? profile.preferences.map((int: string, i: number) => (
-                     <span key={i} className="px-4 py-2 bg-slate-50 text-slate-600 rounded-full text-xs font-bold border border-slate-100 flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-brand-accent" />
+                     <span key={i} className="px-5 py-2.5 bg-slate-50 text-slate-700 rounded-full text-xs font-bold border border-slate-200 flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-brand-accent" />
                         {int}
                      </span>
                   )) : (
-                    <p className="text-sm text-slate-400 italic">Nenhuma preferência selecionada.</p>
+                    <p className="text-sm text-slate-400 italic">Nenhuma preferência selecionada ainda.</p>
                   )}
                </div>
             </div>
@@ -1209,157 +1219,184 @@ export default function Dashboard() {
                      <span className="text-2xl">📖</span>
                      <h3 className="text-lg font-black text-brand-primary">Sobre {profile.child_name?.split(' ')[0] || 'a criança'}</h3>
                   </div>
-                  {profile.historico && (
-                    <button 
-                      onClick={() => setIsEditModalOpen(true)}
-                      className="text-purple-500 hover:text-purple-600 text-xs font-bold"
-                    >
-                      ✏️ Editar
-                    </button>
-                  )}
+                  <button 
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="text-purple-600 hover:text-purple-700 text-xs font-bold"
+                  >
+                    ✏️ Editar
+                  </button>
                </div>
                {profile.historico ? (
-                 <div className="bg-white/70 rounded-2xl p-5">
-                   <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
-                     {historicoExpandido || profile.historico.length <= 150 
-                       ? profile.historico 
-                       : profile.historico.slice(0, 150) + '...'}
+                 <div className="bg-white/80 rounded-2xl p-6 shadow-sm">
+                   <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-line">
+                     {profile.historico}
                    </p>
-                   {profile.historico.length > 150 && (
-                     <button 
-                       onClick={() => setHistoricoExpandido(!historicoExpandido)}
-                       className="mt-2 text-purple-500 hover:text-purple-600 text-sm font-bold"
-                     >
-                       {historicoExpandido ? 'Ver menos' : 'Ver completo'}
-                     </button>
-                   )}
                  </div>
                ) : (
-                 <div className="text-center py-4">
+                 <div className="text-center py-6">
                    <p className="text-slate-500 text-sm mb-4">Conte um pouco sobre {profile.child_name?.split(' ')[0] || 'a criança'} para ajudarmos a criar animações ainda mais personalizadas!</p>
                    <button 
                      onClick={() => setIsEditModalOpen(true)}
-                     className="px-6 py-2 bg-purple-500 text-white font-bold rounded-full text-sm hover:bg-purple-600 transition-all"
+                     className="px-6 py-3 bg-purple-600 text-white font-black rounded-2xl text-xs hover:bg-purple-700 transition-all shadow-md"
                    >
                      + Adicionar História
                    </button>
                  </div>
                )}
-             </div>
+            </div>
+          </div>
+        )}
 
-             {/* Sistema de Indicação (Regra de 2 Indicações = 1 Aniko) */}
-             <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 rounded-[3rem] p-8 text-white shadow-2xl space-y-6">
-                
-                {/* 1. Card com o Código de Indicação da Conta */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 bg-white/20 rounded-2xl flex items-center justify-center text-xl shrink-0">
-                      🎁
-                    </div>
-                    <div>
-                      <h4 className="font-black text-lg">Seu Código de Indicação</h4>
-                      <p className="text-xs text-emerald-100 font-medium">A cada 2 pessoas que ativarem, você ganha 1 Aniko!</p>
-                    </div>
-                  </div>
+        {/* ABA 3: MINHA ASSINATURA */}
+        {activeTab === 'subscription' && (
+          <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
+            <div className="bg-gradient-to-br from-[#0F2B48] via-[#163D63] to-[#041628] rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden border-2 border-brand-accent/30 space-y-8">
+               <div className="flex items-center justify-between">
+                 <span className="text-xs font-black uppercase tracking-widest bg-brand-accent/20 text-brand-accent px-4 py-1.5 rounded-full">
+                   {profile.plan_name ? 'Plano Ativo' : 'Saldo de Créditos'}
+                 </span>
+                 <span className="text-xs font-bold text-slate-300">
+                   {profile.plan_name || (profile.video_credits ? 'Plano Avulso' : 'Sem Plano')}
+                 </span>
+               </div>
 
-                  {/* Código Único */}
-                  <div className="bg-white/10 p-4 rounded-2xl border border-white/20 flex justify-between items-center">
-                    <div>
-                      <p className="text-[10px] text-emerald-200 font-bold uppercase">Seu Código Único</p>
-                      <p className="text-xl font-mono font-black tracking-widest text-white">
-                        {user?.id ? user.id.substring(0, 8).toUpperCase() : '------'}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        const code = user?.id ? user.id.substring(0, 8).toUpperCase() : '';
-                        navigator.clipboard.writeText(code);
-                        setCopiedReferral(true);
-                        setTimeout(() => setCopiedReferral(false), 3000);
-                      }}
-                      className="px-4 py-2 bg-white text-emerald-900 font-black rounded-xl text-xs hover:bg-emerald-50 transition-all flex items-center gap-1.5 shadow-md"
-                    >
-                      <Copy size={13} />
-                      <span>{copiedReferral ? "Copiado!" : "Copiar"}</span>
-                    </button>
-                  </div>
+               <div className="bg-white/10 rounded-3xl p-8 border border-white/10 text-center space-y-2">
+                 <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">Créditos de Vídeo Disponíveis</p>
+                 <p className="text-6xl font-black text-brand-accent">
+                   {(profile.video_credits !== undefined && profile.video_credits !== null) ? profile.video_credits : 0}
+                 </p>
+                 <p className="text-xs text-slate-400 font-medium pt-1">Créditos válidos por até 60 dias após a compra</p>
+               </div>
 
-                  {/* Progresso de Indicações (X / 2) */}
-                  <div className="bg-emerald-900/40 p-3.5 rounded-2xl border border-white/10 space-y-2">
-                    <div className="flex justify-between items-center text-xs font-bold">
-                      <span className="text-emerald-100">Progresso de Indicações</span>
-                      <span className="text-white font-black">
-                        {(profile.referral_count || 0) % 2} / 2 concluídos
-                      </span>
-                    </div>
-                    <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-white transition-all duration-500"
-                        style={{ width: `${(((profile.referral_count || 0) % 2) / 2) * 100}%` }}
-                      />
-                    </div>
-                    <p className="text-[10px] text-emerald-200 text-center font-medium">
-                      Total de pessoas que já usaram seu código: <strong>{profile.referral_count || 0}</strong>
-                    </p>
-                  </div>
+               <div className="space-y-4">
+                 <Link 
+                   href="/pagamento"
+                   className="w-full py-4 bg-brand-accent hover:bg-brand-accent/90 text-white font-black rounded-2xl text-base shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-center block"
+                 >
+                   ✨ Assinar Novo Plano ou Recarregar Créditos
+                 </Link>
 
-                  <a
-                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Crie sua conta no Aniko (Animações Adaptativas para TEA) e ative o meu código de indicação no seu painel: ${user?.id ? user.id.substring(0, 8).toUpperCase() : ''} - acesse: https://www.aniko.com.br/cadastro`)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-2xl text-xs transition-all flex items-center justify-center gap-2 shadow-lg"
-                  >
-                    <Share2 size={14} />
-                    <span>Enviar Código pelo WhatsApp</span>
-                  </a>
+                 <Link 
+                   href="/assinatura"
+                   className="w-full py-3 text-xs text-slate-300 hover:text-white font-bold transition-colors text-center block"
+                 >
+                   ⚙️ Ver Detalhes do Seu Plano Atual
+                 </Link>
+               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ABA 4: INDICAÇÃO */}
+        {activeTab === 'referral' && (
+          <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
+            <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 rounded-[3rem] p-10 text-white shadow-2xl space-y-8">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl shrink-0">
+                  🎁
                 </div>
-
-                {/* 2. Formulário para Ativar Código Recebido de Outra Pessoa */}
-                <div className="pt-4 border-t border-white/15 space-y-3">
-                  <h5 className="text-xs font-black uppercase tracking-wider text-emerald-100">
-                    Foi indicado por alguém?
-                  </h5>
-
-                  {profile.used_referral_code ? (
-                    <div className="p-3.5 bg-white/10 border border-white/20 rounded-2xl text-xs font-medium text-emerald-100 flex items-center gap-2">
-                      <CheckCircle2 size={16} className="text-emerald-300 shrink-0" />
-                      <span>Você já ativou o código <strong>{profile.used_referral_code}</strong> nesta conta.</span>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={inputReferralCode}
-                          onChange={(e) => setInputReferralCode(e.target.value.toUpperCase())}
-                          placeholder="DIGITE O CÓDIGO"
-                          maxLength={8}
-                          className="flex-1 px-4 py-2.5 rounded-xl bg-white/15 text-white placeholder-emerald-200/60 font-mono text-xs uppercase border border-white/20 focus:outline-none focus:border-white font-bold"
-                        />
-                        <button
-                          onClick={handleActivateReferralCode}
-                          disabled={!inputReferralCode.trim() || isActivatingReferral}
-                          className="px-4 py-2.5 bg-white text-emerald-900 font-black text-xs rounded-xl hover:bg-emerald-50 transition-all disabled:opacity-50"
-                        >
-                          {isActivatingReferral ? "..." : "Ativar"}
-                        </button>
-                      </div>
-                      {referralMsg && <p className="text-[11px] text-emerald-200 font-bold">{referralMsg}</p>}
-                      {referralErrorMsg && <p className="text-[11px] text-red-300 font-bold">{referralErrorMsg}</p>}
-                    </div>
-                  )}
+                <div>
+                  <h3 className="font-black text-2xl">Programa Indique e Ganhe</h3>
+                  <p className="text-xs text-emerald-100 font-medium mt-1">A cada 2 pessoas que ativarem seu código, você ganha 1 Aniko!</p>
                 </div>
-
               </div>
 
-          </aside>
+              {/* Código Único */}
+              <div className="bg-white/10 p-6 rounded-3xl border border-white/20 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div>
+                  <p className="text-xs text-emerald-200 font-bold uppercase">Seu Código Único de Indicação</p>
+                  <p className="text-3xl font-mono font-black tracking-widest text-white mt-1">
+                    {user?.id ? user.id.substring(0, 8).toUpperCase() : '------'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    const code = user?.id ? user.id.substring(0, 8).toUpperCase() : '';
+                    navigator.clipboard.writeText(code);
+                    setCopiedReferral(true);
+                    setTimeout(() => setCopiedReferral(false), 3000);
+                  }}
+                  className="w-full sm:w-auto px-6 py-3 bg-white text-emerald-900 font-black rounded-2xl text-xs hover:bg-emerald-50 transition-all flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <Copy size={16} />
+                  <span>{copiedReferral ? "Copiado!" : "Copiar Código"}</span>
+                </button>
+              </div>
 
-          {/* Modal Guia Pedagógico PDF */}
-          <PedagogicalPdfModal 
-            isOpen={!!pdfModalVideo} 
-            onClose={() => setPdfModalVideo(null)} 
-            video={pdfModalVideo} 
-          />
+              {/* Progresso de Indicações (X / 2) */}
+              <div className="bg-emerald-900/40 p-6 rounded-3xl border border-white/10 space-y-3">
+                <div className="flex justify-between items-center text-sm font-bold">
+                  <span className="text-emerald-100">Progresso Atual</span>
+                  <span className="text-white font-black text-base">
+                    {(profile.referral_count || 0) % 2} / 2 indicações
+                  </span>
+                </div>
+                <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-white transition-all duration-500"
+                    style={{ width: `${(((profile.referral_count || 0) % 2) / 2) * 100}%` }}
+                  />
+                </div>
+                <p className="text-xs text-emerald-200 text-center font-medium pt-1">
+                  Total de amigos que já usaram seu código: <strong>{profile.referral_count || 0}</strong>
+                </p>
+              </div>
+
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Crie sua conta no Aniko (Animações Adaptativas para TEA) e ative o meu código de indicação no seu painel: ${user?.id ? user.id.substring(0, 8).toUpperCase() : ''} - acesse: https://www.aniko.com.br/cadastro`)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-2xl text-sm transition-all flex items-center justify-center gap-2 shadow-xl"
+              >
+                <Share2 size={18} />
+                <span>Enviar Código pelo WhatsApp</span>
+              </a>
+
+              {/* Formulário para Ativar Código Recebido de Outra Pessoa */}
+              <div className="pt-6 border-t border-white/20 space-y-4">
+                <h4 className="text-sm font-black uppercase tracking-wider text-emerald-100">
+                  Foi indicado por alguém?
+                </h4>
+
+                {profile.used_referral_code ? (
+                  <div className="p-4 bg-white/10 border border-white/20 rounded-2xl text-xs font-medium text-emerald-100 flex items-center gap-2">
+                    <CheckCircle2 size={18} className="text-emerald-300 shrink-0" />
+                    <span>Você já ativou o código <strong>{profile.used_referral_code}</strong> nesta conta.</span>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <input
+                        type="text"
+                        value={inputReferralCode}
+                        onChange={(e) => setInputReferralCode(e.target.value.toUpperCase())}
+                        placeholder="DIGITE O CÓDIGO DO SEU AMIGO"
+                        maxLength={8}
+                        className="flex-1 px-5 py-3.5 rounded-2xl bg-white/15 text-white placeholder-emerald-200/60 font-mono text-sm uppercase border border-white/20 focus:outline-none focus:border-white font-bold"
+                      />
+                      <button
+                        onClick={handleActivateReferralCode}
+                        disabled={!inputReferralCode.trim() || isActivatingReferral}
+                        className="px-6 py-3.5 bg-white text-emerald-900 font-black text-sm rounded-2xl hover:bg-emerald-50 transition-all disabled:opacity-50 shadow-md"
+                      >
+                        {isActivatingReferral ? "..." : "Ativar"}
+                      </button>
+                    </div>
+                    {referralMsg && <p className="text-xs text-emerald-200 font-bold">{referralMsg}</p>}
+                    {referralErrorMsg && <p className="text-xs text-red-300 font-bold">{referralErrorMsg}</p>}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Guia Pedagógico PDF */}
+        <PedagogicalPdfModal 
+          isOpen={!!pdfModalVideo} 
+          onClose={() => setPdfModalVideo(null)} 
+          video={pdfModalVideo} 
+        />
 
       </div>
 
