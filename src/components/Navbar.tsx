@@ -38,6 +38,17 @@ export default function Navbar() {
     checkUser();
   }, []);
 
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMenuOpen]);
+
   const navLinks = [
     { name: "Abordagem", href: "/abordagem" },
     { name: "Tecnologia", href: "/tecnologia" },
@@ -192,7 +203,7 @@ export default function Navbar() {
 
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-[100] backdrop-blur-2xl bg-white/90 dark:bg-[#070E1B]/95 md:hidden animate-fade-in flex flex-col p-6 overflow-y-auto shadow-2xl border border-white/20 dark:border-slate-800/80">
+        <div className="fixed inset-0 z-[100] h-dvh max-h-dvh backdrop-blur-2xl bg-white/75 dark:bg-[#070E1B]/80 md:hidden animate-fade-in flex flex-col p-6 overflow-y-auto overscroll-contain touch-pan-y shadow-2xl border-l border-white/30 dark:border-slate-800/80">
           {/* Header */}
           <div className="flex justify-between items-center pb-6 border-b border-slate-100 dark:border-slate-800 mb-6">
             <Link href="/" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3">
@@ -208,9 +219,9 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* User Profile Card no Mobile */}
+          {/* User Profile Card no Mobile com Glassmorphism */}
           {currentUser && (
-            <div className="mb-6 p-4 rounded-2xl bg-slate-50 dark:bg-[#0F1F35] border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="mb-6 p-4 rounded-2xl backdrop-blur-md bg-white/60 dark:bg-[#0F1F35]/70 border border-white/40 dark:border-slate-700/60 shadow-xl space-y-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-brand-primary/20 flex items-center justify-center overflow-hidden border border-brand-accent/40">
                   {userProfile?.avatar_url ? (
