@@ -506,7 +506,7 @@ export default function Home() {
               loop
               disablePictureInPicture
               disableRemotePlayback
-              className="w-full h-full object-cover scale-[1.42] mix-blend-multiply dark:mix-blend-lighten transition-transform group-hover/hero:scale-[1.47]"
+              className="w-full h-full object-cover scale-[1.05] mix-blend-multiply dark:mix-blend-lighten transition-transform group-hover/hero:scale-[1.08]"
             />
           </div>
           {/* Invisible overlay to block browser video controls on hover & handle click */}
