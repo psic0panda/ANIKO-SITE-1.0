@@ -486,17 +486,19 @@ export default function Home() {
           onMouseEnter={() => setIsPenguinHovered(true)}
           onMouseLeave={() => setIsPenguinHovered(false)}
         >
-          <div className="relative pointer-events-none">
-            <video 
-              ref={penguinVideoRef}
-              src="/assets/ANIKO ANIMAÇÃO HOME.mp4" 
-              muted 
-              playsInline
-              loop
-              disablePictureInPicture
-              disableRemotePlayback
-              className="w-full max-w-[550px] object-contain mix-blend-multiply transition-all group-hover/hero:scale-105"
-            />
+          <div className="relative p-3 md:p-6 rounded-full bg-gradient-to-b from-brand-accent/25 via-brand-secondary/10 to-transparent border-4 border-brand-accent/40 shadow-[0_20px_60px_rgba(52,211,153,0.25)] dark:shadow-[0_20px_60px_rgba(52,211,153,0.35)] backdrop-blur-md aspect-square w-full max-w-[480px] flex items-center justify-center transition-transform group-hover/hero:scale-105">
+            <div className="relative w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#0F1F35] flex items-center justify-center p-2 md:p-4 shadow-inner border border-white/20">
+              <video 
+                ref={penguinVideoRef}
+                src="/assets/ANIKO ANIMAÇÃO HOME.mp4" 
+                muted 
+                playsInline
+                loop
+                disablePictureInPicture
+                disableRemotePlayback
+                className="w-full h-full object-cover rounded-full mix-blend-multiply dark:mix-blend-lighten transition-transform group-hover/hero:scale-105"
+              />
+            </div>
           </div>
           {/* Invisible overlay to block browser video controls on hover */}
           <div className="absolute inset-0 z-10" />
