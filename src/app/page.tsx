@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AiChat from "@/components/AiChat";
 import BackgroundDecor from "@/components/BackgroundDecor";
+import { supabase } from "@/lib/supabase";
 import { useSensory } from "@/context/SensoryContext";
 
 export default function Home() {
@@ -14,7 +15,23 @@ export default function Home() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Verificar se usuário está logado
+  useEffect(() => {
+    async function checkUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUser(user);
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        if (profile) setUserProfile(profile);
+      }
+    }
+    checkUser();
+  }, []);
 
   // Efeito de Glassmorphism na Navbar ao rolar
   useEffect(() => {
@@ -255,9 +272,67 @@ export default function Home() {
           <Link href="/valores" className="hover:text-brand-accent transition-colors">Valores</Link>
           <Link href="/duvidas" className="hover:text-brand-accent transition-colors font-bold">Dúvidas</Link>
           <Link href="/contato" className="hover:text-brand-accent transition-colors">Contato</Link>
-          <Link href="/login" className="rounded-full bg-brand-primary px-6 py-2.5 text-white shadow-xl hover:bg-brand-primary/90 transition-all hover:scale-105 active:scale-95">
-            Começar Agora
-          </Link>
+          {currentUser ? (
+            <div className="relative">
+              <button 
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-brand-primary text-white shadow-xl hover:bg-brand-primary/90 transition-all border border-brand-accent/30 hover:scale-105 active:scale-95"
+              >
+                <div className="h-7 w-7 rounded-full bg-white/20 flex items-center justify-center overflow-hidden border border-white/40">
+                  {userProfile?.avatar_url ? (
+                    <img src={`/assets/avatars/avatar_${userProfile.avatar_url}.png`} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-sm">🧒</span>
+                  )}
+                </div>
+                <span className="text-xs font-black max-w-[120px] truncate">{userProfile?.child_name || userProfile?.parent_name || 'Minha Conta'}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-300 ${isUserMenuOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+
+              {/* Dropdown Menu do Usuário */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-3 w-60 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-50 animate-scale-up text-left">
+                  <div className="p-3 border-b border-slate-100 bg-slate-50/50 rounded-xl mb-1">
+                    <p className="text-xs font-black text-brand-primary truncate">{userProfile?.child_name || 'Sua Conta'}</p>
+                    <p className="text-[10px] text-brand-accent font-bold mt-0.5">{userProfile?.video_credits !== undefined ? userProfile.video_credits : 4} Créditos Restantes</p>
+                  </div>
+                  
+                  <Link 
+                    href="/dashboard" 
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-brand-primary rounded-xl transition-all"
+                  >
+                    <span className="text-base">📊</span>
+                    <span>Meu Painel</span>
+                  </Link>
+                  
+                  <Link 
+                    href="/dashboard#solicitar-video" 
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-brand-accent rounded-xl transition-all"
+                  >
+                    <span className="text-base">✨</span>
+                    <span>Solicitar Animação</span>
+                  </Link>
+
+                  <button 
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      window.location.reload();
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 rounded-xl transition-all text-left mt-1 border-t border-slate-100"
+                  >
+                    <span className="text-base">🚪</span>
+                    <span>Sair da Conta</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link href="/login" className="rounded-full bg-brand-primary px-6 py-2.5 text-white shadow-xl hover:bg-brand-primary/90 transition-all hover:scale-105 active:scale-95 text-sm font-bold">
+              Começar Agora
+            </Link>
+          )}
         </div>
 
         <button 

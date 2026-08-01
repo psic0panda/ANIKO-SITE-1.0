@@ -17,34 +17,32 @@ export default function ForgotPassword() {
     setError("");
     setLoading(true);
 
-    const redirectTo = process.env.NODE_ENV === 'development' 
-      ? `${window.location.origin}/resetar-senha`
-      : 'https://www.aniko.com.br/resetar-senha';
-
-    console.log("[Auth] Requesting password reset with redirectTo:", redirectTo);
+    const redirectTo = `${window.location.origin}/resetar-senha`;
 
     try {
-      // Adicionar timeout para evitar travamento "Enviando..."
-      const resetPromise = supabase.auth.resetPasswordForEmail(email, {
-        redirectTo,
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, redirectTo }),
       });
 
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout de conexão")), 10000)
-      );
+      const data = await res.json();
 
-      const { error } = await Promise.race([resetPromise, timeoutPromise]) as any;
-
-      if (error) {
-        setError(error.message);
+      if (res.ok && data.success) {
+        setMessage(data.message || "E-mail de recuperação enviado! Verifique sua caixa de entrada.");
       } else {
-        setMessage("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+        const errorMsg = data.error || "Não foi possível enviar o e-mail de recuperação.";
+        if (errorMsg.includes("Failed to fetch") || errorMsg.includes("fetch")) {
+          setError("Erro de rede ao conectar com o serviço de e-mail. Verifique sua conexão e tente novamente.");
+        } else if (errorMsg.includes("rate limit") || errorMsg.includes("429")) {
+          setError("Muitas tentativas em pouco tempo. Por favor, aguarde alguns minutos antes de tentar novamente.");
+        } else {
+          setError(errorMsg);
+        }
       }
     } catch (err: any) {
       console.error("[Auth Error]", err);
-      setError(err.message === "Timeout de conexão" 
-        ? "O servidor demorou muito para responder. Verifique sua internet ou tente novamente." 
-        : "Erro ao enviar e-mail de recuperação.");
+      setError("Erro ao enviar o e-mail de recuperação. Tente novamente em instantes.");
     } finally {
       setLoading(false);
     }
