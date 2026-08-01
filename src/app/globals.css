@@ -177,6 +177,15 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 800;
 }
 
+@keyframes gentle-wave {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(4deg); }
+}
+
+.animate-gentle-wave {
+  animation: gentle-wave 3.5s ease-in-out infinite;
+}
+
 /* Animations */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(20px); }

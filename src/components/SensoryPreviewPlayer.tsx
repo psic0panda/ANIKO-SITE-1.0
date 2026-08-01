@@ -84,11 +84,11 @@ export default function SensoryPreviewPlayer() {
           {/* Personagens Simulado no Player */}
           <div className="relative z-10 text-center space-y-4 my-auto">
             <div className="flex justify-center items-center gap-6">
-              <div className={`transition-all duration-700 ${isAdapted ? "scale-100 hover:scale-105" : "scale-125 animate-bounce"}`}>
-                <span className="text-7xl md:text-8xl filter drop-shadow-xl">🐧</span>
+              <div className={`transition-all duration-700 ${isAdapted ? "scale-100 animate-gentle-wave" : "scale-125 animate-bounce"}`}>
+                <span className="text-7xl md:text-8xl filter drop-shadow-xl inline-block">🐧</span>
               </div>
-              <div className={`transition-all duration-700 ${isAdapted ? "scale-100" : "scale-125 animate-spin"}`}>
-                <span className="text-6xl md:text-7xl">⭐</span>
+              <div className={`transition-all duration-700 ${isAdapted ? "scale-100 animate-pulse" : "scale-125 animate-spin"}`}>
+                <span className="text-6xl md:text-7xl inline-block">⭐</span>
               </div>
             </div>
 
