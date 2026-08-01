@@ -147,6 +147,25 @@ function CheckoutContent() {
     setCardExpiry(val);
   };
 
+  // Validação matemática do CPF (dígitos verificadores)
+  const isValidCpf = (rawCpf: string): boolean => {
+    const digits = rawCpf.replace(/\D/g, "");
+    if (digits.length !== 11) return false;
+    // Rejeita sequências repetidas (111.111.111-11, etc.)
+    if (/^(\d)\1+$/.test(digits)) return false;
+
+    const calc = (factor: number) => {
+      let total = 0;
+      for (let i = 0; i < factor - 1; i++) {
+        total += parseInt(digits[i]) * (factor - i);
+      }
+      const remainder = (total * 10) % 11;
+      return remainder === 10 || remainder === 11 ? 0 : remainder;
+    };
+
+    return calc(10) === parseInt(digits[9]) && calc(11) === parseInt(digits[10]);
+  };
+
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, "").slice(0, 11);
     val = val.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
@@ -186,15 +205,15 @@ function CheckoutContent() {
     setIsProcessing(true);
     setErrorMessage("");
 
-    // Validar CPF para boleto
+    // Validar CPF para boleto (matemática dos dígitos verificadores)
     if (paymentMethod === "boleto") {
-      const cpfDigits = cpf.replace(/\D/g, "");
-      if (cpfDigits.length !== 11) {
-        setErrorMessage("Por favor, informe seu CPF completo (11 dígitos) para gerar o boleto.");
+      if (!isValidCpf(cpf)) {
+        setErrorMessage("CPF inválido. Verifique o número digitado e tente novamente.");
         setIsProcessing(false);
         return;
       }
     }
+
 
     try {
       let userId = currentUser?.id;
