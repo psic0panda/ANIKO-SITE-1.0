@@ -45,7 +45,7 @@ html {
   --background-l: 95%; /* Slightly darker background to reduce glare */
 }
 
-[data-sensory="friendly"] * {
+[data-sensory="friendly"] *:not(.sensory-demo *) {
   animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.1s !important;
