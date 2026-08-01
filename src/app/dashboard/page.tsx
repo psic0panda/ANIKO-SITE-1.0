@@ -205,6 +205,41 @@ export default function Dashboard() {
   // Estado para Guia Pedagógico PDF e Link de Indicação
   const [pdfModalVideo, setPdfModalVideo] = useState<any>(null);
   const [copiedReferral, setCopiedReferral] = useState(false);
+  const [inputReferralCode, setInputReferralCode] = useState("");
+  const [isActivatingReferral, setIsActivatingReferral] = useState(false);
+  const [referralMsg, setReferralMsg] = useState("");
+  const [referralErrorMsg, setReferralErrorMsg] = useState("");
+
+  const handleActivateReferralCode = async () => {
+    if (!inputReferralCode.trim() || isActivatingReferral || !user) return;
+    setIsActivatingReferral(true);
+    setReferralMsg("");
+    setReferralErrorMsg("");
+
+    try {
+      const res = await fetch("/api/activate-referral", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.id,
+          referral_code: inputReferralCode.trim(),
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setReferralMsg(data.message);
+        setProfile((prev: any) => ({ ...prev, used_referral_code: inputReferralCode.trim().toUpperCase() }));
+        setInputReferralCode("");
+      } else {
+        setReferralErrorMsg(data.error || "Erro ao ativar código.");
+      }
+    } catch (e) {
+      setReferralErrorMsg("Erro de conexão ao ativar código.");
+    } finally {
+      setIsActivatingReferral(false);
+    }
+  };
 
   const router = useRouter();
 
@@ -1212,43 +1247,111 @@ export default function Dashboard() {
                )}
              </div>
 
-             {/* Card Indique e Ganhe 1 Crédito */}
-             <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-[3rem] p-8 text-white shadow-2xl space-y-4">
-               <div className="flex items-center gap-3">
-                 <div className="h-10 w-10 bg-white/20 rounded-2xl flex items-center justify-center text-xl">
-                   🎁
-                 </div>
-                 <div>
-                   <h4 className="font-black text-lg">Indique e Ganhe</h4>
-                   <p className="text-xs text-emerald-100 font-medium">Ganhe +1 Crédito por cada indicação!</p>
-                 </div>
-               </div>
-               <p className="text-xs text-emerald-100 leading-relaxed font-medium">
-                 Compartilhe o Aniko com outros pais ou grupos de apoio e ganhe 1 crédito adicional no seu saldo assim que fizerem o cadastro.
-               </p>
-               <div className="flex gap-2">
-                 <button
-                   onClick={() => {
-                     const url = `https://www.aniko.com.br/cadastro?ref=${user?.id || 'aniko'}`;
-                     navigator.clipboard.writeText(url);
-                     setCopiedReferral(true);
-                     setTimeout(() => setCopiedReferral(false), 3000);
-                   }}
-                   className="flex-1 py-3 bg-white text-emerald-800 font-black rounded-2xl text-xs transition-all flex items-center justify-center gap-2 hover:bg-emerald-50 active:scale-95 shadow-md"
-                 >
-                   <Copy size={14} />
-                   <span>{copiedReferral ? "Link Copiado!" : "Copiar Link"}</span>
-                 </button>
-                 <a
-                   href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Conheça o Aniko! Animações adaptativas personalizadas para crianças com TEA. Cadastre-se pelo link: https://www.aniko.com.br/cadastro?ref=${user?.id || 'aniko'}`)}`}
-                   target="_blank"
-                   rel="noreferrer"
-                   className="py-3 px-4 bg-emerald-900/40 hover:bg-emerald-900/60 text-white font-bold rounded-2xl text-xs transition-all flex items-center justify-center"
-                 >
-                   <Share2 size={14} />
-                 </a>
-               </div>
-             </div>
+             {/* Sistema de Indicação (Regra de 2 Indicações = 1 Aniko) */}
+             <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 rounded-[3rem] p-8 text-white shadow-2xl space-y-6">
+                
+                {/* 1. Card com o Código de Indicação da Conta */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 bg-white/20 rounded-2xl flex items-center justify-center text-xl shrink-0">
+                      🎁
+                    </div>
+                    <div>
+                      <h4 className="font-black text-lg">Seu Código de Indicação</h4>
+                      <p className="text-xs text-emerald-100 font-medium">A cada 2 pessoas que ativarem, você ganha 1 Aniko!</p>
+                    </div>
+                  </div>
+
+                  {/* Código Único */}
+                  <div className="bg-white/10 p-4 rounded-2xl border border-white/20 flex justify-between items-center">
+                    <div>
+                      <p className="text-[10px] text-emerald-200 font-bold uppercase">Seu Código Único</p>
+                      <p className="text-xl font-mono font-black tracking-widest text-white">
+                        {user?.id ? user.id.substring(0, 8).toUpperCase() : '------'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const code = user?.id ? user.id.substring(0, 8).toUpperCase() : '';
+                        navigator.clipboard.writeText(code);
+                        setCopiedReferral(true);
+                        setTimeout(() => setCopiedReferral(false), 3000);
+                      }}
+                      className="px-4 py-2 bg-white text-emerald-900 font-black rounded-xl text-xs hover:bg-emerald-50 transition-all flex items-center gap-1.5 shadow-md"
+                    >
+                      <Copy size={13} />
+                      <span>{copiedReferral ? "Copiado!" : "Copiar"}</span>
+                    </button>
+                  </div>
+
+                  {/* Progresso de Indicações (X / 2) */}
+                  <div className="bg-emerald-900/40 p-3.5 rounded-2xl border border-white/10 space-y-2">
+                    <div className="flex justify-between items-center text-xs font-bold">
+                      <span className="text-emerald-100">Progresso de Indicações</span>
+                      <span className="text-white font-black">
+                        {(profile.referral_count || 0) % 2} / 2 concluídos
+                      </span>
+                    </div>
+                    <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-white transition-all duration-500"
+                        style={{ width: `${(((profile.referral_count || 0) % 2) / 2) * 100}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-emerald-200 text-center font-medium">
+                      Total de pessoas que já usaram seu código: <strong>{profile.referral_count || 0}</strong>
+                    </p>
+                  </div>
+
+                  <a
+                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Crie sua conta no Aniko (Animações Adaptativas para TEA) e ative o meu código de indicação no seu painel: ${user?.id ? user.id.substring(0, 8).toUpperCase() : ''} - acesse: https://www.aniko.com.br/cadastro`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-2xl text-xs transition-all flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    <Share2 size={14} />
+                    <span>Enviar Código pelo WhatsApp</span>
+                  </a>
+                </div>
+
+                {/* 2. Formulário para Ativar Código Recebido de Outra Pessoa */}
+                <div className="pt-4 border-t border-white/15 space-y-3">
+                  <h5 className="text-xs font-black uppercase tracking-wider text-emerald-100">
+                    Foi indicado por alguém?
+                  </h5>
+
+                  {profile.used_referral_code ? (
+                    <div className="p-3.5 bg-white/10 border border-white/20 rounded-2xl text-xs font-medium text-emerald-100 flex items-center gap-2">
+                      <CheckCircle2 size={16} className="text-emerald-300 shrink-0" />
+                      <span>Você já ativou o código <strong>{profile.used_referral_code}</strong> nesta conta.</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={inputReferralCode}
+                          onChange={(e) => setInputReferralCode(e.target.value.toUpperCase())}
+                          placeholder="DIGITE O CÓDIGO"
+                          maxLength={8}
+                          className="flex-1 px-4 py-2.5 rounded-xl bg-white/15 text-white placeholder-emerald-200/60 font-mono text-xs uppercase border border-white/20 focus:outline-none focus:border-white font-bold"
+                        />
+                        <button
+                          onClick={handleActivateReferralCode}
+                          disabled={!inputReferralCode.trim() || isActivatingReferral}
+                          className="px-4 py-2.5 bg-white text-emerald-900 font-black text-xs rounded-xl hover:bg-emerald-50 transition-all disabled:opacity-50"
+                        >
+                          {isActivatingReferral ? "..." : "Ativar"}
+                        </button>
+                      </div>
+                      {referralMsg && <p className="text-[11px] text-emerald-200 font-bold">{referralMsg}</p>}
+                      {referralErrorMsg && <p className="text-[11px] text-red-300 font-bold">{referralErrorMsg}</p>}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
           </aside>
 
           {/* Modal Guia Pedagógico PDF */}
