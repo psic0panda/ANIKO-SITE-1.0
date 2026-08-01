@@ -996,6 +996,49 @@ export default function Dashboard() {
 
         {/* Sidebar */}
         <aside className="space-y-8 animate-fade-in delay-300">
+           {/* Painel do Assinante / Créditos */}
+           <div className="bg-gradient-to-br from-[#0F2B48] to-[#041628] rounded-[3rem] p-8 text-white shadow-2xl relative overflow-hidden border-2 border-brand-accent/30">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-widest bg-brand-accent/20 text-brand-accent px-3 py-1 rounded-full">
+                    Painel do Assinante
+                  </span>
+                  <span className="text-xs font-bold text-slate-300">
+                    {profile.plan_name || 'Plano Essencial'}
+                  </span>
+                </div>
+
+                <div className="bg-white/5 rounded-2xl p-6 border border-white/10 text-center space-y-1">
+                  <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">Créditos de Vídeo</p>
+                  <p className="text-5xl font-black text-brand-accent">{profile.video_credits !== undefined ? profile.video_credits : 4}</p>
+                  <p className="text-[10px] text-slate-400 font-medium">acumuláveis por até 60 dias</p>
+                </div>
+
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => {
+                      document.getElementById('solicitar-video')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="w-full py-3.5 bg-brand-accent text-white font-black rounded-2xl text-sm shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-center block"
+                  >
+                    Usar 1 Crédito
+                  </button>
+
+                  <button 
+                    onClick={() => {
+                      if (confirm("Deseja mesmo solicitar o cancelamento da sua assinatura? Seu saldo de créditos atual continuará disponível até o fim do ciclo.")) {
+                        alert("Sua solicitação de cancelamento foi enviada! Nosso suporte entrará em contato para confirmar.");
+                      }
+                    }}
+                    className="w-full py-2.5 text-xs text-slate-400 hover:text-red-400 font-bold transition-colors text-center block"
+                  >
+                    Cancelar Assinatura
+                  </button>
+                </div>
+              </div>
+           </div>
+
            {/* Child Profile Card */}
            <div className="bg-brand-primary rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden">
               <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-white/10 rounded-full blur-2xl" />
@@ -1235,10 +1278,20 @@ export default function Dashboard() {
                    </div>
                    <button 
                       onClick={() => { setIsPaymentModalOpen(false); setPaymentStatus('pending'); }}
-                      className="w-full text-slate-400 font-bold py-2"
+                      className="w-full text-slate-400 font-bold py-2 hover:text-slate-600 transition-colors"
                    >
                       Cancelar e Voltar
                    </button>
+                   
+                   <a 
+                     href={`https://wa.me/5511999999999?text=${encodeURIComponent('Olá! Tive dificuldades para efetuar o pagamento da minha solicitação no Aniko e gostaria de suporte.')}`}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className="w-full py-3.5 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl flex items-center justify-center gap-2 shadow-lg transition-all text-xs md:text-sm"
+                   >
+                     <MessageSquare className="h-4 w-4" />
+                     <span>Não conseguiu pagar? Fale conosco no WhatsApp</span>
+                   </a>
                 </div>
                 
                 <p className="text-[10px] text-slate-400 italic">O pedido será enviado automaticamente assim que o pagamento for confirmado.</p>
