@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import Link from "next/link";
+import CustomPedagogicalPdfModal from "@/components/CustomPedagogicalPdfModal";
 import { 
   Eye, 
   EyeOff, 
@@ -22,7 +23,12 @@ import {
   PlusCircle,
   Tag,
   RefreshCcw,
-  Sparkles
+  Sparkles,
+  Printer,
+  BookOpen,
+  Wand2,
+  UploadCloud,
+  Play
 } from "lucide-react";
 
 const SCRIPT_TEMPLATES = [
@@ -58,8 +64,9 @@ export default function AdminDashboard() {
   const [isCreatingCoupon, setIsCreatingCoupon] = useState(false);
   const [isSingleUse, setIsSingleUse] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'pedidos' | 'faturamento' | 'clientes' | 'cupons'>('pedidos');
+  const [activeTab, setActiveTab] = useState<'pedidos' | 'faturamento' | 'clientes' | 'cupons' | 'guia_especial'>('pedidos');
   const [viewMode, setViewMode] = useState<'pendentes' | 'historico'>('pendentes');
+  const [requestStageFilter, setRequestStageFilter] = useState<string>('todos');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadDebug, setUploadDebug] = useState("");
@@ -68,6 +75,16 @@ export default function AdminDashboard() {
   const [selectedDemandModal, setSelectedDemandModal] = useState<any>(null);
   const [currentStage, setCurrentStage] = useState<string>("roteiro");
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
+  const [aiScriptModal, setAiScriptModal] = useState<string | null>(null);
+  const [isGeneratingScriptModal, setIsGeneratingScriptModal] = useState(false);
+
+  // Guia Pedagógico Personalizado com IA (Casos Especiais)
+  const [guiaChildName, setGuiaChildName] = useState("");
+  const [guiaCharacter, setGuiaCharacter] = useState("");
+  const [guiaCaseDetails, setGuiaCaseDetails] = useState("");
+  const [generatedGuideText, setGeneratedGuideText] = useState<string | null>(null);
+  const [isGeneratingGuide, setIsGeneratingGuide] = useState(false);
+  const [isCustomPdfOpen, setIsCustomPdfOpen] = useState(false);
 
   // Modal de Concessão Manual de Créditos
   const [creditModalUser, setCreditModalUser] = useState<any>(null);
@@ -77,6 +94,67 @@ export default function AdminDashboard() {
 
   const CLOUDINARY_CLOUD_NAME = "dorusgnpe";
   const CLOUDINARY_UPLOAD_PRESET = "aniko_videos";
+
+  // Função para gerar Roteiro por IA no Modal de Solicitação
+  const handleGenerateAiScriptModal = async (demand: any) => {
+    setIsGeneratingScriptModal(true);
+    try {
+      const res = await fetch('/api/admin/gerar-roteiro-ia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          childName: demand.profiles?.child_name || 'Criança',
+          age: demand.profiles?.age || null,
+          character: demand.profiles?.preferences?.[0] || 'Desenho Animado',
+          topic: demand.description || 'Previsibilidade e Autonomia',
+          observation: demand.profiles?.historico || demand.notes || ''
+        })
+      });
+      const data = await res.json();
+      if (data.script) {
+        setAiScriptModal(data.script);
+      } else {
+        alert(data.error || 'Erro ao gerar roteiro.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Erro de conexão ao gerar roteiro.');
+    } finally {
+      setIsGeneratingScriptModal(false);
+    }
+  };
+
+  // Função para gerar Guia Pedagógico Personalizado para Casos Especiais via IA
+  const handleGenerateCustomGuide = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!guiaCaseDetails.trim()) {
+      alert('Por favor, descreva o caso da criança para a IA.');
+      return;
+    }
+    setIsGeneratingGuide(true);
+    try {
+      const res = await fetch('/api/admin/gerar-guia-ia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          childName: guiaChildName || 'Aluno(a)',
+          characterPreference: guiaCharacter,
+          caseDetails: guiaCaseDetails
+        })
+      });
+      const data = await res.json();
+      if (data.guideText) {
+        setGeneratedGuideText(data.guideText);
+      } else {
+        alert(data.error || 'Erro ao gerar o guia pedagógico.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Erro de conexão ao comunicar com a IA.');
+    } finally {
+      setIsGeneratingGuide(false);
+    }
+  };
 
   // Verificar se já está logado (sessionStorage)
   useEffect(() => {
@@ -690,6 +768,14 @@ export default function AdminDashboard() {
             <Tag className="h-4 w-4" />
             <span>Cupons de Desconto</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('guia_especial')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all ${activeTab === 'guia_especial' ? 'bg-brand-accent text-white shadow-lg' : 'bg-slate-900/60 text-slate-400 hover:text-white'}`}
+          >
+            <Sparkles className="h-4 w-4 text-yellow-400" />
+            <span>✨ Guia Especial IA</span>
+          </button>
         </section>
 
         {/* TAB 1: FILA DE PRODUÇÃO & SLA */}
@@ -951,6 +1037,18 @@ export default function AdminDashboard() {
                     required
                     className="w-full px-4 py-3 rounded-xl bg-[#16253B] text-white border border-slate-700 focus:border-brand-accent outline-none text-xs font-mono"
                   />
+                  {videoUrl && (
+                    <div className="mt-3 p-3 bg-slate-900/80 rounded-2xl border border-slate-700 space-y-2 animate-fade-in">
+                      <span className="text-[10px] font-bold text-brand-accent uppercase flex items-center gap-1">
+                        <Play size={12} /> Pré-visualização antes do Envio
+                      </span>
+                      <video
+                        src={videoUrl}
+                        controls
+                        className="w-full aspect-video rounded-xl object-cover bg-black"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -1293,6 +1391,133 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+
+        {/* TAB 5: GUIA PEDAGÓGICO PERSONALIZADO COM IA (CASOS ESPECIAIS) */}
+        {activeTab === 'guia_especial' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Form de instrução da IA */}
+            <div className="bg-[#0F1F35] p-8 rounded-3xl border border-slate-800 shadow-xl space-y-6">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 text-xs font-black uppercase mb-3">
+                  <Sparkles size={14} />
+                  <span>Assistente de IA Pedagógica</span>
+                </div>
+                <h2 className="text-2xl font-black text-white tracking-tight">
+                  Criar Guia Personalizado para Casos Especiais
+                </h2>
+                <p className="text-slate-400 text-xs mt-2 leading-relaxed">
+                  Descreva em linguagem livre os desafios, gatilhos e hábitos da criança. A IA estruturará um plano pedagógico completo com estratégias ABA, rotina visual e orientações de exibição.
+                </p>
+              </div>
+
+              <form onSubmit={handleGenerateCustomGuide} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    Nome da Criança / Aluno:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Joãozinho, Maria..."
+                    value={guiaChildName}
+                    onChange={(e) => setGuiaChildName(e.target.value)}
+                    className="w-full px-5 py-3.5 rounded-2xl bg-[#16253B] text-white border border-slate-700 focus:border-brand-accent outline-none text-sm font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    Personagem Favorito / Hiperfoco:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Bluey, Daniel Tigre, Carros..."
+                    value={guiaCharacter}
+                    onChange={(e) => setGuiaCharacter(e.target.value)}
+                    className="w-full px-5 py-3.5 rounded-2xl bg-[#16253B] text-white border border-slate-700 focus:border-brand-accent outline-none text-sm font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    Explicação Detalhada do Caso Especial (Instrução para a IA):
+                  </label>
+                  <textarea
+                    rows={6}
+                    placeholder="Explique o caso para a IA... Exemplo: 'Criança de 5 anos com sensibilidade auditiva a barulho de secador de cabelo e chuveiro. Apresenta choro na hora de tomar banho. Ama a personagem Bluey e responde muito bem a reforços de estrelinhas. Precisa de uma rotina gradual para desmistificar o banho.'"
+                    value={guiaCaseDetails}
+                    onChange={(e) => setGuiaCaseDetails(e.target.value)}
+                    required
+                    className="w-full px-5 py-4 rounded-2xl bg-[#16253B] text-white border border-slate-700 focus:border-brand-accent outline-none text-xs font-medium leading-relaxed"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isGeneratingGuide}
+                  className="w-full py-4 bg-gradient-to-r from-brand-accent to-emerald-400 hover:opacity-90 text-white font-black rounded-2xl shadow-xl transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <Wand2 size={18} />
+                  <span>{isGeneratingGuide ? "Gerando Guia Pedagógico..." : "Gerar Guia Especial com IA"}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Resultado do Guia & Impressão */}
+            <div className="bg-[#0F1F35] p-8 rounded-3xl border border-slate-800 shadow-xl space-y-6 flex flex-col justify-between">
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-black text-white flex items-center gap-2">
+                    <BookOpen className="text-brand-accent" size={20} />
+                    <span>Resultado do Guia Pedagógico</span>
+                  </h3>
+
+                  {generatedGuideText && (
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomPdfOpen(true)}
+                      className="px-4 py-2 bg-brand-accent hover:bg-brand-accent/90 text-white text-xs font-black rounded-xl shadow-lg flex items-center gap-1.5 transition-all"
+                    >
+                      <Printer size={14} />
+                      <span>Ver / Imprimir PDF</span>
+                    </button>
+                  )}
+                </div>
+
+                {generatedGuideText ? (
+                  <div className="bg-[#16253B] p-6 rounded-2xl border border-slate-700 max-h-[480px] overflow-y-auto space-y-3">
+                    <textarea
+                      value={generatedGuideText}
+                      onChange={(e) => setGeneratedGuideText(e.target.value)}
+                      className="w-full h-[400px] bg-transparent text-slate-200 text-xs font-medium leading-relaxed outline-none resize-none"
+                    />
+                  </div>
+                ) : (
+                  <div className="py-20 text-center border-2 border-dashed border-slate-800 rounded-3xl space-y-3">
+                    <div className="h-16 w-16 mx-auto rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent">
+                      <Sparkles size={28} />
+                    </div>
+                    <p className="text-slate-400 font-bold text-sm">Nenhum guia gerado ainda.</p>
+                    <p className="text-slate-500 text-xs max-w-xs mx-auto">
+                      Preencha a explicação do caso ao lado e clique em &quot;Gerar Guia Especial com IA&quot;.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {generatedGuideText && (
+                <div className="pt-4 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400 font-bold">
+                  <span>Você pode editar o texto acima antes de imprimir.</span>
+                  <button
+                    onClick={() => setIsCustomPdfOpen(true)}
+                    className="text-brand-accent hover:underline flex items-center gap-1"
+                  >
+                    <span>Imprimir Documento Completo →</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal de Gestão Manual de Créditos (Adicionar & Remover) */}
@@ -1558,6 +1783,16 @@ export default function AdminDashboard() {
 
               <button
                 type="button"
+                onClick={() => handleGenerateAiScriptModal(selectedDemandModal)}
+                disabled={isGeneratingScriptModal}
+                className="px-5 py-3 bg-purple-600 hover:bg-purple-500 text-white font-black rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-md disabled:opacity-50"
+              >
+                <Wand2 size={14} />
+                <span>{isGeneratingScriptModal ? "Gerando Roteiro IA..." : "✨ Gerar Roteiro com IA"}</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => {
                   setSelectedProfileId(selectedDemandModal.profile_id);
                   setSelectedProfile(selectedDemandModal.profiles || {});
@@ -1579,9 +1814,43 @@ export default function AdminDashboard() {
               </button>
             </div>
 
+            {/* Resultado do Roteiro IA (se gerado) */}
+            {aiScriptModal && (
+              <div className="bg-[#16253B] p-5 rounded-2xl border border-purple-500/40 space-y-2 animate-fade-in">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-black text-purple-300 flex items-center gap-1.5">
+                    <Wand2 size={14} /> Sugestão de Roteiro Gerado pela IA (ANIKO Adaptado)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(aiScriptModal);
+                      alert('Roteiro copiado!');
+                    }}
+                    className="text-[10px] font-bold px-3 py-1 bg-purple-500/20 text-purple-300 hover:bg-purple-500/40 rounded-lg"
+                  >
+                    Copiar Roteiro
+                  </button>
+                </div>
+                <textarea
+                  readOnly
+                  value={aiScriptModal}
+                  className="w-full h-48 bg-slate-900/60 p-4 rounded-xl text-slate-200 text-xs font-mono leading-relaxed outline-none border border-slate-700"
+                />
+              </div>
+            )}
+
           </div>
         </div>
       )}
+
+      {/* Modal de Impressão do Guia Pedagógico Personalizado em PDF */}
+      <CustomPedagogicalPdfModal
+        isOpen={isCustomPdfOpen}
+        onClose={() => setIsCustomPdfOpen(false)}
+        childName={guiaChildName || "Aluno(a)"}
+        guideContent={generatedGuideText || ""}
+      />
     </main>
   );
 }
