@@ -797,14 +797,7 @@ export default function Dashboard() {
               }`}
             >
               <span>💳</span>
-              className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 whitespace-nowrap ${
-                activeTab === 'referral'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-500 hover:text-emerald-700'
-              }`}
-            >
-              <span>🎁</span>
-              <span>Indicação</span>
+              <span>Assinatura ({profile?.video_credits || 0})</span>
             </button>
           </div>
 
@@ -1131,8 +1124,6 @@ export default function Dashboard() {
                           </div>
                         </div>
                       )}
-                    </div>
-                  );
 
                       {/* Modal de Solicitação de Alteração (Inside Timeline for better context) */}
                       {activeAlterationId === v.id && (
