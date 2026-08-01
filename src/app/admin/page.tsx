@@ -233,6 +233,38 @@ export default function AdminDashboard() {
     }
   };
 
+  // Autorizar Cancelamento de Assinatura pelo Admin
+  const handleApproveCancellation = async (profileId: string) => {
+    if (!confirm("Confirma o cancelamento definitivo da assinatura deste cliente?")) return;
+    const { error } = await supabase
+      .from('profiles')
+      .update({ subscription_status: 'cancelled', plan_name: 'Cancelado' })
+      .eq('id', profileId);
+
+    if (!error) {
+      alert("✅ Cancelamento da assinatura autorizado com sucesso.");
+      setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, subscription_status: 'cancelled', plan_name: 'Cancelado' } : p));
+    } else {
+      alert("Erro ao aprovar cancelamento: " + error.message);
+    }
+  };
+
+  // Reativar / Manter Assinatura Ativa pelo Admin
+  const handleReactivateSubscription = async (profileId: string) => {
+    if (!confirm("Deseja reativar e manter a assinatura deste cliente ativa?")) return;
+    const { error } = await supabase
+      .from('profiles')
+      .update({ subscription_status: 'active', plan_name: 'Plano Essencial' })
+      .eq('id', profileId);
+
+    if (!error) {
+      alert("✅ Assinatura reativada e mantida ativa com sucesso.");
+      setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, subscription_status: 'active', plan_name: 'Plano Essencial' } : p));
+    } else {
+      alert("Erro ao reativar assinatura: " + error.message);
+    }
+  };
+
   const handleCreateCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCouponCode || !newCouponDiscount || isCreatingCoupon) return;
@@ -902,15 +934,88 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* TAB 2: FATURAMENTO & CONTAS */}
+        {/* TAB 2: FATURAMENTO, CONTAS & CANCELAMENTOS */}
         {activeTab === 'faturamento' && (
-          <div className="bg-[#0F1F35] p-8 rounded-3xl border border-slate-800 shadow-xl space-y-6">
-            <div>
-              <h2 className="text-xl font-black text-white flex items-center gap-2">
-                <span>💵</span> Relatório de Faturamento & Contas
-              </h2>
-              <p className="text-slate-400 text-xs mt-1">Histórico completo de pagamentos recebidos via Mercado Pago (PIX e Cartão).</p>
-            </div>
+          <div className="space-y-8">
+            
+            {/* Solicitações de Cancelamento de Assinatura */}
+            {(() => {
+              const cancellationRequests = profiles.filter(p => p.subscription_status === 'cancelled' || p.subscription_status === 'cancel_requested');
+              return (
+                <div className="bg-[#0F1F35] p-8 rounded-3xl border border-amber-500/30 shadow-xl space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full text-[10px] font-black uppercase tracking-wider">
+                        ⚠️ Gestão de Cancelamentos
+                      </span>
+                      <h3 className="text-xl font-black text-white mt-2 flex items-center gap-2">
+                        <span>🔴</span> Solicitações de Cancelamento ({cancellationRequests.length})
+                      </h3>
+                      <p className="text-slate-400 text-xs mt-1">Autorize o cancelamento ou entre em contato via WhatsApp para reter o cliente.</p>
+                    </div>
+                  </div>
+
+                  {cancellationRequests.length === 0 ? (
+                    <div className="p-6 bg-slate-900/40 rounded-2xl text-center border border-slate-800">
+                      <p className="text-slate-400 text-xs font-bold">Nenhuma solicitação de cancelamento pendente no momento.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {cancellationRequests.map((c) => (
+                        <div key={c.id} className="p-5 bg-slate-900/80 rounded-2xl border border-slate-800 space-y-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-black text-white text-sm">{c.child_name || c.parent_name || 'Cliente'}</h4>
+                              <p className="text-xs text-slate-400 font-bold">{c.parent_name} ({c.phone || c.email})</p>
+                              <span className="text-[10px] font-mono text-brand-accent mt-1 inline-block">Plano: {c.plan_name || 'Plano Mensal'}</span>
+                            </div>
+                            <span className="px-2.5 py-1 bg-rose-500/20 text-rose-300 text-[10px] font-black uppercase rounded-lg border border-rose-500/30">
+                              Cancelamento Solicitado
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-800">
+                            {c.phone && (
+                              <a
+                                href={`https://wa.me/55${c.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${c.parent_name || ''}! Recebemos seu pedido de cancelamento da assinatura no Aniko. Gostaria de entender como podemos te ajudar melhor ou se prefere um plano personalizado?`)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-3 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-bold flex items-center gap-1"
+                              >
+                                <span>📱 WhatsApp</span>
+                              </a>
+                            )}
+                            <button
+                              onClick={() => handleApproveCancellation(c.id)}
+                              className="px-3 py-2 bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-bold"
+                            >
+                              ✓ Autorizar Cancelamento
+                            </button>
+                            <button
+                              onClick={() => handleReactivateSubscription(c.id)}
+                              className="px-3 py-2 bg-blue-500/20 hover:bg-blue-500/40 text-blue-300 border border-blue-500/40 rounded-xl text-xs font-bold"
+                            >
+                              🔄 Manter Assinatura Ativa
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Faturamento e Entradas */}
+            <div className="bg-[#0F1F35] p-8 rounded-3xl border border-slate-800 shadow-xl space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-black text-white flex items-center gap-2">
+                    <span>💵</span> Relatório de Faturamento & Contas
+                  </h2>
+                  <p className="text-slate-400 text-xs mt-1">Histórico completo de pagamentos recebidos via Mercado Pago (PIX e Cartão).</p>
+                </div>
+              </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -954,7 +1059,8 @@ export default function AdminDashboard() {
               </table>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
         {/* TAB 3: CLIENTES & GESTÃO DE CRÉDITOS */}
         {activeTab === 'clientes' && (
