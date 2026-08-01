@@ -163,6 +163,7 @@ export default function AdminClientDashboard({ params }: { params: Promise<{ id:
   const [feedbackScore, setFeedbackScore] = useState(0);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [mostrarHistoricoCompleto, setMostrarHistoricoCompleto] = useState(false);
+  const [payments, setPayments] = useState<any[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -192,6 +193,15 @@ export default function AdminClientDashboard({ params }: { params: Promise<{ id:
         const videosRes = await fetch(`/api/admin/videos-cliente/${profileId}?key=aniko_admin_segredo_2026`);
         const videosData = await videosRes.json();
         if (videosData.videos) setVideos(videosData.videos);
+
+        // Buscar histórico de pagamentos/faturas do cliente
+        const { data: userPayments } = await supabase
+          .from("payments")
+          .select("*")
+          .eq("profile_id", profileId)
+          .order("created_at", { ascending: false });
+
+        if (userPayments) setPayments(userPayments);
       } catch (e) {
         console.error('Erro ao buscar dados:', e);
       }
@@ -332,7 +342,108 @@ export default function AdminClientDashboard({ params }: { params: Promise<{ id:
         </div>
       </nav>
 
-      <div className="mx-auto max-w-7xl px-6 py-12 md:px-12 grid gap-12 lg:grid-cols-[1fr_350px]">
+      <div className="mx-auto max-w-7xl px-6 py-12 md:px-12 space-y-10">
+        
+        {/* Banner de Métricas Financeiras & Resumo do Cliente */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Card Total Investido */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-lg space-y-2">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Investido no Site</p>
+            <p className="text-3xl font-black text-emerald-600">
+              R$ {payments.reduce((acc, p) => acc + Number(p.amount || 80), 0)},00
+            </p>
+            <p className="text-[11px] text-slate-400 font-medium">{payments.length} transação(ões) realizada(s)</p>
+          </div>
+
+          {/* Card Status da Assinatura */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-lg space-y-2">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Status do Plano</p>
+            <div className="flex items-center gap-2">
+              <span className={`px-3 py-1 rounded-full text-xs font-black uppercase ${
+                profile.subscription_status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'
+              }`}>
+                {profile.plan_name || (profile.subscription_status === 'active' ? 'Plano Ativo' : 'Compra Avulsa')}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 font-medium">
+              {profile.subscription_status === 'active' ? 'Renovação Ativa' : 'Sem assinatura mensal'}
+            </p>
+          </div>
+
+          {/* Card Saldo de Créditos */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-lg space-y-2">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Créditos de Animação</p>
+            <p className="text-3xl font-black text-brand-primary">{profile.video_credits || 0}</p>
+            <p className="text-[11px] text-slate-400 font-medium">créditos disponíveis para uso</p>
+          </div>
+
+          {/* Card Contato WhatsApp */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-lg space-y-2 flex flex-col justify-between">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Contato do Cliente</p>
+            {profile.phone ? (
+              <a
+                href={`https://wa.me/55${profile.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${profile.parent_name || ''}! Estamos acompanhando sua conta no Aniko.`)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs rounded-xl text-center shadow-md flex items-center justify-center gap-2 transition-all"
+              >
+                <span>📱 Abrir no WhatsApp</span>
+              </a>
+            ) : (
+              <p className="text-xs text-slate-400 italic">WhatsApp não informado</p>
+            )}
+          </div>
+        </div>
+
+        {/* Histórico Financeiro de Compras */}
+        <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl space-y-6">
+          <h3 className="text-xl font-black text-brand-primary flex items-center gap-2 border-b border-slate-100 pb-4">
+            <span>💳</span> Histórico de Compras e Faturas do Cliente
+          </h3>
+
+          {payments.length === 0 ? (
+            <p className="text-slate-400 text-xs italic text-center py-4">Nenhuma compra registrada para este cliente.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-400 uppercase text-[10px] font-bold">
+                    <th className="py-3 px-3">Data</th>
+                    <th className="py-3 px-3">Descrição / Produto</th>
+                    <th className="py-3 px-3">Método</th>
+                    <th className="py-3 px-3">Valor</th>
+                    <th className="py-3 px-3 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {payments.map((p) => (
+                    <tr key={p.id} className="hover:bg-slate-50 font-medium">
+                      <td className="py-3 px-3 font-mono font-bold text-slate-700">
+                        {new Date(p.created_at).toLocaleDateString("pt-BR")}
+                      </td>
+                      <td className="py-3 px-3 font-bold text-brand-primary">
+                        {p.description || profile?.plan_name || "Recarga de Crédito Aniko"}
+                      </td>
+                      <td className="py-3 px-3 text-slate-600">
+                        {p.payment_method || "Cartão de Crédito"}
+                      </td>
+                      <td className="py-3 px-3 font-black text-emerald-600">
+                        R$ {p.amount || 80},00
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        <span className="px-3 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 uppercase">
+                          ✓ Aprovado
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="grid gap-12 lg:grid-cols-[1fr_350px]">
         {/* Main Content */}
           <div className="space-y-12">
             <section className="space-y-12 animate-fade-up">
@@ -669,6 +780,7 @@ export default function AdminClientDashboard({ params }: { params: Promise<{ id:
          </aside>
 
       </div>
+    </div>
 
       {/* Edit Profile Modal */}
       {isEditModalOpen && (

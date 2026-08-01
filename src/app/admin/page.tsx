@@ -64,6 +64,11 @@ export default function AdminDashboard() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadDebug, setUploadDebug] = useState("");
 
+  // Modal de Detalhes da Solicitação & Controle de Estágios de Produção
+  const [selectedDemandModal, setSelectedDemandModal] = useState<any>(null);
+  const [currentStage, setCurrentStage] = useState<string>("roteiro");
+  const [isUpdatingStage, setIsUpdatingStage] = useState(false);
+
   // Modal de Concessão Manual de Créditos
   const [creditModalUser, setCreditModalUser] = useState<any>(null);
   const [creditAmount, setCreditAmount] = useState<number>(4);
@@ -178,16 +183,53 @@ export default function AdminDashboard() {
 
       if (!error) {
         const actionLabel = creditAction === 'add' ? 'adicionados' : 'removidos';
-        alert(`✅ Sucesso! ${qty} crédito(s) ${actionLabel} para ${creditModalUser.child_name || creditModalUser.parent_name || 'Cliente'}. Novo saldo: ${newCredits}.`);
+        alert(`✅ ${qty} créditos foram ${actionLabel} para ${creditModalUser.child_name || 'o usuário'}. Novo saldo: ${newCredits}`);
+        setProfiles(prev => prev.map(p => p.id === creditModalUser.id ? { ...p, video_credits: newCredits } : p));
         setCreditModalUser(null);
-        refreshData();
       } else {
-        alert("Erro ao atualizar créditos: " + error.message);
+        alert('Erro ao atualizar créditos: ' + error.message);
       }
-    } catch (err: any) {
-      alert("Erro ao atualizar créditos: " + err.message);
+    } catch (e) {
+      alert('Erro ao atualizar créditos');
     } finally {
       setIsUpdatingCredits(false);
+    }
+  };
+
+  // Atualizar etapa de produção do vídeo (Roteiro -> Voz -> Edição -> Concluído)
+  const handleUpdateDemandStage = async (newStage: string) => {
+    if (!selectedDemandModal || isUpdatingStage) return;
+    setIsUpdatingStage(true);
+
+    try {
+      const { error } = await supabase
+        .from('requests')
+        .update({ current_stage: newStage })
+        .eq('id', selectedDemandModal.id);
+
+      if (!error) {
+        setCurrentStage(newStage);
+        setRequests(prev => prev.map(r => r.id === selectedDemandModal.id ? { ...r, current_stage: newStage } : r));
+        setSelectedDemandModal((prev: any) => ({ ...prev, current_stage: newStage }));
+      } else {
+        alert("Erro ao atualizar etapa: " + error.message);
+      }
+    } catch (e) {
+      alert("Erro ao atualizar etapa de produção.");
+    } finally {
+      setIsUpdatingStage(false);
+    }
+  };
+
+  // Excluir solicitação
+  const handleDeleteRequest = async (requestId: number) => {
+    if (!confirm("Tem certeza que deseja apagar esta solicitação permanentemente?")) return;
+    const { error } = await supabase.from('requests').delete().eq('id', requestId);
+    if (!error) {
+      setRequests(prev => prev.filter(r => r.id !== requestId));
+      setSelectedDemandModal(null);
+    } else {
+      alert("Erro ao apagar solicitação: " + error.message);
     }
   };
 
@@ -719,14 +761,16 @@ export default function AdminDashboard() {
                             </a>
                           )}
 
-                          <Link
-                            href={`/admin/cliente/${req.profile_id}`}
-                            target="_blank"
-                            className="px-4 py-2 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 rounded-xl text-xs font-bold flex items-center gap-1.5"
+                          <button
+                            onClick={() => {
+                              setSelectedDemandModal(req);
+                              setCurrentStage(req.current_stage || 'roteiro');
+                            }}
+                            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
                           >
-                            <BarChart3 className="h-3.5 w-3.5" />
-                            <span>Perfil</span>
-                          </Link>
+                            <FileText className="h-3.5 w-3.5" />
+                            <span>Ver Detalhes / Estágio</span>
+                          </button>
 
                           {viewMode === 'pendentes' && (
                             <button
@@ -746,6 +790,14 @@ export default function AdminDashboard() {
                               Criar Vídeo →
                             </button>
                           )}
+
+                          <button
+                            onClick={() => handleDeleteRequest(req.id)}
+                            className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
+                            title="Apagar solicitação"
+                          >
+                            🗑️
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1207,6 +1259,189 @@ export default function AdminDashboard() {
                   : `- Remover (${creditAmount})`}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Detalhes da Solicitação & Controle de Estágios */}
+      {selectedDemandModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in overflow-y-auto">
+          <div className="bg-[#0F1F35] border border-slate-800 max-w-3xl w-full rounded-3xl p-8 text-white space-y-6 shadow-2xl my-8">
+            
+            {/* Modal Header */}
+            <div className="flex justify-between items-start border-b border-slate-800 pb-4">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-widest bg-brand-accent/20 text-brand-accent px-3 py-1 rounded-full">
+                  {selectedDemandModal.is_alteration ? '⚠️ Pedido de Alteração' : '📥 Solicitação do Cliente'}
+                </span>
+                <h3 className="text-xl font-black mt-2 leading-relaxed">
+                  &quot;{selectedDemandModal.description}&quot;
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedDemandModal(null)}
+                className="h-9 w-9 bg-slate-800 hover:bg-slate-700 rounded-full flex items-center justify-center text-slate-400 hover:text-white transition-all text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* CONTROLE DE ESTÁGIO DA ANIMAÇÃO (Roteiro -> Voz -> Edição -> Concluído) */}
+            <div className="bg-[#16253B] p-6 rounded-2xl border border-slate-700/80 space-y-4">
+              <div className="flex justify-between items-center">
+                <h4 className="text-xs font-black uppercase tracking-wider text-brand-accent flex items-center gap-2">
+                  <span>🎬</span> Etapa Atual do Processo de Produção
+                </h4>
+                {isUpdatingStage && <span className="text-[10px] text-brand-accent animate-pulse font-bold">Salvando...</span>}
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => handleUpdateDemandStage('roteiro')}
+                  className={`p-3.5 rounded-2xl text-xs font-black transition-all flex flex-col items-center gap-1 border ${
+                    currentStage === 'roteiro'
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-lg'
+                      : 'bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <span className="text-base">📝</span>
+                  <span>1. Roteiro</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleUpdateDemandStage('voz')}
+                  className={`p-3.5 rounded-2xl text-xs font-black transition-all flex flex-col items-center gap-1 border ${
+                    currentStage === 'voz'
+                      ? 'bg-blue-500/20 text-blue-300 border-blue-500/50 shadow-lg'
+                      : 'bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <span className="text-base">🎙️</span>
+                  <span>2. Voz (TTS)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleUpdateDemandStage('edicao')}
+                  className={`p-3.5 rounded-2xl text-xs font-black transition-all flex flex-col items-center gap-1 border ${
+                    currentStage === 'edicao'
+                      ? 'bg-purple-500/20 text-purple-300 border-purple-500/50 shadow-lg'
+                      : 'bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <span className="text-base">🎨</span>
+                  <span>3. Edição</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleUpdateDemandStage('concluido')}
+                  className={`p-3.5 rounded-2xl text-xs font-black transition-all flex flex-col items-center gap-1 border ${
+                    currentStage === 'concluido'
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-lg'
+                      : 'bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <span className="text-base">🎉</span>
+                  <span>4. Concluído</span>
+                </button>
+              </div>
+
+              <p className="text-[10px] text-slate-400 italic">
+                * A alteração da etapa atualiza automaticamente o indicador visual na linha do tempo no dashboard do cliente.
+              </p>
+            </div>
+
+            {/* Informações da Criança & WhatsApp */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="bg-[#16253B] p-5 rounded-2xl border border-slate-700/80 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xl overflow-hidden">
+                    {selectedDemandModal.profiles?.avatar_url ? (
+                      <img src={`/assets/avatars/avatar_${selectedDemandModal.profiles.avatar_url}.png`} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      '🧒'
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-black text-sm text-white">{selectedDemandModal.profiles?.child_name || 'Criança'}</h4>
+                    <p className="text-xs text-slate-400 font-bold">Responsável: {selectedDemandModal.profiles?.parent_name || 'Não informado'}</p>
+                  </div>
+                </div>
+
+                {selectedDemandModal.profiles?.phone && (
+                  <a
+                    href={`https://wa.me/55${selectedDemandModal.profiles.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá ${selectedDemandModal.profiles.parent_name || ''}! Estamos produzindo a animação "${selectedDemandModal.description}" no Aniko.`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 shadow-md transition-all block text-center"
+                  >
+                    <span>📱 WhatsApp Direto do Cliente</span>
+                  </a>
+                )}
+              </div>
+
+              <div className="bg-[#16253B] p-5 rounded-2xl border border-slate-700/80 space-y-2">
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Preferências da Criança</span>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {selectedDemandModal.profiles?.preferences?.length > 0 ? selectedDemandModal.profiles.preferences.map((p: string, i: number) => (
+                    <span key={i} className="px-2.5 py-1 bg-slate-800 text-slate-300 rounded-lg text-[10px] font-bold">
+                      {p}
+                    </span>
+                  )) : (
+                    <span className="text-xs text-slate-500 italic">Nenhuma preferência cadastrada</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* História/Biografia Pedagogica */}
+            {selectedDemandModal.profiles?.historico && (
+              <div className="bg-[#16253B] p-5 rounded-2xl border border-slate-700/80 space-y-2">
+                <span className="text-xs font-black text-purple-300 flex items-center gap-1.5">
+                  <span>📖</span> Sobre a Criança (Histórico)
+                </span>
+                <p className="text-xs text-slate-300 leading-relaxed italic whitespace-pre-line">
+                  &quot;{selectedDemandModal.profiles.historico}&quot;
+                </p>
+              </div>
+            )}
+
+            {/* Rodapé de Ações */}
+            <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-800">
+              <Link
+                href={`/admin/cliente/${selectedDemandModal.profile_id}`}
+                target="_blank"
+                className="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl text-xs transition-all flex items-center gap-1.5"
+              >
+                <span>👤 Ver Perfil Completo do Cliente</span>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedProfileId(selectedDemandModal.profile_id);
+                  setSelectedProfile(selectedDemandModal.profiles || {});
+                  (window as any).currentRequestId = selectedDemandModal.id;
+                  setSelectedDemandModal(null);
+                  window.scrollTo({ top: 300, behavior: 'smooth' });
+                }}
+                className="px-5 py-3 bg-brand-accent hover:bg-brand-accent/90 text-white font-black rounded-xl text-xs shadow-lg transition-all"
+              >
+                🎥 Disparar Vídeo para Este Pedido
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDeleteRequest(selectedDemandModal.id)}
+                className="px-4 py-3 bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 font-bold rounded-xl text-xs transition-all border border-rose-500/30 ml-auto"
+              >
+                🗑️ Apagar Solicitação
+              </button>
+            </div>
+
           </div>
         </div>
       )}
