@@ -52,6 +52,44 @@ html {
   scroll-behavior: auto !important;
 }
 
+/* Dark Mode */
+[data-theme="dark"] {
+  --background-h: 220;
+  --background-s: 20%;
+  --background-l: 8%;
+  --background: hsl(var(--background-h), var(--background-s), var(--background-l));
+
+  --primary-h: 205;
+  --primary-s: 80%;
+  --primary-l: 70%;
+  --foreground: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+
+  --secondary-h: 197;
+  --secondary-s: 50%;
+  --secondary-l: 40%;
+
+  --accent-h: 153;
+  --accent-s: 60%;
+  --accent-l: 50%;
+
+  --warmth-h: 32;
+  --warmth-s: 90%;
+  --warmth-l: 58%;
+
+  color-scheme: dark;
+}
+
+[data-theme="dark"] body {
+  background: hsl(220, 20%, 8%);
+  color: hsl(210, 30%, 90%);
+}
+
+[data-theme="dark"] .glass-modern {
+  background: hsla(220, 20%, 12%, 0.85);
+  border: 1px solid hsla(210, 30%, 90%, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+}
+
 @theme {
   --color-brand-primary: var(--color-primary);
   --color-brand-secondary: var(--color-secondary);

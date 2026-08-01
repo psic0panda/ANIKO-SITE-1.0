@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SensoryProvider } from "@/context/SensoryContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import BackgroundDecor from "@/components/BackgroundDecor";
 
 const baloo = Baloo_2({
@@ -38,16 +39,18 @@ export default function RootLayout({
       className={`${baloo.variable} ${quicksand.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-body">
-        <SensoryProvider>
-          <Suspense fallback={null}>
-            <FacebookPixel />
-          </Suspense>
-          <Clarity />
-          <BackgroundDecor />
-          {children}
-          <Analytics />
-          <SpeedInsights />
-        </SensoryProvider>
+        <ThemeProvider>
+          <SensoryProvider>
+            <Suspense fallback={null}>
+              <FacebookPixel />
+            </Suspense>
+            <Clarity />
+            <BackgroundDecor />
+            {children}
+            <Analytics />
+            <SpeedInsights />
+          </SensoryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
