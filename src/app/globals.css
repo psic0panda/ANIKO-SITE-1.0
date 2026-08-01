@@ -205,6 +205,25 @@ h1, h2, h3, h4, h5, h6 {
   animation: gentle-wave 3.5s ease-in-out infinite;
 }
 
+/* Animações explícitas para o SensoryPreviewPlayer */
+@keyframes sensory-bounce {
+  0%, 100% { transform: scale(1.25) translateY(-15%); animation-timing-function: cubic-bezier(0.8,0,1,1); }
+  50% { transform: scale(1.25) translateY(0); animation-timing-function: cubic-bezier(0,0,0.2,1); }
+}
+@keyframes sensory-spin {
+  from { transform: scale(1.25) rotate(0deg); }
+  to   { transform: scale(1.25) rotate(360deg); }
+}
+@keyframes sensory-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(0.95); }
+}
+
+.sensory-penguin-adapted { animation: gentle-wave 3.5s ease-in-out infinite; }
+.sensory-penguin-high    { animation: sensory-bounce 0.8s ease-in-out infinite; }
+.sensory-star-adapted    { animation: sensory-pulse 2s ease-in-out infinite; }
+.sensory-star-high       { animation: sensory-spin 1s linear infinite; }
+
 /* Animations */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(20px); }

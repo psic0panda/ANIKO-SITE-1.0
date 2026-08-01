@@ -85,10 +85,10 @@ export default function SensoryPreviewPlayer() {
           {/* Personagens Simulado no Player */}
           <div className="relative z-10 text-center space-y-4 my-auto">
             <div key={animKey} className="flex justify-center items-center gap-6">
-              <div className={`transition-all duration-700 ${isAdapted ? "scale-100 animate-gentle-wave" : "scale-125 animate-bounce"}`}>
+              <div className={isAdapted ? "sensory-penguin-adapted" : "sensory-penguin-high"}>
                 <span className="text-7xl md:text-8xl filter drop-shadow-xl inline-block">🐧</span>
               </div>
-              <div className={`transition-all duration-700 ${isAdapted ? "scale-100 animate-pulse" : "scale-125 animate-spin"}`}>
+              <div className={isAdapted ? "sensory-star-adapted" : "sensory-star-high"}>
                 <span className="text-6xl md:text-7xl inline-block">⭐</span>
               </div>
             </div>
