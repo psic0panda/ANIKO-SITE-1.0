@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import SensoryPreviewPlayer from "@/components/SensoryPreviewPlayer";
 
 export default function Abordagem() {
   return (
@@ -78,6 +79,9 @@ export default function Abordagem() {
 
         </div>
       </div>
+
+      {/* Demonstração Interativa */}
+      <SensoryPreviewPlayer />
 
       {/* Video Modeling */}
       <div className="py-16 px-6 bg-gradient-to-b from-white to-cyan-50">

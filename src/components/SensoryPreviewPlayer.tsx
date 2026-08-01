@@ -6,6 +6,7 @@ import { Sparkles, Zap, ShieldCheck, Volume2, Eye, RefreshCw } from "lucide-reac
 export default function SensoryPreviewPlayer() {
   const [isAdapted, setIsAdapted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [animKey, setAnimKey] = useState(0);
 
   return (
     <section className="w-full py-16 px-4 md:px-8 max-w-6xl mx-auto">
@@ -74,16 +75,16 @@ export default function SensoryPreviewPlayer() {
             </div>
 
             <button 
-              onClick={() => setIsPlaying(!isPlaying)} 
-              className="bg-white/20 backdrop-blur-md hover:bg-white/30 text-white p-2 rounded-xl transition-all"
+              onClick={() => { setAnimKey(k => k + 1); setIsPlaying(true); }} 
+              className="bg-white/20 backdrop-blur-md hover:bg-white/30 text-white p-2 rounded-xl transition-all active:scale-90"
             >
-              <RefreshCw size={16} className={isPlaying ? "animate-spin-slow" : ""} />
+              <RefreshCw size={16} className="animate-spin-slow" />
             </button>
           </div>
 
           {/* Personagens Simulado no Player */}
           <div className="relative z-10 text-center space-y-4 my-auto">
-            <div className="flex justify-center items-center gap-6">
+            <div key={animKey} className="flex justify-center items-center gap-6">
               <div className={`transition-all duration-700 ${isAdapted ? "scale-100 animate-gentle-wave" : "scale-125 animate-bounce"}`}>
                 <span className="text-7xl md:text-8xl filter drop-shadow-xl inline-block">🐧</span>
               </div>
