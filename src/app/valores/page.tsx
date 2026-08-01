@@ -64,10 +64,10 @@ export default function Valores() {
             </div>
 
             <Link 
-              href="/login" 
+              href="/pagamento?plan=unico" 
               className="w-full py-6 rounded-3xl bg-brand-primary text-white text-xl font-black shadow-2xl hover:scale-[1.02] active:scale-95 transition-all text-center"
             >
-              Começar Agora
+              Comprar Vídeo Único
             </Link>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function Valores() {
             </div>
 
             <Link
-              href="/login?plan=essencial"
+              href="/pagamento?plan=essencial"
               className="mt-8 w-full py-5 rounded-2xl bg-slate-900 text-white text-lg font-black shadow-lg hover:bg-brand-primary hover:scale-[1.02] active:scale-95 transition-all text-center block"
             >
               Assinar Plano Essencial
@@ -188,7 +188,7 @@ export default function Valores() {
             </div>
 
             <Link
-              href="/login?plan=pro"
+              href="/pagamento?plan=pro"
               className="mt-8 w-full py-5 rounded-2xl bg-brand-warmth text-white text-lg font-black shadow-xl hover:bg-brand-warmth/90 hover:scale-[1.02] active:scale-95 transition-all text-center block"
             >
               Assinar Plano Pro

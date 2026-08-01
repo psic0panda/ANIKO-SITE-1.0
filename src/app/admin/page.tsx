@@ -67,6 +67,7 @@ export default function AdminDashboard() {
   // Modal de Concessão Manual de Créditos
   const [creditModalUser, setCreditModalUser] = useState<any>(null);
   const [creditAmount, setCreditAmount] = useState<number>(4);
+  const [creditAction, setCreditAction] = useState<'add' | 'remove'>('add');
   const [isUpdatingCredits, setIsUpdatingCredits] = useState(false);
 
   const CLOUDINARY_CLOUD_NAME = "dorusgnpe";
@@ -158,27 +159,33 @@ export default function AdminDashboard() {
     return { diffHours, diffDays, isUrgent, pctSLA, timeText };
   };
 
-  // Ajuste manual de créditos
+  // Ajuste manual de créditos (Adicionar ou Remover)
   const handleGrantCredits = async () => {
     if (!creditModalUser || isUpdatingCredits) return;
     setIsUpdatingCredits(true);
 
     try {
-      const newCredits = (creditModalUser.video_credits || 0) + Number(creditAmount);
+      const currentCredits = Number(creditModalUser.video_credits || 0);
+      const qty = Math.max(1, Number(creditAmount));
+      const newCredits = creditAction === 'add' 
+        ? currentCredits + qty 
+        : Math.max(0, currentCredits - qty);
+
       const { error } = await supabase
         .from('profiles')
         .update({ video_credits: newCredits })
         .eq('id', creditModalUser.id);
 
       if (!error) {
-        alert(`✅ Sucesso! ${creditAmount} créditos concedidos para ${creditModalUser.child_name || 'Cliente'}.`);
+        const actionLabel = creditAction === 'add' ? 'adicionados' : 'removidos';
+        alert(`✅ Sucesso! ${qty} crédito(s) ${actionLabel} para ${creditModalUser.child_name || creditModalUser.parent_name || 'Cliente'}. Novo saldo: ${newCredits}.`);
         setCreditModalUser(null);
         refreshData();
       } else {
-        alert("Erro ao conceder créditos: " + error.message);
+        alert("Erro ao atualizar créditos: " + error.message);
       }
     } catch (err: any) {
-      alert("Erro ao conceder créditos: " + err.message);
+      alert("Erro ao atualizar créditos: " + err.message);
     } finally {
       setIsUpdatingCredits(false);
     }
@@ -908,15 +915,39 @@ export default function AdminDashboard() {
                 <p className="text-slate-400 text-xs mt-1">Gerencie saldos de créditos e contas de usuários.</p>
               </div>
 
-              <div className="relative w-full sm:w-72">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                <input
-                  type="text"
-                  placeholder="Buscar por nome..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-[#16253B] text-white border border-slate-700 focus:border-brand-accent outline-none text-xs"
-                />
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button
+                  onClick={async () => {
+                    if (confirm("⚠️ Tem certeza que deseja ZERAR os créditos e resetar os planos de TODOS os clientes cadastrados?")) {
+                      try {
+                        const res = await fetch('/api/admin/zerar-creditos', { method: 'POST' });
+                        const data = await res.json();
+                        if (data.success) {
+                          alert("✅ Todos os créditos foram zerados e os planos foram resetados com sucesso!");
+                          refreshData();
+                        } else {
+                          alert("Erro: " + data.error);
+                        }
+                      } catch (err: any) {
+                        alert("Erro de conexão: " + err.message);
+                      }
+                    }
+                  }}
+                  className="px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/40 text-xs font-black rounded-xl transition-all whitespace-nowrap"
+                >
+                  ⚡ Zerar Créditos de Todos
+                </button>
+
+                <div className="relative w-full sm:w-72">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por nome..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-[#16253B] text-white border border-slate-700 focus:border-brand-accent outline-none text-xs"
+                  />
+                </div>
               </div>
             </div>
 
@@ -949,26 +980,40 @@ export default function AdminDashboard() {
                         <p className="text-[10px] text-slate-500">{p.phone || p.email}</p>
                       </td>
                       <td className="py-4 px-4">
-                        <span className="px-3 py-1 rounded-full text-[10px] font-black bg-brand-primary/30 text-brand-accent border border-brand-accent/20">
-                          {p.plan_name || 'Plano Essencial'}
+                        <span className="px-3 py-1 rounded-full text-[10px] font-black bg-slate-800 text-slate-400 border border-slate-700">
+                          {p.plan_name || 'Sem Plano'}
                         </span>
                       </td>
                       <td className="py-4 px-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                          {p.video_credits !== undefined ? p.video_credits : 4} Créditos
+                        <span className="px-3 py-1 rounded-full text-xs font-black bg-slate-800 text-slate-300 border border-slate-700">
+                          {p.video_credits || 0} Créditos
                         </span>
                       </td>
-                      <td className="py-4 px-4 text-right space-x-2">
+                      <td className="py-4 px-4 text-right space-x-2 whitespace-nowrap">
                         <button
-                          onClick={() => setCreditModalUser(p)}
-                          className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold rounded-xl transition-all"
+                          onClick={() => {
+                            setCreditAction('add');
+                            setCreditAmount(4);
+                            setCreditModalUser(p);
+                          }}
+                          className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold rounded-xl transition-all"
                         >
-                          + Dar Créditos
+                          + Adicionar
+                        </button>
+                        <button
+                          onClick={() => {
+                            setCreditAction('remove');
+                            setCreditAmount(1);
+                            setCreditModalUser(p);
+                          }}
+                          className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold rounded-xl transition-all"
+                        >
+                          - Remover
                         </button>
                         <Link
                           href={`/admin/cliente/${p.id}`}
                           target="_blank"
-                          className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 text-xs font-bold rounded-xl transition-all inline-block"
+                          className="px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 text-xs font-bold rounded-xl transition-all inline-block"
                         >
                           Detalhes
                         </Link>
@@ -1061,38 +1106,105 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Modal de Concessão Manual de Créditos */}
+      {/* Modal de Gestão Manual de Créditos (Adicionar & Remover) */}
       {creditModalUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-fade-in">
           <div className="bg-[#0F1F35] border border-slate-700 w-full max-w-md rounded-3xl p-8 space-y-6 text-white shadow-2xl">
-            <h3 className="text-xl font-black flex items-center gap-2">
-              <span>🎁</span> Conceder Créditos
-            </h3>
-            <p className="text-xs text-slate-400">
-              Cliente: <strong className="text-white">{creditModalUser.child_name || creditModalUser.email}</strong><br />
-              Saldo atual: <strong className="text-brand-accent">{creditModalUser.video_credits || 0} créditos</strong>
-            </p>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-black flex items-center gap-2">
+                <span>⚙️</span> Gestão de Créditos
+              </h3>
+              <button 
+                onClick={() => setCreditModalUser(null)}
+                className="text-slate-400 hover:text-white text-sm font-bold p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700 space-y-1 text-xs">
+              <p className="text-slate-400 font-medium">
+                Paciente / Criança: <strong className="text-white">{creditModalUser.child_name || 'Sem nome'}</strong>
+              </p>
+              <p className="text-slate-400 font-medium">
+                Responsável: <strong className="text-white">{creditModalUser.parent_name || creditModalUser.email || 'N/A'}</strong>
+              </p>
+              <p className="text-slate-400 font-medium pt-2 border-t border-slate-700/60 flex justify-between items-center mt-2">
+                <span>Saldo Atual no Banco:</span>
+                <span className="text-brand-accent font-black text-sm">{creditModalUser.video_credits || 0} créditos</span>
+              </p>
+            </div>
+
+            {/* Alternador de Ação: Adicionar x Remover */}
+            <div className="grid grid-cols-2 gap-2 bg-[#16253B] p-1.5 rounded-2xl border border-slate-700">
+              <button
+                type="button"
+                onClick={() => setCreditAction('add')}
+                className={`py-2.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 ${
+                  creditAction === 'add'
+                    ? 'bg-emerald-500 text-white shadow-lg'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>➕</span> Adicionar
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreditAction('remove')}
+                className={`py-2.5 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 ${
+                  creditAction === 'remove'
+                    ? 'bg-rose-500 text-white shadow-lg'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>➖</span> Remover
+              </button>
+            </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Quantidade de Créditos a Adicionar:</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+                {creditAction === 'add' ? 'Quantidade a Adicionar:' : 'Quantidade a Remover:'}
+              </label>
               <input
                 type="number"
                 min="1"
                 max="50"
                 value={creditAmount}
-                onChange={(e) => setCreditAmount(Number(e.target.value))}
+                onChange={(e) => setCreditAmount(Math.max(1, Number(e.target.value)))}
                 className="w-full px-4 py-3 rounded-xl bg-[#16253B] text-white border border-slate-700 focus:border-brand-accent outline-none font-black text-lg"
               />
             </div>
 
+            <div className="bg-slate-900/60 p-3.5 rounded-xl text-xs flex justify-between items-center border border-slate-800">
+              <span className="text-slate-400 font-medium">Novo Saldo Após Operação:</span>
+              <strong className={`font-black text-sm ${creditAction === 'add' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {creditAction === 'add'
+                  ? (creditModalUser.video_credits || 0) + Number(creditAmount)
+                  : Math.max(0, (creditModalUser.video_credits || 0) - Number(creditAmount))} créditos
+              </strong>
+            </div>
+
             <div className="flex gap-3">
-              <button onClick={() => setCreditModalUser(null)} className="flex-1 py-3 bg-slate-800 text-slate-400 rounded-xl font-bold text-xs">Cancelar</button>
+              <button 
+                onClick={() => setCreditModalUser(null)} 
+                className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded-xl font-bold text-xs transition-all"
+              >
+                Cancelar
+              </button>
               <button
                 onClick={handleGrantCredits}
                 disabled={isUpdatingCredits}
-                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-xs shadow-lg"
+                className={`flex-1 py-3 text-white rounded-xl font-black text-xs shadow-lg transition-all ${
+                  creditAction === 'add'
+                    ? 'bg-emerald-500 hover:bg-emerald-600'
+                    : 'bg-rose-500 hover:bg-rose-600'
+                }`}
               >
-                {isUpdatingCredits ? "Adicionando..." : "Confirmar Créditos"}
+                {isUpdatingCredits
+                  ? "Salvando..."
+                  : creditAction === 'add'
+                  ? `+ Adicionar (${creditAmount})`
+                  : `- Remover (${creditAmount})`}
               </button>
             </div>
           </div>

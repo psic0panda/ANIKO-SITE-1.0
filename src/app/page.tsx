@@ -294,7 +294,7 @@ export default function Home() {
                 <div className="absolute right-0 mt-3 w-60 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-50 animate-scale-up text-left">
                   <div className="p-3 border-b border-slate-100 bg-slate-50/50 rounded-xl mb-1">
                     <p className="text-xs font-black text-brand-primary truncate">{userProfile?.child_name || 'Sua Conta'}</p>
-                    <p className="text-[10px] text-brand-accent font-bold mt-0.5">{userProfile?.video_credits !== undefined ? userProfile.video_credits : 4} Créditos Restantes</p>
+                    <p className="text-[10px] text-brand-accent font-bold mt-0.5">{userProfile?.video_credits || 0} Créditos Restantes</p>
                   </div>
                   
                   <Link 

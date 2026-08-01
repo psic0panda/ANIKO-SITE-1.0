@@ -1029,25 +1029,19 @@ export default function Dashboard() {
                     </button>
                   ) : (
                     <Link 
-                      href="/valores"
+                      href="/pagamento"
                       className="w-full py-3.5 bg-brand-accent text-white font-black rounded-2xl text-sm shadow-lg hover:scale-[1.02] active:scale-95 transition-all text-center block"
                     >
                       Assinar Plano ou Recarregar
                     </Link>
                   )}
 
-                  {profile.plan_name && (
-                    <button 
-                      onClick={() => {
-                        if (confirm("Deseja mesmo solicitar o cancelamento da sua assinatura? Seu saldo de créditos atual continuará disponível até o fim do ciclo.")) {
-                          alert("Sua solicitação de cancelamento foi enviada! Nosso suporte entrará em contato para confirmar.");
-                        }
-                      }}
-                      className="w-full py-2.5 text-xs text-slate-400 hover:text-red-400 font-bold transition-colors text-center block"
-                    >
-                      Cancelar Assinatura
-                    </button>
-                  )}
+                  <Link 
+                    href="/assinatura"
+                    className="w-full py-2.5 text-xs text-slate-300 hover:text-brand-accent font-bold transition-colors text-center block"
+                  >
+                    ⚙️ Gerenciar Assinatura Completa
+                  </Link>
                 </div>
               </div>
            </div>
